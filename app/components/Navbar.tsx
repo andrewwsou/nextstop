@@ -55,15 +55,15 @@ export default function Navbar() {
         ))}
       </div>
 
-      <Link href="/profile" style={{
-        width: 34, height: 34, borderRadius: "50%",
-        background: "#1a2e28", border: "1px solid #2a4a3e",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        fontSize: "0.8rem", fontWeight: 700, color: "#3ecfb2",
-        textDecoration: "none",
-      }}>
-        U
-      </Link>
+      {/*<Link href="/profile" style={{*/}
+      {/*  width: 34, height: 34, borderRadius: "50%",*/}
+      {/*  background: "#1a2e28", border: "1px solid #2a4a3e",*/}
+      {/*  display: "flex", alignItems: "center", justifyContent: "center",*/}
+      {/*  fontSize: "0.8rem", fontWeight: 700, color: "#3ecfb2",*/}
+      {/*  textDecoration: "none",*/}
+      {/*}}>*/}
+      {/*  U*/}
+      {/*</Link>*/}
     </nav>
   );
 }
