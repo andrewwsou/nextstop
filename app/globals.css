@@ -14,7 +14,7 @@ main {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  align-items: center;          /* ← was missing, nothing was centered */
+  /*align-items: center;          /* ← was missing, nothing was centered */
   padding: 2rem;
   background: #111111;
 }
