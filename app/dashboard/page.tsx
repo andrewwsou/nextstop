@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { type CSSProperties } from "react";
+import { useState, type CSSProperties } from "react";
 
 const NAVBAR_HEIGHT = 60;
 
@@ -11,15 +11,36 @@ const scheduledTrips = [
   { from: "Irvine Station", to: "Home", time: "5:15 PM", lines: ["Metrolink", "OC 59"] },
 ];
 
+const recentTrips = [
+  { from: "Home", to: "UCI Student Center", time: "Yesterday" },
+  { from: "UCI Student Center", to: "Irvine Station", time: "Mon" },
+  { from: "Irvine Station", to: "Home", time: "Last week" },
+];
+
 export default function Dashboard() {
+  const [showRecent, setShowRecent] = useState(false);
+
   return (
     <main style={styles.page}>
       <div style={styles.mapPlaceholder}>
         <p style={styles.mapText}>Live Map Here</p>
       </div>
 
-      <div style={styles.searchStack}>
-        <label style={styles.searchBar}>
+      <div
+        style={styles.searchStack}
+        onFocus={() => setShowRecent(true)}
+        onBlur={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget)) {
+            setShowRecent(false);
+          }
+        }}
+      >
+        <label
+          style={{
+            ...styles.searchBar,
+            borderRadius: showRecent ? "24px 24px 0 0" : 999,
+          }}
+        >
           <span style={styles.searchIcon}>⌕</span>
           <input
             aria-label="Plan a trip"
@@ -30,6 +51,36 @@ export default function Dashboard() {
             Plan
           </Link>
         </label>
+
+        {showRecent && (
+          <section style={styles.recentTray} aria-label="Recent trip searches">
+            {recentTrips.map((trip) => (
+              <Link
+                key={`${trip.to}-${trip.time}`}
+                href="/trip"
+                style={styles.recentSearchItem}
+              >
+                <span style={styles.recentIcon}>
+                  <span style={styles.clockFace}>
+                    <span style={styles.clockHour} />
+                    <span style={styles.clockMinute} />
+                  </span>
+                </span>
+
+                <span>
+                  <strong style={styles.recentDestination}>
+                    {trip.from} → {trip.to}
+                  </strong>
+                  <span style={styles.recentMeta}>{trip.time}</span>
+                </span>
+              </Link>
+            ))}
+
+            <Link href="/history" style={styles.moreHistory}>
+              More from recent history
+            </Link>
+          </section>
+        )}
       </div>
 
       <section style={styles.panel}>
@@ -102,8 +153,8 @@ const styles = {
     display: "block",
     minHeight: "100vh",
     overflow: "hidden",
-    background: "#0f1115",
-    color: "#f8fafc",
+    background: "#0d1210",
+    color: "#ffffff",
     padding: `${NAVBAR_HEIGHT + 22}px 28px 28px`,
   },
 
@@ -112,16 +163,16 @@ const styles = {
     inset: `${NAVBAR_HEIGHT}px 0 0`,
     display: "flex",
     alignItems: "center",
-    justifyContent: "right",
-    background: "#151922",
-    border: "2px dashed #374151",
+    justifyContent: "flex-end",
+    background: "#07100d",
   },
 
   mapText: {
     margin: 0,
+    paddingRight: 48,
     fontSize: 28,
     fontWeight: 700,
-    color: "#6b7280",
+    color: "#2a4a3e",
   },
 
   searchStack: {
@@ -136,16 +187,16 @@ const styles = {
     alignItems: "center",
     gap: 12,
     padding: "0 10px 0 20px",
-    borderRadius: 999,
-    background: "#f8fafc",
-    color: "#111827",
+    background: "#16241f",
+    color: "#ffffff",
+    border: "1px solid #1a2e28",
     boxShadow: "0 5px 18px rgba(0,0,0,0.34)",
   },
 
   searchIcon: {
     flex: "0 0 auto",
     fontSize: 25,
-    color: "#64748b",
+    color: "#3ecfb2",
   },
 
   searchInput: {
@@ -155,7 +206,7 @@ const styles = {
     border: 0,
     outline: 0,
     background: "transparent",
-    color: "#111827",
+    color: "#ffffff",
     fontSize: 17,
     fontFamily: "inherit",
   },
@@ -164,9 +215,100 @@ const styles = {
     flex: "0 0 auto",
     borderRadius: 999,
     padding: "10px 16px",
-    background: "#00bfa5",
-    color: "#06251f",
+    background: "#3ecfb2",
+    color: "#0d1210",
     fontSize: 14,
+    fontWeight: 800,
+    textDecoration: "none",
+  },
+
+  recentTray: {
+    position: "absolute",
+    top: 56,
+    left: 0,
+    width: "100%",
+    padding: "8px 0 18px",
+    borderTop: "1px solid #1a2e28",
+    borderRadius: "0 0 24px 24px",
+    background: "#111a17",
+    color: "#ffffff",
+    boxShadow: "0 14px 28px rgba(0,0,0,0.28)",
+  },
+
+  recentSearchItem: {
+    display: "grid",
+    gridTemplateColumns: "64px 1fr",
+    gap: 8,
+    alignItems: "center",
+    minHeight: 76,
+    padding: "8px 28px",
+    color: "inherit",
+    textDecoration: "none",
+  },
+
+  recentIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 999,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    background: "#1a2e28",
+    color: "#3ecfb2",
+  },
+
+  clockFace: {
+    position: "relative",
+    width: 22,
+    height: 22,
+    borderRadius: "50%",
+    border: "2px solid currentColor",
+  },
+
+  clockHour: {
+    position: "absolute",
+    width: 2,
+    height: 7,
+    left: "50%",
+    top: "50%",
+    background: "currentColor",
+    borderRadius: 999,
+    transform: "translate(-50%, -100%)",
+    transformOrigin: "bottom center",
+  },
+
+  clockMinute: {
+    position: "absolute",
+    width: 8,
+    height: 2,
+    left: "50%",
+    top: "50%",
+    background: "currentColor",
+    borderRadius: 999,
+    transform: "translateY(-50%)",
+    transformOrigin: "left center",
+  },
+
+  recentDestination: {
+    display: "block",
+    fontSize: 19,
+    lineHeight: 1.25,
+    color: "#ffffff",
+  },
+
+  recentMeta: {
+    display: "block",
+    marginTop: 4,
+    color: "#6b8f82",
+    fontSize: 16,
+    lineHeight: 1.25,
+  },
+
+  moreHistory: {
+    display: "block",
+    padding: "16px 28px 4px 100px",
+    color: "#3ecfb2",
+    fontSize: 18,
     fontWeight: 800,
     textDecoration: "none",
   },
@@ -178,7 +320,8 @@ const styles = {
     marginTop: 18,
     padding: 24,
     borderRadius: 24,
-    background: "rgba(24,28,37,0.94)",
+    background: "#111a17",
+    border: "1px solid #1a2e28",
     boxShadow: "0 12px 34px rgba(0,0,0,0.35)",
   },
 
@@ -186,7 +329,7 @@ const styles = {
     maxWidth: 420,
   },
 
-  breadcrumb: { margin: 0, color: "#9ca3af", fontSize: 14 },
+  breadcrumb: { margin: 0, color: "#6b8f82", fontSize: 14 },
 
   title: {
     margin: "14px 0 18px",
@@ -198,18 +341,18 @@ const styles = {
     maxWidth: 500,
     padding: 15,
     borderRadius: 18,
-    background: "rgba(0,191,165,0.14)",
-    border: "1px solid rgba(0,191,165,0.45)",
-    color: "#99f6e4",
+    background: "#1a2e28",
+    border: "1px solid #2a4a3e",
+    color: "#3ecfb2",
   },
 
   alertText: {
     margin: "6px 0",
-    color: "#d1fae5",
+    color: "#d8fff6",
   },
 
   alertLink: {
-    color: "#5eead4",
+    color: "#3ecfb2",
     fontWeight: 700,
     textDecoration: "none",
   },
@@ -232,7 +375,7 @@ const styles = {
   },
 
   linkButton: {
-    color: "#5eead4",
+    color: "#3ecfb2",
     fontWeight: 700,
     textDecoration: "none",
     fontSize: 14,
@@ -255,8 +398,8 @@ const styles = {
     gap: 14,
     padding: 16,
     borderRadius: 18,
-    background: "#222733",
-    border: "1px solid #343b49",
+    background: "#0d1210",
+    border: "1px solid #1a2e28",
     color: "inherit",
     textDecoration: "none",
   },
@@ -264,14 +407,14 @@ const styles = {
   tripTime: {
     whiteSpace: "nowrap",
     fontSize: 22,
-    color: "#f8fafc",
+    color: "#ffffff",
   },
 
   tripRoute: {
     margin: 0,
     fontSize: 15,
     lineHeight: 1.35,
-    color: "#e5e7eb",
+    color: "#d8fff6",
   },
 
   lineRow: {
@@ -283,8 +426,8 @@ const styles = {
   linePill: {
     padding: "4px 9px",
     borderRadius: 999,
-    background: "#2f6f65",
-    color: "#ffffff",
+    background: "#1a2e28",
+    color: "#3ecfb2",
     fontSize: 11,
     fontWeight: 700,
   },
