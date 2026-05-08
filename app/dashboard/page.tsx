@@ -56,27 +56,43 @@ export default function Dashboard() {
 
           <div style={styles.todayScroller} aria-label="Today's scheduled trips">
             {scheduledTrips.map((trip) => (
-              <Link key={`${trip.from}-${trip.time}`} href="/trip" style={styles.tripCard}>
-                <strong style={styles.tripTime}>{trip.time}</strong>
-
-                <p style={styles.tripRoute}>
-                  <span>{trip.from}</span>
-                  <br />→ <span>{trip.to}</span>
-                </p>
-
-                <div style={styles.lineRow}>
-                  {trip.lines.map((line) => (
-                    <span key={line} style={styles.linePill}>
-                      {line}
-                    </span>
-                  ))}
-                </div>
-              </Link>
+              <TripCard key={`${trip.from}-${trip.time}`} {...trip} />
             ))}
           </div>
         </section>
       </section>
     </main>
+  );
+}
+
+function TripCard({
+  from,
+  to,
+  time,
+  lines,
+}: {
+  from: string;
+  to: string;
+  time: string;
+  lines: string[];
+}) {
+  return (
+    <Link href="/trip" style={styles.tripCard}>
+      <strong style={styles.tripTime}>{time}</strong>
+
+      <p style={styles.tripRoute}>
+        <span>{from}</span>
+        <br />→ <span>{to}</span>
+      </p>
+
+      <div style={styles.lineRow}>
+        {lines.map((line) => (
+          <span key={line} style={styles.linePill}>
+            {line}
+          </span>
+        ))}
+      </div>
+    </Link>
   );
 }
 
