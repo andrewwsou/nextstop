@@ -5,6 +5,12 @@ import { type CSSProperties } from "react";
 
 const NAVBAR_HEIGHT = 60;
 
+const scheduledTrips = [
+  { from: "Home", to: "UCI Student Center", time: "8:00 AM", lines: ["OC 79"] },
+  { from: "UCI Student Center", to: "Irvine Station", time: "12:30 PM", lines: ["OC 79", "Metrolink"] },
+  { from: "Irvine Station", to: "Home", time: "5:15 PM", lines: ["Metrolink", "OC 59"] },
+];
+
 export default function Dashboard() {
   return (
     <main style={styles.page}>
@@ -39,6 +45,36 @@ export default function Dashboard() {
             View details →
           </Link>
         </div>
+
+        <section style={styles.section}>
+          <div style={styles.sectionHeader}>
+            <h2 style={styles.sectionTitle}>Today</h2>
+            <Link href="/trip" style={styles.linkButton}>
+              Schedule more →
+            </Link>
+          </div>
+
+          <div style={styles.todayScroller} aria-label="Today's scheduled trips">
+            {scheduledTrips.map((trip) => (
+              <Link key={`${trip.from}-${trip.time}`} href="/trip" style={styles.tripCard}>
+                <strong style={styles.tripTime}>{trip.time}</strong>
+
+                <p style={styles.tripRoute}>
+                  <span>{trip.from}</span>
+                  <br />→ <span>{trip.to}</span>
+                </p>
+
+                <div style={styles.lineRow}>
+                  {trip.lines.map((line) => (
+                    <span key={line} style={styles.linePill}>
+                      {line}
+                    </span>
+                  ))}
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
       </section>
     </main>
   );
@@ -160,5 +196,80 @@ const styles = {
     color: "#5eead4",
     fontWeight: 700,
     textDecoration: "none",
+  },
+
+  section: {
+    marginTop: 22,
+  },
+
+  sectionHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 16,
+    marginBottom: 12,
+  },
+
+  sectionTitle: {
+    margin: 0,
+    fontSize: 20,
+  },
+
+  linkButton: {
+    color: "#5eead4",
+    fontWeight: 700,
+    textDecoration: "none",
+    fontSize: 14,
+  },
+
+  todayScroller: {
+    display: "grid",
+    gridAutoFlow: "column",
+    gridAutoColumns: "minmax(220px, 1fr)",
+    gap: 12,
+    overflowX: "auto",
+    paddingBottom: 4,
+  },
+
+  tripCard: {
+    minHeight: 150,
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "space-between",
+    gap: 14,
+    padding: 16,
+    borderRadius: 18,
+    background: "#222733",
+    border: "1px solid #343b49",
+    color: "inherit",
+    textDecoration: "none",
+  },
+
+  tripTime: {
+    whiteSpace: "nowrap",
+    fontSize: 22,
+    color: "#f8fafc",
+  },
+
+  tripRoute: {
+    margin: 0,
+    fontSize: 15,
+    lineHeight: 1.35,
+    color: "#e5e7eb",
+  },
+
+  lineRow: {
+    display: "flex",
+    gap: 7,
+    flexWrap: "wrap",
+  },
+
+  linePill: {
+    padding: "4px 9px",
+    borderRadius: 999,
+    background: "#2f6f65",
+    color: "#ffffff",
+    fontSize: 11,
+    fontWeight: 700,
   },
 } satisfies Record<string, CSSProperties>;
