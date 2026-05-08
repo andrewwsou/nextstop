@@ -7,8 +7,12 @@ const NAVBAR_HEIGHT = 60;
 export default function Dashboard() {
   return (
     <main style={styles.page}>
+      <div style={styles.mapPlaceholder}>
+        <p style={styles.mapText}>Live Map Here in background</p>
+      </div>
+
       <section style={styles.panel}>
-        <p style={styles.breadcrumb}>Home / Dashboard</p>
+        <p style={styles.breadcrumb}>Home</p>
         <h1 style={styles.title}>Welcome, User</h1>
       </section>
     </main>
@@ -24,6 +28,23 @@ const styles = {
     background: "#0f1115",
     color: "#f8fafc",
     padding: `${NAVBAR_HEIGHT + 22}px 28px 28px`,
+  },
+
+  mapPlaceholder: {
+    position: "absolute",
+    inset: `${NAVBAR_HEIGHT}px 0 0`,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "right",
+    background: "#151922",
+    border: "2px dashed #374151",
+  },
+
+  mapText: {
+    margin: 0,
+    fontSize: 28,
+    fontWeight: 700,
+    color: "#6b7280",
   },
 
   panel: {
