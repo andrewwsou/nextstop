@@ -27,8 +27,18 @@ export default function Dashboard() {
       </div>
 
       <section style={styles.panel}>
-        <p style={styles.breadcrumb}>Home</p>
-        <h1 style={styles.title}>Welcome, User</h1>
+        <div style={styles.panelIntro}>
+          <p style={styles.breadcrumb}>Home Dashboard</p>
+          <h1 style={styles.title}>Welcome, User</h1>
+        </div>
+
+        <div style={styles.alert}>
+          <strong>Live alert</strong>
+          <p style={styles.alertText}>Your 8:00 AM bus departs in 20 minutes.</p>
+          <Link href="/trip" style={styles.alertLink}>
+            View details →
+          </Link>
+        </div>
       </section>
     </main>
   );
@@ -50,7 +60,7 @@ const styles = {
     inset: `${NAVBAR_HEIGHT}px 0 0`,
     display: "flex",
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "right",
     background: "#151922",
     border: "2px dashed #374151",
   },
@@ -120,11 +130,35 @@ const styles = {
     boxShadow: "0 12px 34px rgba(0,0,0,0.35)",
   },
 
+  panelIntro: {
+    maxWidth: 420,
+  },
+
   breadcrumb: { margin: 0, color: "#9ca3af", fontSize: 14 },
 
   title: {
-    margin: "14px 0 0",
+    margin: "14px 0 18px",
     fontSize: 32,
     lineHeight: 1.08,
+  },
+
+  alert: {
+    maxWidth: 500,
+    padding: 15,
+    borderRadius: 18,
+    background: "rgba(0,191,165,0.14)",
+    border: "1px solid rgba(0,191,165,0.45)",
+    color: "#99f6e4",
+  },
+
+  alertText: {
+    margin: "6px 0",
+    color: "#d1fae5",
+  },
+
+  alertLink: {
+    color: "#5eead4",
+    fontWeight: 700,
+    textDecoration: "none",
   },
 } satisfies Record<string, CSSProperties>;
