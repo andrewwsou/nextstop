@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { type CSSProperties } from "react";
 
 const NAVBAR_HEIGHT = 60;
@@ -8,7 +9,21 @@ export default function Dashboard() {
   return (
     <main style={styles.page}>
       <div style={styles.mapPlaceholder}>
-        <p style={styles.mapText}>Live Map Here in background</p>
+        <p style={styles.mapText}>Live Map Here</p>
+      </div>
+
+      <div style={styles.searchStack}>
+        <label style={styles.searchBar}>
+          <span style={styles.searchIcon}>⌕</span>
+          <input
+            aria-label="Plan a trip"
+            placeholder="Search NextStop"
+            style={styles.searchInput}
+          />
+          <Link href="/trip" style={styles.searchAction}>
+            Plan
+          </Link>
+        </label>
       </div>
 
       <section style={styles.panel}>
@@ -35,7 +50,7 @@ const styles = {
     inset: `${NAVBAR_HEIGHT}px 0 0`,
     display: "flex",
     alignItems: "center",
-    justifyContent: "right",
+    justifyContent: "center",
     background: "#151922",
     border: "2px dashed #374151",
   },
@@ -45,6 +60,53 @@ const styles = {
     fontSize: 28,
     fontWeight: 700,
     color: "#6b7280",
+  },
+
+  searchStack: {
+    position: "relative",
+    zIndex: 4,
+    width: "min(760px, calc(50vw - 40px), calc(100vw - 56px))",
+  },
+
+  searchBar: {
+    minHeight: 56,
+    display: "flex",
+    alignItems: "center",
+    gap: 12,
+    padding: "0 10px 0 20px",
+    borderRadius: 999,
+    background: "#f8fafc",
+    color: "#111827",
+    boxShadow: "0 5px 18px rgba(0,0,0,0.34)",
+  },
+
+  searchIcon: {
+    flex: "0 0 auto",
+    fontSize: 25,
+    color: "#64748b",
+  },
+
+  searchInput: {
+    flex: 1,
+    minWidth: 0,
+    height: 54,
+    border: 0,
+    outline: 0,
+    background: "transparent",
+    color: "#111827",
+    fontSize: 17,
+    fontFamily: "inherit",
+  },
+
+  searchAction: {
+    flex: "0 0 auto",
+    borderRadius: 999,
+    padding: "10px 16px",
+    background: "#00bfa5",
+    color: "#06251f",
+    fontSize: 14,
+    fontWeight: 800,
+    textDecoration: "none",
   },
 
   panel: {
