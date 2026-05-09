@@ -6,11 +6,11 @@ import { useState } from "react";
 export default function Trip() {
   const router = useRouter();
 
-  // Holds state for Location inputs
+  {/* Holds state for Location inputs */}
   const [start, setStart] = useState("");
   const [destination, setDestination] = useState("");
 
-  // Plan trip button
+  {/* Plan trip button */}
   const handlePlanTrip = () => {
     router.push(
       `/trip/results?start=${encodeURIComponent(start)}&destination=${encodeURIComponent(destination)}`
@@ -18,22 +18,21 @@ export default function Trip() {
   };
 
   return (
-    // Main page
     <main className="min-h-screen bg-[#111] text-white px-6 pt-8">
       <div className="flex items-center gap-4 mb-6">
-        // Back button 
+        {/* Back button */} 
         <button className="text-4xl leading-none" onClick={() => router.push("/dashboard")}>
           ←
         </button>
 
-        // Header
+        {/* Header */}
         <h1 className="text-4xl font-bold whitespace-nowrap">
           Where do you want to go?
         </h1>
       </div>
 
-      // Start Label
-      // Current Location Button doesn't do anything... ..
+      {/* Start Label */}
+      {/* Current Location Button doesn't do anything... .. */}
       <section className="rounded-3xl border border-zinc-600 bg-[#262626] p-4 mb-6">
         <div className="flex justify-between items-center mb-3">
           <span className="text-xs text-zinc-400">START</span>
@@ -42,7 +41,7 @@ export default function Trip() {
           </button>
         </div>
 
-        // Location Input 
+        {/* Location Input */}
         <input
           value={start}
           onChange={(e) => setStart(e.target.value)}
@@ -52,7 +51,7 @@ export default function Trip() {
 
         <span className="text-xs text-zinc-400">DESTINATION</span>
 
-        // Destination Input
+        {/* Destination Input */}
         <input
           value={destination}
           onChange={(e) => setDestination(e.target.value)}
@@ -61,7 +60,7 @@ export default function Trip() {
         />
       </section>
 
-      // Buttons for Day, Time, Transit Types
+      {/* Buttons for Day, Time, Transit Types */}
       <div className="grid grid-cols-2 gap-3 mb-7">
         <div>
           <p className="mb-2">Day</p>
@@ -102,7 +101,7 @@ export default function Trip() {
         </button>
       </div>
 
-      // Goes to trip planner page
+      {/* Goes to trip planner page */}
       <button
         onClick={handlePlanTrip}
         className="mt-10 w-full rounded-xl bg-teal-400 py-4 font-bold text-black"

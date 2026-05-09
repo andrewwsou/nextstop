@@ -1,87 +1,154 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
+type Segment =
+  | {
+      type: "walk";
+    }
+  | {
+      type: "transit";
+      label: string;
+      transitType: "bus" | "train" | "express";
+    };
 
-// Draws the transit line graphic used in all three routes
-function RouteLine({ stops }: { stops: string[] }) {
+function RouteLine({ segments }: { segments: Segment[] }) {
   return (
     <div className="my-5 flex items-center w-full">
+      {/* Start circle */}
       <div className="h-6 w-6 rounded-full border-2 border-teal-300 flex items-center justify-center shrink-0">
         <div className="h-3 w-3 rounded-full bg-teal-300" />
       </div>
 
-      <span className="mx-3 text-sm text-zinc-300">🚶</span>
-
-      {stops.map((stop, index) => (
-        <div key={`${stop}-${index}`} className="flex flex-1 items-center">
+      {/* Dynamic route pieces */}
+      {segments.map((segment, index) => (
+        <div key={index} className="flex flex-1 items-center">
           <div className="h-[2px] flex-1 bg-teal-200" />
 
-          <div
-            className={`rounded-md px-4 py-1 text-xs font-bold whitespace-nowrap ${
-              stop.includes("ML") || stop.includes("Metrolink")
-                ? "bg-indigo-500"
-                : "bg-teal-700"
-            }`}
-          >
-            {stop}
-          </div>
-
-          <div className="h-[2px] flex-1 bg-teal-200" />
-
-          {index < stops.length - 1 && (
-            <span className="mx-3 text-sm text-zinc-300">🚶</span>
+          {/* WALK */}
+          {segment.type === "walk" && (
+            <div className="mx-2 text-sm">🚶</div>
           )}
+
+          {/* TRANSIT */}
+          {segment.type === "transit" && (
+            <div
+              className={`rounded-md px-4 py-1 text-xs font-bold whitespace-nowrap ${
+                segment.transitType === "train"
+                  ? "bg-indigo-500"
+                  : segment.transitType === "express"
+                  ? "bg-cyan-700"
+                  : "bg-teal-700"
+              }`}
+            >
+              {segment.label}
+            </div>
+          )}
+
+          <div className="h-[2px] flex-1 bg-teal-200" />
         </div>
       ))}
 
-      <span className="mx-3 text-sm text-zinc-300">🚶</span>
-
+      {/* End circle */}
       <div className="h-6 w-6 rounded-full border-2 border-teal-700 shrink-0" />
     </div>
   );
 }
 
-// Main page component
+{/* Placeholder for Live Route API Data*/}
+const liveRoutesPlaceholder = [
+  {
+    label: "Suggested Route",
+    time: "--:-- → --:--",
+    depart: "Live departure time",
+    duration: "-- min",
+    transfers: "-- transfers",
+    walk: "-- min walk",
+
+    segments: [
+      { type: "walk" },
+
+      {
+        type: "transit",
+        label: "OC 57",
+        transitType: "bus",
+      },
+
+      { type: "walk" },
+
+      {
+        type: "transit",
+        label: "Metrolink 682",
+        transitType: "train",
+      },
+
+      { type: "walk" },
+    ],
+  },
+
+  {
+    time: "--:-- → --:--",
+    depart: "Live departure time",
+    duration: "-- min",
+    transfers: "-- transfers",
+    walk: "-- min walk",
+
+    segments: [
+      { type: "walk" },
+
+      {
+        type: "transit",
+        label: "OC 43",
+        transitType: "bus",
+      },
+
+      { type: "walk" },
+    ],
+  },
+
+  {
+    time: "--:-- → --:--",
+    depart: "Live departure time",
+    duration: "-- min",
+    transfers: "-- transfers",
+    walk: "-- min walk",
+
+    segments: [
+      { type: "walk" },
+
+      {
+        type: "transit",
+        label: "OC 54",
+        transitType: "bus",
+      },
+
+      { type: "walk" },
+
+      {
+        type: "transit",
+        label: "OC 12",
+        transitType: "bus",
+      },
+
+      { type: "walk" },
+    ],
+  },
+];
+
+{/* Main page component */}
 export default function TripResults() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Reads START/Dest location from prior pages and defaults to fill in if nothing
+  {/* Reads START/Dest location from prior pages and defaults to fill in if nothing */}
   const start = searchParams.get("start") || "1234 Street Lane";
   const destination = searchParams.get("destination") || "Huntington Library";
 
-  // Static routes....
-  const routes = [
-    {
-      label: "Suggested Route",
-      time: "9:52 am → 10:56 am",
-      depart: "Departs in 11 min",
-      duration: "1h 4min",
-      transfers: "2 transfers",
-      walk: "12 min walk",
-      stops: ["OC 57", "Metrolink 682"],
-    },
-    {
-      time: "10:22 am → 11:37 am",
-      depart: "Departs in 24 min",
-      duration: "1h 15min",
-      transfers: "3 transfers",
-      walk: "20 min walk",
-      stops: ["OC 57", "Metrolink 682", "OC 43"],
-    },
-    {
-      time: "10:08 am → 11:53 am",
-      depart: "Departs in 34 min",
-      duration: "1h 45min",
-      transfers: "2 transfers",
-      walk: "28 min walk",
-      stops: ["OC 57", "OC 54"],
-    },
-  ];
+  {/* Static routes.... */}
+  const routes = liveRoutesPlaceholder;
 
   return (
     <main className="min-h-screen bg-[#111] text-white px-6 py-6">
-      // Back button
+      {/* Back button */}
       <button
         onClick={() => router.back()}
         className="block text-left text-4xl mb-4"
@@ -89,14 +156,14 @@ export default function TripResults() {
         ←
       </button>
 
-      // hardcoded route num
+      {/* hardcoded route num */}
       <h1 className="text-4xl font-bold">3 routes found</h1>
 
       <p className="text-lg underline text-zinc-200 mt-1">
         {start} → {destination}
       </p>
 
-      // Shows Today's date
+      {/* Shows Today's date */}
       <p className="text-sm text-zinc-400 mb-5">
       Departing now ·{" "}
       {new Date().toLocaleDateString("en-US", {
@@ -107,7 +174,7 @@ export default function TripResults() {
       </p>
 
       <div className="space-y-5">
-        // Renders label if exists
+        {/* Renders label if exists */}
         {routes.map((route, index) => (
           <section
             key={index}
@@ -117,7 +184,7 @@ export default function TripResults() {
                 : "bg-[#2b2b2b] border-zinc-700"
             }`}
           >
-            // Route time and departure info
+            {/* Route time and departure info */}
             {route.label && (
               <p className="text-teal-200 font-bold mb-1">{route.label}</p>
             )}
@@ -125,10 +192,10 @@ export default function TripResults() {
             <h2 className="text-2xl font-bold">{route.time}</h2>
             <p className="text-sm text-zinc-300">{route.depart}</p>
 
-            // Line graphic referenced at top
-            <RouteLine stops={route.stops} />
+            {/* Line graphic referenced at top */}
+            <RouteLine segments={route.segments} />
             
-            // Duration, Transfer, and Walk TIme
+            {/* Duration, Transfer, and Walk Time */}
             <div className="flex justify-between text-sm text-teal-100 border-t border-teal-200/40 pt-3">
               <span>◷ {route.duration}</span>
               <span>→ {route.transfers}</span>
