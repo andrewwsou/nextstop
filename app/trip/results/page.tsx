@@ -148,6 +148,8 @@ const liveRoutesPlaceholder: Route[] = [
 export default function TripResults() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const tripDate = searchParams.get("date") || "";
+  const tripTime = searchParams.get("time") || "";
 
   {/* Reads START/Dest location from prior pages and defaults to fill in if nothing */}
   const start = searchParams.get("start") || "1234 Street Lane";
@@ -196,12 +198,15 @@ export default function TripResults() {
 
       {/* Shows Today's date */}
       <p className="text-sm text-zinc-400 mb-5">
-      Departing now ·{" "}
-      {new Date().toLocaleDateString("en-US", {
-        weekday: "short",
-        month: "short",
-        day: "numeric",
-      })}
+        Departing{" "}
+        {tripDate
+          ? new Date(tripDate).toLocaleDateString("en-US", {
+              weekday: "short",
+              month: "short",
+              day: "numeric",
+            })
+          : "today"}
+        {tripTime && ` · ${tripTime}`}
       </p>
 
       <div className="space-y-5">

@@ -9,6 +9,9 @@ export default function Trip() {
   const [start, setStart] = useState("");
   const [destination, setDestination] = useState("");
 
+  const [tripDate, setTripDate] = useState("");
+  const [tripTime, setTripTime] = useState("");
+
   const [transitTypes, setTransitTypes] = useState({
     bus: true,
     train: true,
@@ -45,10 +48,10 @@ export default function Trip() {
       .map(([type]) => type)
       .join(",");
 
-    router.push(
-      `/trip/results?start=${encodeURIComponent(start)}&destination=${encodeURIComponent(
-        destination
-      )}&transit=${encodeURIComponent(allowedTransit)}`
+      router.push(
+      `/trip/results?start=${encodeURIComponent(start)}&destination=${encodeURIComponent(destination
+      )}&transit=${encodeURIComponent(allowedTransit)}&date=${encodeURIComponent(tripDate
+      )}&time=${encodeURIComponent(tripTime)}`
     );
   };
 
@@ -99,16 +102,22 @@ export default function Trip() {
       <div className="grid grid-cols-2 gap-3 mb-7">
         <div>
           <p className="mb-2">Day</p>
-          <button className="w-full rounded-xl border border-zinc-600 bg-[#262626] px-4 py-3 text-left">
-            ◷ Today
-          </button>
+          <input
+            type="date"
+            value={tripDate}
+            onChange={(e) => setTripDate(e.target.value)}
+            className="w-full rounded-xl border border-zinc-600 bg-[#262626] px-4 py-3 text-left text-white"
+          />
         </div>
 
         <div>
           <p className="mb-2">Time</p>
-          <button className="w-full rounded-xl border border-zinc-600 bg-[#262626] px-4 py-3 text-left">
-            ◷ Now
-          </button>
+          <input
+            type="time"
+            value={tripTime}
+            onChange={(e) => setTripTime(e.target.value)}
+            className="w-full rounded-xl border border-zinc-600 bg-[#262626] px-4 py-3 text-left text-white"
+          />
         </div>
       </div>
 
