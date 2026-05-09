@@ -55,7 +55,17 @@ function RouteLine({ segments }: { segments: Segment[] }) {
 }
 
 {/* Placeholder for Live Route API Data*/}
-const liveRoutesPlaceholder = [
+type Route = {
+  label?: string;
+  time: string;
+  depart: string;
+  duration: string;
+  transfers: string;
+  walk: string;
+  segments: Segment[];
+};
+
+const liveRoutesPlaceholder: Route[] = [
   {
     label: "Suggested Route",
     time: "--:-- → --:--",
@@ -146,6 +156,25 @@ export default function TripResults() {
   {/* Static routes.... */}
   const routes = liveRoutesPlaceholder;
 
+  const allowedTransitTypes =
+  searchParams.get("transit")?.split(",").filter(Boolean) || [
+    "bus",
+    "train",
+    "express",
+  ];
+
+  const filteredRoutes = routes.filter((route) =>
+    route.segments.every((segment) => {
+      if (segment.type === "walk") {
+        return true;
+      }
+
+      return allowedTransitTypes.includes(
+        segment.transitType as string
+      );
+    })
+  );
+
   return (
     <main className="min-h-screen bg-[#111] text-white px-6 py-6">
       {/* Back button */}
@@ -156,8 +185,10 @@ export default function TripResults() {
         ←
       </button>
 
-      {/* hardcoded route num */}
-      <h1 className="text-4xl font-bold">3 routes found</h1>
+      {/* grabs routes found */}
+      <h1 className="text-4xl font-bold">
+        {filteredRoutes.length} routes found
+      </h1>
 
       <p className="text-lg underline text-zinc-200 mt-1">
         {start} → {destination}
@@ -175,7 +206,7 @@ export default function TripResults() {
 
       <div className="space-y-5">
         {/* Renders label if exists */}
-        {routes.map((route, index) => (
+        {filteredRoutes.map((route, index) => (
           <section
             key={index}
             className={`rounded-2xl p-4 border ${

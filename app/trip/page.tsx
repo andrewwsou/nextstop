@@ -6,14 +6,35 @@ import { useState } from "react";
 export default function Trip() {
   const router = useRouter();
 
+{/* buttons for transit types */}
+const [transitTypes, setTransitTypes] = useState({
+  bus: true,
+  train: true,
+  express: true,
+});
+
+const toggleTransitType = (type: "bus" | "train" | "express") => {
+  setTransitTypes((prev) => ({
+    ...prev,
+    [type]: !prev[type],
+  }));
+};
+
   {/* Holds state for Location inputs */}
   const [start, setStart] = useState("");
   const [destination, setDestination] = useState("");
 
   {/* Plan trip button */}
   const handlePlanTrip = () => {
+    const allowedTransit = Object.entries(transitTypes)
+      .filter(([_, isEnabled]) => isEnabled)
+      .map(([type]) => type)
+      .join(",");
+
     router.push(
-      `/trip/results?start=${encodeURIComponent(start)}&destination=${encodeURIComponent(destination)}`
+      `/trip/results?start=${encodeURIComponent(start)}&destination=${encodeURIComponent(
+        destination
+      )}&transit=${encodeURIComponent(allowedTransit)}`
     );
   };
 
@@ -79,27 +100,46 @@ export default function Trip() {
 
       <p className="mb-3">Transit types</p>
 
-      <div className="grid grid-cols-3 gap-2">
-        <button className="rounded-xl border-4 border-teal-300 bg-teal-700 py-4 font-semibold">
-          🚌
-          <br />
-          OC Bus
-        </button>
+      <button
+        onClick={() => toggleTransitType("bus")}
+        className={`rounded-xl border-4 py-4 font-semibold ${
+          transitTypes.bus
+            ? "border-teal-300 bg-teal-700"
+            : "border-zinc-600 bg-zinc-800 text-zinc-500 opacity-50"
+        }`}
+      >
+        🚌
+        <br />
+        OC Bus
+      </button>
 
-        <button className="rounded-xl border-4 border-indigo-400 bg-indigo-500/60 py-4 font-semibold">
-          🚆
-          <br />
-          Metrolink
-        </button>
+      <button
+        onClick={() => toggleTransitType("train")}
+        className={`rounded-xl border-4 py-4 font-semibold ${
+          transitTypes.train
+            ? "border-indigo-400 bg-indigo-500/60"
+            : "border-zinc-600 bg-zinc-800 text-zinc-500 opacity-50"
+        }`}
+      >
+        🚆
+        <br />
+        Metrolink
+      </button>
 
-        <button className="rounded-xl border-2 border-cyan-700 bg-cyan-950 py-4 text-sm font-semibold">
-          🚌
-          <br />
-          Anteater
-          <br />
-          Express
-        </button>
-      </div>
+      <button
+        onClick={() => toggleTransitType("express")}
+        className={`rounded-xl border-2 py-4 text-sm font-semibold ${
+          transitTypes.express
+            ? "border-cyan-700 bg-cyan-950"
+            : "border-zinc-600 bg-zinc-800 text-zinc-500 opacity-50"
+        }`}
+      >
+        🚌
+        <br />
+        Anteater
+        <br />
+        Express
+      </button>
 
       {/* Goes to trip planner page */}
       <button
