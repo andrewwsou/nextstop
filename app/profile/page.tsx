@@ -1,3 +1,7 @@
+"use client";
+import { useRouter } from "next/navigation";
+import { useRequireAuth, getUser, logout } from "../lib/auth";
+
 const sections = [
   { label: "Account", items: ["Edit name", "Change email", "Change password"] },
   { label: "Preferences", items: ["Default transit modes", "Notification settings", "Home & work locations"] },
@@ -5,6 +9,10 @@ const sections = [
 ];
 
 export default function Profile() {
+  const router = useRouter();
+  useRequireAuth();
+  const user = getUser();
+
   return (
     <main style={{
       minHeight: "100vh",
@@ -21,11 +29,15 @@ export default function Profile() {
           display: "flex", alignItems: "center", justifyContent: "center",
           fontSize: "1.6rem", fontWeight: 700, color: "#3ecfb2",
         }}>
-          U
+          {user?.first_name?.[0] ?? "U"}
         </div>
         <div>
-          <p style={{ margin: 0, fontSize: "1.4rem", fontWeight: 700 }}>UCI Student</p>
-          <p style={{ margin: "4px 0 0", fontSize: "0.85rem", color: "#555" }}>student@uci.edu</p>
+          <p style={{ margin: 0, fontSize: "1.4rem", fontWeight: 700 }}>
+            {user?.first_name} {user?.last_name}
+          </p>
+          <p style={{ margin: "4px 0 0", fontSize: "0.85rem", color: "#555" }}>
+            {user?.email}
+          </p>
         </div>
       </div>
 
@@ -50,13 +62,17 @@ export default function Profile() {
               borderRadius: 14, overflow: "hidden",
             }}>
               {s.items.map((item, i) => (
-                <div key={item} style={{
-                  padding: "16px 20px",
-                  borderBottom: i < s.items.length - 1 ? "1px solid #1a2e28" : "none",
-                  display: "flex", justifyContent: "space-between", alignItems: "center",
-                  cursor: "pointer", fontSize: "0.9rem",
-                  color: item === "Sign out" ? "#ef4444" : "white",
-                }}>
+                <div
+                  key={item}
+                  onClick={() => item === "Sign out" && logout(router)}
+                  style={{
+                    padding: "16px 20px",
+                    borderBottom: i < s.items.length - 1 ? "1px solid #1a2e28" : "none",
+                    display: "flex", justifyContent: "space-between", alignItems: "center",
+                    cursor: "pointer", fontSize: "0.9rem",
+                    color: item === "Sign out" ? "#ef4444" : "white",
+                  }}
+                >
                   {item}
                   {item !== "Sign out" && <span style={{ color: "#333" }}>›</span>}
                 </div>

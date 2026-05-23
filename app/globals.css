@@ -123,3 +123,18 @@ main {
   font-family: Arial, sans-serif;
 }
 .google-btn:hover { background: #f7f7f7; }
+
+.input {
+  width: 100%;
+  padding: 13px 14px;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  border: 1px solid #2e2e2e;
+  background: #1c1c1c;
+  color: white;
+  font-size: 15px;
+  outline: none;
+  font-family: inherit;
+}
+.input:focus { border-color: #3ecfb2; }
+.input::placeholder { color: #4a4a4a; }

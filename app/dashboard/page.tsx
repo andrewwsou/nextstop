@@ -1,434 +1,179 @@
 "use client";
-
-import Link from "next/link";
-import { useState, type CSSProperties } from "react";
-
-const NAVBAR_HEIGHT = 60;
-
-const scheduledTrips = [
-  { from: "Home", to: "UCI Student Center", time: "8:00 AM", lines: ["OC 79"] },
-  { from: "UCI Student Center", to: "Irvine Station", time: "12:30 PM", lines: ["OC 79", "Metrolink"] },
-  { from: "Irvine Station", to: "Home", time: "5:15 PM", lines: ["Metrolink", "OC 59"] },
-];
-
-const recentTrips = [
-  { from: "Home", to: "UCI Student Center", time: "Yesterday" },
-  { from: "UCI Student Center", to: "Irvine Station", time: "Mon" },
-  { from: "Irvine Station", to: "Home", time: "Last week" },
-];
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useRequireAuth, getUser } from "../lib/auth";
+import { getTrips } from "../lib/api";
 
 export default function Dashboard() {
-  const [showRecent, setShowRecent] = useState(false);
+  const router = useRouter();
+  useRequireAuth();
+
+  const user = getUser();
+  const [trips, setTrips] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getTrips().then(data => {
+      if (Array.isArray(data)) setTrips(data);
+      setLoading(false);
+    });
+  }, []);
+
+  const recent = trips.filter(t => t.status === "completed").slice(0, 3);
+  const scheduled = trips.filter(t => t.status === "scheduled").slice(0, 3);
+
+  const quickActions = [
+    { label: "Live Map", sub: "Real-time vehicle positions", href: "/map", color: "#3ecfb2" },
+    { label: "Plan a Trip", sub: "Find the fastest route", href: "/trip", color: "#60a5fa" },
+    { label: "Trip History", sub: "View past journeys", href: "/history", color: "#a78bfa" },
+    { label: "Profile", sub: "Settings & preferences", href: "/profile", color: "#f59e0b" },
+  ];
+
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
 
   return (
-    <main style={styles.page}>
-      <div style={styles.mapPlaceholder}>
-        <p style={styles.mapText}>Live Map Here</p>
+    <main style={{ minHeight: "100vh", padding: "80px 2.5rem 2.5rem",
+      background: "#0d1210", color: "white" }}>
+
+      {/* Header */}
+      <div style={{ marginBottom: "2rem" }}>
+        <h1 style={{ fontSize: "1.8rem", fontWeight: 700, margin: "0 0 4px",
+          letterSpacing: "-0.02em" }}>
+          {greeting}{user?.first_name ? `, ${user.first_name}` : ""}
+        </h1>
+        <p style={{ color: "#555", margin: 0, fontSize: "0.9rem" }}>
+          Where are you heading today?
+        </p>
       </div>
 
-      <div
-        style={styles.searchStack}
-        onFocus={() => setShowRecent(true)}
-        onBlur={(event) => {
-          if (!event.currentTarget.contains(event.relatedTarget)) {
-            setShowRecent(false);
-          }
-        }}
-      >
-        <label
-          style={{
-            ...styles.searchBar,
-            borderRadius: showRecent ? "24px 24px 0 0" : 999,
+      {/* Search bar */}
+      <div style={{
+        display: "flex", alignItems: "center", gap: 12,
+        background: "#111a17", border: "1px solid #1f3530",
+        borderRadius: 12, padding: "13px 18px", marginBottom: "2.5rem",
+        maxWidth: 560, cursor: "pointer",
+      }} onClick={() => router.push("/trip")}>
+        <div style={{ width: 6, height: 6, borderRadius: "50%",
+          background: "#3ecfb2", flexShrink: 0 }} />
+        <span style={{ color: "#3a3a3a", fontSize: "0.9rem" }}>
+          Search a destination...
+        </span>
+      </div>
+
+      {/* Quick actions */}
+      <p style={{ margin: "0 0 0.75rem", fontSize: "0.72rem", color: "#444",
+        textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 700 }}>
+        Quick Actions
+      </p>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)",
+        gap: 12, marginBottom: "2.5rem", maxWidth: 800 }}>
+        {quickActions.map(a => (
+          <div key={a.href} onClick={() => router.push(a.href)} style={{
+            background: "#111a17", border: "1px solid #1a2e28",
+            borderRadius: 14, padding: "1.1rem 1.25rem", cursor: "pointer",
+            transition: "border-color 0.15s",
           }}
-        >
-          <span style={styles.searchIcon}>⌕</span>
-          <input
-            aria-label="Plan a trip"
-            placeholder="Search NextStop"
-            style={styles.searchInput}
-          />
-          <Link href="/trip" style={styles.searchAction}>
-            Plan
-          </Link>
-        </label>
-
-        {showRecent && (
-          <section style={styles.recentTray} aria-label="Recent trip searches">
-            {recentTrips.map((trip) => (
-              <Link
-                key={`${trip.to}-${trip.time}`}
-                href="/trip"
-                style={styles.recentSearchItem}
-              >
-                <span style={styles.recentIcon}>
-                  <span style={styles.clockFace}>
-                    <span style={styles.clockHour} />
-                    <span style={styles.clockMinute} />
-                  </span>
-                </span>
-
-                <span>
-                  <strong style={styles.recentDestination}>
-                    {trip.from} → {trip.to}
-                  </strong>
-                  <span style={styles.recentMeta}>{trip.time}</span>
-                </span>
-              </Link>
-            ))}
-
-            <Link href="/history" style={styles.moreHistory}>
-              More from recent history
-            </Link>
-          </section>
-        )}
+            onMouseEnter={e => (e.currentTarget.style.borderColor = a.color + "55")}
+            onMouseLeave={e => (e.currentTarget.style.borderColor = "#1a2e28")}
+          >
+            <div style={{ width: 8, height: 8, borderRadius: "50%",
+              background: a.color, marginBottom: 14 }} />
+            <p style={{ margin: 0, fontWeight: 600, fontSize: "0.9rem",
+              letterSpacing: "-0.01em" }}>{a.label}</p>
+            <p style={{ margin: "4px 0 0", fontSize: "0.75rem",
+              color: "#555", lineHeight: 1.4 }}>{a.sub}</p>
+          </div>
+        ))}
       </div>
 
-      <section style={styles.panel}>
-        <div style={styles.panelIntro}>
-          <p style={styles.breadcrumb}>Home Dashboard</p>
-          <h1 style={styles.title}>Welcome, User</h1>
+      {/* Trips grid */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr",
+        gap: 20, maxWidth: 800 }}>
+
+        {/* Recent */}
+        <div>
+          <p style={{ margin: "0 0 0.75rem", fontSize: "0.72rem", color: "#444",
+            textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 700 }}>
+            Recent Trips
+          </p>
+          {loading ? (
+            <p style={{ color: "#333", fontSize: "0.85rem" }}>Loading...</p>
+          ) : recent.length === 0 ? (
+            <p style={{ color: "#333", fontSize: "0.85rem" }}>No trips yet.</p>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {recent.map(t => (
+                <div key={t.id} style={{ background: "#111a17",
+                  border: "1px solid #1a2e28", borderRadius: 12,
+                  padding: "12px 14px" }}>
+                  <p style={{ margin: 0, fontSize: "0.88rem", fontWeight: 600,
+                    letterSpacing: "-0.01em" }}>
+                    {t.origin} → {t.destination}
+                  </p>
+                  <div style={{ display: "flex", justifyContent: "space-between",
+                    marginTop: 5 }}>
+                    <span style={{ fontSize: "0.73rem", color: "#444" }}>
+                      {new Date(t.created_at).toLocaleString()}
+                    </span>
+                    {t.duration_minutes && (
+                      <span style={{ fontSize: "0.73rem", color: "#3ecfb2" }}>
+                        {t.duration_minutes} min
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+              <button onClick={() => router.push("/history")} style={{
+                background: "transparent", border: "none",
+                color: "#3ecfb2", fontSize: "0.78rem", cursor: "pointer",
+                textAlign: "left", padding: "6px 0", letterSpacing: "0.02em",
+              }}>
+                View all →
+              </button>
+            </div>
+          )}
         </div>
 
-        <div style={styles.alert}>
-          <strong>Live alert</strong>
-          <p style={styles.alertText}>Your 8:00 AM bus departs in 20 minutes.</p>
-          <Link href="/trip" style={styles.alertLink}>
-            View details →
-          </Link>
+        {/* Scheduled */}
+        <div>
+          <p style={{ margin: "0 0 0.75rem", fontSize: "0.72rem", color: "#444",
+            textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 700 }}>
+            Scheduled Trips
+          </p>
+          {scheduled.length === 0 ? (
+            <p style={{ color: "#333", fontSize: "0.85rem" }}>No scheduled trips.</p>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {scheduled.map(t => (
+                <div key={t.id} style={{ background: "#111a17",
+                  border: "1px solid #1a2e28", borderRadius: 12,
+                  padding: "12px 14px" }}>
+                  <p style={{ margin: 0, fontSize: "0.88rem", fontWeight: 600,
+                    letterSpacing: "-0.01em" }}>
+                    {t.origin} → {t.destination}
+                  </p>
+                  <span style={{ fontSize: "0.73rem", color: "#f59e0b" }}>
+                    {t.departure_time
+                      ? new Date(t.departure_time).toLocaleString()
+                      : "No time set"}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+          <button style={{
+            marginTop: 8, width: "100%",
+            background: "transparent",
+            border: "1px dashed #1f3530",
+            borderRadius: 12, padding: "12px 14px",
+            color: "#3ecfb2", fontSize: "0.82rem",
+            cursor: "pointer", textAlign: "left",
+          }} onClick={() => router.push("/trip")}>
+            + Schedule a trip
+          </button>
         </div>
-
-        <section style={styles.section}>
-          <div style={styles.sectionHeader}>
-            <h2 style={styles.sectionTitle}>Today</h2>
-            <Link href="/trip" style={styles.linkButton}>
-              Schedule more →
-            </Link>
-          </div>
-
-          <div style={styles.todayScroller} aria-label="Today's scheduled trips">
-            {scheduledTrips.map((trip) => (
-              <TripCard key={`${trip.from}-${trip.time}`} {...trip} />
-            ))}
-          </div>
-        </section>
-      </section>
+      </div>
     </main>
   );
 }
-
-function TripCard({
-  from,
-  to,
-  time,
-  lines,
-}: {
-  from: string;
-  to: string;
-  time: string;
-  lines: string[];
-}) {
-  return (
-    <Link href="/trip" style={styles.tripCard}>
-      <strong style={styles.tripTime}>{time}</strong>
-
-      <p style={styles.tripRoute}>
-        <span>{from}</span>
-        <br />→ <span>{to}</span>
-      </p>
-
-      <div style={styles.lineRow}>
-        {lines.map((line) => (
-          <span key={line} style={styles.linePill}>
-            {line}
-          </span>
-        ))}
-      </div>
-    </Link>
-  );
-}
-
-const styles = {
-  page: {
-    position: "relative",
-    display: "block",
-    minHeight: "100vh",
-    overflow: "hidden",
-    background: "#0d1210",
-    color: "#ffffff",
-    padding: `${NAVBAR_HEIGHT + 22}px 28px 28px`,
-  },
-
-  mapPlaceholder: {
-    position: "absolute",
-    inset: `${NAVBAR_HEIGHT}px 0 0`,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "flex-end",
-    background: "#07100d",
-  },
-
-  mapText: {
-    margin: 0,
-    paddingRight: 48,
-    fontSize: 28,
-    fontWeight: 700,
-    color: "#2a4a3e",
-  },
-
-  searchStack: {
-    position: "relative",
-    zIndex: 4,
-    width: "min(760px, calc(50vw - 40px), calc(100vw - 56px))",
-  },
-
-  searchBar: {
-    minHeight: 56,
-    display: "flex",
-    alignItems: "center",
-    gap: 12,
-    padding: "0 10px 0 20px",
-    background: "#16241f",
-    color: "#ffffff",
-    border: "1px solid #1a2e28",
-    boxShadow: "0 5px 18px rgba(0,0,0,0.34)",
-  },
-
-  searchIcon: {
-    flex: "0 0 auto",
-    fontSize: 25,
-    color: "#3ecfb2",
-  },
-
-  searchInput: {
-    flex: 1,
-    minWidth: 0,
-    height: 54,
-    border: 0,
-    outline: 0,
-    background: "transparent",
-    color: "#ffffff",
-    fontSize: 17,
-    fontFamily: "inherit",
-  },
-
-  searchAction: {
-    flex: "0 0 auto",
-    borderRadius: 999,
-    padding: "10px 16px",
-    background: "#3ecfb2",
-    color: "#0d1210",
-    fontSize: 14,
-    fontWeight: 800,
-    textDecoration: "none",
-  },
-
-  recentTray: {
-    position: "absolute",
-    top: 56,
-    left: 0,
-    width: "100%",
-    padding: "8px 0 18px",
-    borderTop: "1px solid #1a2e28",
-    borderRadius: "0 0 24px 24px",
-    background: "#111a17",
-    color: "#ffffff",
-    boxShadow: "0 14px 28px rgba(0,0,0,0.28)",
-  },
-
-  recentSearchItem: {
-    display: "grid",
-    gridTemplateColumns: "64px 1fr",
-    gap: 8,
-    alignItems: "center",
-    minHeight: 76,
-    padding: "8px 28px",
-    color: "inherit",
-    textDecoration: "none",
-  },
-
-  recentIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 999,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    background: "#1a2e28",
-    color: "#3ecfb2",
-  },
-
-  clockFace: {
-    position: "relative",
-    width: 22,
-    height: 22,
-    borderRadius: "50%",
-    border: "2px solid currentColor",
-  },
-
-  clockHour: {
-    position: "absolute",
-    width: 2,
-    height: 7,
-    left: "50%",
-    top: "50%",
-    background: "currentColor",
-    borderRadius: 999,
-    transform: "translate(-50%, -100%)",
-    transformOrigin: "bottom center",
-  },
-
-  clockMinute: {
-    position: "absolute",
-    width: 8,
-    height: 2,
-    left: "50%",
-    top: "50%",
-    background: "currentColor",
-    borderRadius: 999,
-    transform: "translateY(-50%)",
-    transformOrigin: "left center",
-  },
-
-  recentDestination: {
-    display: "block",
-    fontSize: 19,
-    lineHeight: 1.25,
-    color: "#ffffff",
-  },
-
-  recentMeta: {
-    display: "block",
-    marginTop: 4,
-    color: "#6b8f82",
-    fontSize: 16,
-    lineHeight: 1.25,
-  },
-
-  moreHistory: {
-    display: "block",
-    padding: "16px 28px 4px 100px",
-    color: "#3ecfb2",
-    fontSize: 18,
-    fontWeight: 800,
-    textDecoration: "none",
-  },
-
-  panel: {
-    position: "relative",
-    zIndex: 2,
-    width: "min(760px, calc(50vw - 40px), calc(100vw - 56px))",
-    marginTop: 18,
-    padding: 24,
-    borderRadius: 24,
-    background: "#111a17",
-    border: "1px solid #1a2e28",
-    boxShadow: "0 12px 34px rgba(0,0,0,0.35)",
-  },
-
-  panelIntro: {
-    maxWidth: 420,
-  },
-
-  breadcrumb: { margin: 0, color: "#6b8f82", fontSize: 14 },
-
-  title: {
-    margin: "14px 0 18px",
-    fontSize: 32,
-    lineHeight: 1.08,
-  },
-
-  alert: {
-    maxWidth: 500,
-    padding: 15,
-    borderRadius: 18,
-    background: "#1a2e28",
-    border: "1px solid #2a4a3e",
-    color: "#3ecfb2",
-  },
-
-  alertText: {
-    margin: "6px 0",
-    color: "#d8fff6",
-  },
-
-  alertLink: {
-    color: "#3ecfb2",
-    fontWeight: 700,
-    textDecoration: "none",
-  },
-
-  section: {
-    marginTop: 22,
-  },
-
-  sectionHeader: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: 16,
-    marginBottom: 12,
-  },
-
-  sectionTitle: {
-    margin: 0,
-    fontSize: 20,
-  },
-
-  linkButton: {
-    color: "#3ecfb2",
-    fontWeight: 700,
-    textDecoration: "none",
-    fontSize: 14,
-  },
-
-  todayScroller: {
-    display: "grid",
-    gridAutoFlow: "column",
-    gridAutoColumns: "minmax(220px, 1fr)",
-    gap: 12,
-    overflowX: "auto",
-    paddingBottom: 4,
-  },
-
-  tripCard: {
-    minHeight: 150,
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "space-between",
-    gap: 14,
-    padding: 16,
-    borderRadius: 18,
-    background: "#0d1210",
-    border: "1px solid #1a2e28",
-    color: "inherit",
-    textDecoration: "none",
-  },
-
-  tripTime: {
-    whiteSpace: "nowrap",
-    fontSize: 22,
-    color: "#ffffff",
-  },
-
-  tripRoute: {
-    margin: 0,
-    fontSize: 15,
-    lineHeight: 1.35,
-    color: "#d8fff6",
-  },
-
-  lineRow: {
-    display: "flex",
-    gap: 7,
-    flexWrap: "wrap",
-  },
-
-  linePill: {
-    padding: "4px 9px",
-    borderRadius: 999,
-    background: "#1a2e28",
-    color: "#3ecfb2",
-    fontSize: 11,
-    fontWeight: 700,
-  },
-} satisfies Record<string, CSSProperties>;

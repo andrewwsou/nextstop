@@ -1,11 +1,33 @@
 "use client";
-
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import AuthInput from "../components/AuthInput";
 import AuthButton from "../components/AuthButton";
+import { login } from "../lib/api";
 
 export default function Login() {
   const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit() {
+    setError("");
+    setLoading(true);
+    try {
+      const res = await login({ email, password });
+      if (res.token) {
+        localStorage.setItem("token", res.token);
+        localStorage.setItem("user", JSON.stringify(res.user));
+        router.push("/dashboard");
+      } else {
+        setError(res.error || "Login failed");
+      }
+    } catch {
+      setError("Network error — is the backend running?");
+    }
+    setLoading(false);
+  }
 
   return (
     <main className="bg-grid">
@@ -14,36 +36,32 @@ export default function Login() {
           Welcome back!
         </h1>
 
+        {error && (
+          <p style={{ color: "#ef4444", fontSize: "0.85rem", marginBottom: "1rem" }}>
+            {error}
+          </p>
+        )}
+
         <p className="field-section-label">Email</p>
-        <AuthInput label="" type="email" placeholder="Email" />
+        <input className="input" type="email" placeholder="Email"
+          onChange={e => setEmail(e.target.value)} />
 
         <p className="field-section-label" style={{ marginTop: 6 }}>Password</p>
-        <AuthInput label="" type="password" placeholder="Password" />
+        <input className="input" type="password" placeholder="Password"
+          onChange={e => setPassword(e.target.value)} />
 
-        <a
-          href="/forgot-password"
-          style={{
-            fontSize: "0.78rem",
-            color: "#3ecfb2",
-            display: "block",
-            marginTop: 6,
-            marginBottom: 4,
-            textDecoration: "underline",
-          }}
-        >
+        <a href="/forgot-password" style={{
+          fontSize: "0.78rem", color: "#3ecfb2",
+          display: "block", marginTop: 6, marginBottom: 4,
+        }}>
           Forgot password?
         </a>
 
         <AuthButton
-          text="Sign In"
-          onClick={() => router.push("/dashboard")} // ✅ THIS
+          text={loading ? "Signing in..." : "Sign In"}
+          onClick={handleSubmit}
         />
-
-        <AuthButton
-          text="Sign in with Google"
-          variant="google"
-          onClick={() => router.push("/dashboard")} // ✅ optional
-        />
+        <AuthButton text="Sign in with Google" variant="google" />
       </div>
     </main>
   );
