@@ -1,7 +1,27 @@
 "use client";
-import { useState } from "react";
-import { trips } from "./mockdata";
+import { useEffect, useState } from "react";
+import { getTrips } from "../lib/api";
+import { useRequireAuth } from "../lib/auth";
 import type { Leg, Trip } from "./mockdata";
+
+function mapApiTrip(t: {
+  id: number;
+  origin: string;
+  destination: string;
+  created_at?: string;
+  transit_modes?: string[];
+  duration_minutes?: number;
+}): Trip {
+  const date = t.created_at?.slice(0, 10) ?? "";
+  const legs: Leg[] = (t.transit_modes ?? []).map((route) => ({
+    type: "bus",
+    route,
+    from: t.origin,
+    to: t.destination,
+    duration: t.duration_minutes ? `${t.duration_minutes} min` : "—",
+  }));
+  return { id: t.id, from: t.origin, to: t.destination, date, legs };
+}
 
 function fmtDate(d: string) {
   return new Date(d + "T00:00:00").toLocaleDateString("en-US", {
@@ -67,7 +87,24 @@ function RouteVisualizer({ legs }: { legs: Leg[] }) {
 }
 
 export default function History() {
+  useRequireAuth();
   const [expanded, setExpanded] = useState<number | null>(null);
+  const [trips, setTrips] = useState<Trip[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    getTrips()
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setTrips(data.map(mapApiTrip));
+        } else {
+          setError(data.error ?? "Failed to load trips");
+        }
+      })
+      .catch(() => setError("Failed to load trips"))
+      .finally(() => setLoading(false));
+  }, []);
 
   const grouped: Record<string, Trip[]> = { "this-week": [], "this-month": [], "last-6-months": [] };
   trips.forEach(t => {
@@ -75,23 +112,29 @@ export default function History() {
     if (g) grouped[g].push(t);
   });
 
+  const hasTrips = GROUP_ORDER.some((g) => grouped[g].length > 0);
+
   return (
       <main style={{ padding: "2rem", width: "100%", maxWidth: 1000, marginTop: 60, marginLeft: "auto", marginRight: "auto" }}>    
       <h1 style={{ fontSize: "1.5rem", fontWeight: 700, color: "white", marginBottom: "1.5rem" }}>
           Trip History
-        </h1> 
-      {GROUP_ORDER.map(group => {
+        </h1>
+      {loading && <p style={{ color: "#888", fontSize: 14 }}>Loading trips...</p>}
+      {error && <p style={{ color: "#f87171", fontSize: 14 }}>{error}</p>}
+      {!loading && !error && !hasTrips && (
+        <p style={{ color: "#888", fontSize: 14 }}>No trips yet.</p>
+      )}
+      {!loading && !error && GROUP_ORDER.map(group => {
         const groupTrips = grouped[group];
         if (!groupTrips.length) return null;
 
         return (
-          
           <div key={group} style={{ marginBottom: "2rem" }}>
             <div style={{ marginBottom: "0.75rem" }}>
               <span style={{ fontSize: 13, color: "#888" }}>{GROUP_LABELS[group]}</span>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {groupTrips.map(t => (
+              {groupTrips.map(t => ( // loops thru trips
                 <div
                   key={t.id}
                   style={{ background: "#0d1a16", border: "1px solid #1a2e28", borderRadius: 12, padding: "1.25rem 2rem", width: "100%" }}
@@ -120,7 +163,7 @@ export default function History() {
                     <div style={{ marginTop: "1rem", paddingTop: "1rem", borderTop: "1px solid #1a2e28" }}>
                       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                         {t.legs.map((leg, i) =>
-                          leg.type === "walk" ? (
+                          leg.type === "walk" ? ( 
                             <div key={i} style={{ fontSize: 13, color: "#888", display: "flex", gap: 8, alignItems: "center" }}>
                               <span>🚶</span> Walk · {leg.duration}
                             </div>
