@@ -50,8 +50,8 @@ export default function Onboarding() {
   const router = useRouter();
   const [vehicles, setVehicles] = useState(INITIAL_VEHICLES);
   const [drawn, setDrawn] = useState(0); //fade effect
-  const animRef = useRef<number>();
-  const lastRef = useRef<number>();
+  const animRef = useRef<number | null>(null);
+  const lastRef = useRef<number | null>(null);
 
   useEffect(() => {
     const tick = (ts: number) => {
