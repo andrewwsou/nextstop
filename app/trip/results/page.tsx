@@ -1,5 +1,8 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
+import { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 type Segment =
   | {
@@ -145,7 +148,7 @@ const liveRoutesPlaceholder: Route[] = [
 ];
 
 {/* Main page component */}
-export default function TripResults() {
+function TripResultsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const tripDate = searchParams.get("date") || "";
@@ -241,5 +244,13 @@ export default function TripResults() {
         ))}
       </div>
     </main>
+  );
+}
+
+export default function TripResults() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <TripResultsContent />
+    </Suspense>
   );
 }
