@@ -105,7 +105,8 @@ export default function LiveMap() {
                 pathOptions={{
                     color: "#FFD700",
                     fillColor: "#FFD700",
-                    fillOpacity: 1,
+                    fillOpacity: 0.35,
+                    weight: 3,
                 }}
               >
                 <Popup>
