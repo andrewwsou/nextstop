@@ -8,7 +8,7 @@ const LiveMap = dynamic(() => import("./LiveMap"), {
 
 export default function MapPage() {
   return (
-    <main className="w-screen h-screen pt-16 overflow-hidden">
+    <main className="w-screen h-screen pt-10 overflow-hidden">
       <LiveMap />
     </main>
   );
