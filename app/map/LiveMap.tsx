@@ -23,19 +23,19 @@ export default function LiveMap() {
     return <div>Getting your location...</div>;
   }
 
-  return (
-    <main className="h-screen w-screen">
-      <MapContainer
+    return (
+    <div className="h-full w-full">
+        <MapContainer
         center={position}
         zoom={15}
-        style={{ height: "100vh", width: "100vw" }}
-      >
+        style={{ height: "100%", width: "100%" }}
+        >
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
         <CircleMarker center={position} radius={10}>
-          <Popup>You are here</Popup>
+            <Popup>You are here</Popup>
         </CircleMarker>
-      </MapContainer>
-    </main>
-  );
+        </MapContainer>
+    </div>
+    );
 }
