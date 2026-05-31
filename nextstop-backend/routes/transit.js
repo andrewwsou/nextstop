@@ -16,8 +16,7 @@ router.get("/nearby", async (req, res) => {
     );
 
     const data = await response.json();
-    res.json(data);
-
+    res.status(response.status).json(data);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Transit API error" });
