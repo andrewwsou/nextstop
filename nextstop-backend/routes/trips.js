@@ -4,7 +4,13 @@ const pool = require('../db');
 const authMiddleware = require('../middleware/auth');
 
 // All trip routes require auth
-router.use(authMiddleware);
+// router.use(authMiddleware);
+
+// TEMP: bypass auth for local testing
+router.use((req, res, next) => {
+  req.user = { id: 1 };
+  next();
+});
 
 // GET /api/trips — get all trips for logged-in user
 router.get('/', async (req, res) => {

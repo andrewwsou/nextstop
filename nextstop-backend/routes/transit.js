@@ -7,13 +7,23 @@ router.get("/nearby", async (req, res) => {
 
     const url = `https://external.transitapp.com/v4/public/nearby_routes?lat=${lat}&lon=${lon}`;
 
+    console.log("Request URL:", url);
+
     const response = await fetch(url, {
       headers: {
         apiKey: process.env.TRANSIT_API_KEY,
       },
     });
 
+    console.log("Transit status:", response.status);
+
     const data = await response.json();
+
+    console.log(
+      "Transit response:",
+      JSON.stringify(data, null, 2)
+    );
+
     res.status(response.status).json(data);
   } catch (err) {
     console.error(err);
@@ -54,3 +64,4 @@ router.get("/vehicles", async (req, res) => {
     res.status(500).json({ error: "Transit vehicles API error" });
   }
 });
+module.exports = router;
