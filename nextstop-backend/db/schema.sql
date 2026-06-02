@@ -19,3 +19,12 @@ CREATE TABLE IF NOT EXISTS trips (
   status VARCHAR(50) DEFAULT 'completed',
   created_at TIMESTAMP DEFAULT NOW()
 );
+
+CREATE TABLE IF NOT EXISTS locations (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  category VARCHAR(100),
+  latitude DOUBLE PRECISION,
+  longitude DOUBLE PRECISION,
+  created_at TIMESTAMP DEFAULT NOW()
+);
