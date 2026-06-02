@@ -2,8 +2,9 @@
 
 export const dynamic = "force-dynamic";
 
-import { Suspense } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+
 type Segment =
   | {
       type: "walk";
@@ -59,6 +60,7 @@ function RouteLine({ segments }: { segments: Segment[] }) {
 
 {/* Placeholder for Live Route API Data*/}
 type Route = {
+  id: string;
   label?: string;
   time: string;
   depart: string;
@@ -68,120 +70,62 @@ type Route = {
   segments: Segment[];
 };
 
-const liveRoutesPlaceholder: Route[] = [
-  {
-    label: "Suggested Route",
-    time: "--:-- → --:--",
-    depart: "Live departure time",
-    duration: "-- min",
-    transfers: "-- transfers",
-    walk: "-- min walk",
-
-    segments: [
-      { type: "walk" },
-
-      {
-        type: "transit",
-        label: "OC 57",
-        transitType: "bus",
-      },
-
-      { type: "walk" },
-
-      {
-        type: "transit",
-        label: "Metrolink 682",
-        transitType: "train",
-      },
-
-      { type: "walk" },
-    ],
-  },
-
-  {
-    time: "--:-- → --:--",
-    depart: "Live departure time",
-    duration: "-- min",
-    transfers: "-- transfers",
-    walk: "-- min walk",
-
-    segments: [
-      { type: "walk" },
-
-      {
-        type: "transit",
-        label: "OC 43",
-        transitType: "bus",
-      },
-
-      { type: "walk" },
-    ],
-  },
-
-  {
-    time: "--:-- → --:--",
-    depart: "Live departure time",
-    duration: "-- min",
-    transfers: "-- transfers",
-    walk: "-- min walk",
-
-    segments: [
-      { type: "walk" },
-
-      {
-        type: "transit",
-        label: "OC 54",
-        transitType: "bus",
-      },
-
-      { type: "walk" },
-
-      {
-        type: "transit",
-        label: "OC 12",
-        transitType: "bus",
-      },
-
-      { type: "walk" },
-    ],
-  },
-];
-
 {/* Main page component */}
 function TripResultsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [routes, setRoutes] = useState<Route[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
   const tripDate = searchParams.get("date") || "";
   const tripTime = searchParams.get("time") || "";
 
   {/* Reads START/Dest location from prior pages and defaults to fill in if nothing */}
-  const start = searchParams.get("start") || "1234 Street Lane";
-  const destination = searchParams.get("destination") || "Huntington Library";
+  const start = searchParams.get("start") || "";
+  const destination = searchParams.get("destination") || "";
+  const transit =
+    searchParams.get("transit") || "bus,train,express";
 
-  {/* Static routes.... */}
-  const routes = liveRoutesPlaceholder;
+  useEffect(() => {
+    async function loadRoutes() {
+      setIsLoading(true);
+      setError("");
 
-  const allowedTransitTypes =
-  searchParams.get("transit")?.split(",").filter(Boolean) || [
-    "bus",
-    "train",
-    "express",
-  ];
+      const query = new URLSearchParams({
+        start,
+        destination,
+        transit,
+        date: tripDate,
+        time: tripTime,
+      });
 
-  const filteredRoutes = routes.filter((route) =>
-    route.segments.every((segment) => {
-      if (segment.type === "walk") {
-        return true;
+      try {
+        const res = await fetch(`/api/transit/routes?${query.toString()}`);
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || "Could not load routes.");
+        }
+
+        setRoutes(data.routes || []);
+      } catch (err) {
+        setRoutes([]);
+        setError(
+          err instanceof Error ? err.message : "Could not load routes."
+        );
+      } finally {
+        setIsLoading(false);
       }
+    }
 
-      return allowedTransitTypes.includes(
-        segment.transitType as string
-      );
-    })
-  );
+    loadRoutes();
+  }, [destination, start, transit, tripDate, tripTime]);
 
   return (
-    <main className="min-h-screen bg-[#111] text-white px-6 py-6">
+    <main
+      className="min-h-screen bg-[#111] text-white"
+      style={{ justifyContent: "flex-start", padding: "6rem 1.5rem 2rem" }}
+    >
       {/* Back button */}
       <button
         onClick={() => router.back()}
@@ -191,8 +135,8 @@ function TripResultsContent() {
       </button>
 
       {/* grabs routes found */}
-      <h1 className="text-4xl font-bold">
-        {filteredRoutes.length} routes found
+      <h1 className="text-3xl font-bold leading-tight sm:text-4xl">
+        {isLoading ? "Finding routes..." : `${routes.length} routes found`}
       </h1>
 
       <p className="text-lg underline text-zinc-200 mt-1">
@@ -212,11 +156,23 @@ function TripResultsContent() {
         {tripTime && ` · ${tripTime}`}
       </p>
 
+      {error && (
+        <p className="mb-5 rounded-xl border border-red-500/40 bg-red-950/40 px-4 py-3 text-sm text-red-200">
+          {error}
+        </p>
+      )}
+
+      {!isLoading && !error && routes.length === 0 && (
+        <p className="mb-5 rounded-xl border border-zinc-700 bg-[#262626] px-4 py-3 text-sm text-zinc-300">
+          No routes match those transit filters.
+        </p>
+      )}
+
       <div className="space-y-5">
         {/* Renders label if exists */}
-        {filteredRoutes.map((route, index) => (
+        {routes.map((route, index) => (
           <section
-            key={index}
+            key={route.id}
             className={`rounded-2xl p-4 border ${
               index === 0
                 ? "bg-teal-900/50 border-teal-300"

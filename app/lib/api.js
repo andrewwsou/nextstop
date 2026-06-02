@@ -29,6 +29,12 @@ export async function getMe() {
   return res.json();
 }
 
+export async function searchTransitRoutes(params) {
+  const query = new URLSearchParams(params);
+  const res = await fetch(`${BASE_URL}/transit/routes?${query.toString()}`);
+  return res.json();
+}
+
 export async function getTrips() {
   const res = await fetch(`${BASE_URL}/trips`, {
     headers: { 'Authorization': `Bearer ${getToken()}` },

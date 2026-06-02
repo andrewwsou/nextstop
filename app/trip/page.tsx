@@ -8,6 +8,7 @@ export default function Trip() {
 
   const [start, setStart] = useState("");
   const [destination, setDestination] = useState("");
+  const [formError, setFormError] = useState("");
 
   const [tripDate, setTripDate] = useState("");
   const [tripTime, setTripTime] = useState("");
@@ -43,20 +44,37 @@ export default function Trip() {
   };
 
   const handlePlanTrip = () => {
+    const trimmedStart = start.trim();
+    const trimmedDestination = destination.trim();
     const allowedTransit = Object.entries(transitTypes)
-      .filter(([_, isEnabled]) => isEnabled)
+      .filter(([, isEnabled]) => isEnabled)
       .map(([type]) => type)
       .join(",");
 
-      router.push(
-      `/trip/results?start=${encodeURIComponent(start)}&destination=${encodeURIComponent(destination
+    if (!trimmedStart || !trimmedDestination) {
+      setFormError("Enter both a start and destination.");
+      return;
+    }
+
+    if (!allowedTransit) {
+      setFormError("Choose at least one transit type.");
+      return;
+    }
+
+    setFormError("");
+
+    router.push(
+      `/trip/results?start=${encodeURIComponent(trimmedStart)}&destination=${encodeURIComponent(trimmedDestination
       )}&transit=${encodeURIComponent(allowedTransit)}&date=${encodeURIComponent(tripDate
       )}&time=${encodeURIComponent(tripTime)}`
     );
   };
 
   return (
-    <main className="min-h-screen bg-[#111] text-white px-6 pt-8">
+    <main
+      className="min-h-screen bg-[#111] text-white"
+      style={{ justifyContent: "flex-start", padding: "6rem 1.5rem 2rem" }}
+    >
       <div className="flex items-center gap-4 mb-6">
         <button
           className="text-4xl leading-none"
@@ -65,7 +83,7 @@ export default function Trip() {
           ←
         </button>
 
-        <h1 className="text-4xl font-bold whitespace-nowrap">
+        <h1 className="text-3xl font-bold leading-tight sm:text-4xl">
           Where do you want to go?
         </h1>
       </div>
@@ -165,6 +183,12 @@ export default function Trip() {
           Express
         </button>
       </div>
+
+      {formError && (
+        <p className="mt-4 rounded-xl border border-red-500/40 bg-red-950/40 px-4 py-3 text-sm text-red-200">
+          {formError}
+        </p>
+      )}
 
       <button
         onClick={handlePlanTrip}
