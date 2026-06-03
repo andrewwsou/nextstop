@@ -4,12 +4,33 @@ import { useRouter } from "next/navigation";
 import { useRequireAuth, getUser } from "../lib/auth";
 import { getTrips } from "../lib/api";
 
+type DashboardUser = {
+  first_name?: string;
+};
+
+type Trip = {
+  id: string | number;
+  origin: string;
+  destination: string;
+  status: string;
+  created_at: string;
+  departure_time?: string | null;
+  duration_minutes?: number | null;
+};
+
+function getGreeting() {
+  const hour = new Date().getHours();
+  return hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+}
+
 export default function Dashboard() {
   const router = useRouter();
   useRequireAuth();
 
-  const [trips, setTrips] = useState<any[]>([]);
+  const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
+  const [user] = useState<DashboardUser | null>(() => getUser() as DashboardUser | null);
+  const [greeting] = useState(getGreeting);
 
   useEffect(() => {
     getTrips().then(data => {
@@ -28,20 +49,16 @@ export default function Dashboard() {
     { label: "Profile", sub: "Settings & preferences", href: "/profile", color: "#f59e0b" },
   ];
 
-  const hour = new Date().getHours();
-
-  const [user, setUser] = useState<any>(null);
-  const [greeting, setGreeting] = useState("");
-
-  useEffect(() => {
-    setUser(getUser());
-    const hour = new Date().getHours();
-    setGreeting(hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening");
-  }, []);
-
   return (
-    <main style={{ minHeight: "100vh", padding: "80px 2.5rem 2.5rem",
-      background: "#0d1210", color: "white" }}>
+    <main style={{
+      minHeight: "100vh",
+      padding: "88px 1.25rem 2.5rem",
+      background: "#0d1210",
+      color: "white",
+      display: "flex",
+      justifyContent: "center",
+    }}>
+      <div style={{ width: "100%", maxWidth: 800 }}>
 
       {/* Header */}
       <div style={{ marginBottom: "2rem" }}>
@@ -77,7 +94,7 @@ export default function Dashboard() {
         textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 700 }}>
         Quick Actions
       </p>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)",
+      <div className="dashboard-actions" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)",
         gap: 12, marginBottom: "2.5rem", maxWidth: 800 }}>
         {quickActions.map(a => (
           <div key={a.href} onClick={() => router.push(a.href)} style={{
@@ -99,7 +116,7 @@ export default function Dashboard() {
       </div>
 
       {/* Trips grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr",
+      <div className="dashboard-trips" style={{ display: "grid", gridTemplateColumns: "1fr 1fr",
         gap: 20, maxWidth: 800 }}>
 
         {/* Recent */}
@@ -185,6 +202,24 @@ export default function Dashboard() {
           </button>
         </div>
       </div>
+      </div>
+      <style>{`
+        @media (max-width: 768px) {
+          .dashboard-actions {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+          }
+
+          .dashboard-trips {
+            grid-template-columns: 1fr !important;
+          }
+        }
+
+        @media (max-width: 520px) {
+          .dashboard-actions {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}</style>
     </main>
   );
 }
