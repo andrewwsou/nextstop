@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { getTrips } from "../lib/api";
+import { getTrips, deleteTrip, updateTrip } from "../lib/api";
 import { useRequireAuth } from "../lib/auth";
 import type { Leg, Trip } from "./mockdata";
 
@@ -92,6 +92,8 @@ export default function History() {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editForm, setEditForm] = useState({ origin: "", destination: "" });
 
   useEffect(() => {
     getTrips()
@@ -114,6 +116,19 @@ export default function History() {
 
   const hasTrips = GROUP_ORDER.some((g) => grouped[g].length > 0);
 
+
+  // delete and edits for trips
+  async function handleDelete(id: number) {
+  if (!confirm("Delete this trip?")) return;
+  await deleteTrip(id);
+  setTrips(trips.filter(t => t.id !== id));
+  }
+
+  async function handleEditSave(id: number) {
+    await updateTrip(id, { origin: editForm.origin, destination: editForm.destination });
+    setTrips(trips.map(t => t.id === id ? { ...t, from: editForm.origin, to: editForm.destination } : t));
+    setEditingId(null);
+  }
   return (
       <main style={{ padding: "2rem", width: "100%", maxWidth: 1000, marginTop: 60, marginLeft: "auto", marginRight: "auto" }}>    
       <h1 style={{ fontSize: "1.5rem", fontWeight: 700, color: "white", marginBottom: "1.5rem" }}>
@@ -141,43 +156,153 @@ export default function History() {
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
                     <div>
-                      <div style={{ fontSize: 14, color: "white", fontWeight: 500 }}>{t.from}</div>
-                      <div style={{ fontSize: 13, color: "#888", marginTop: 2 }}>→ {t.to}</div>
+                      {editingId === t.id ? (
+                        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                          <input
+                            value={editForm.origin}
+                            onChange={e => setEditForm({ ...editForm, origin: e.target.value })}
+                            style={{ background: "#1a2e28", border: "1px solid #3ecfb2", borderRadius: 6, padding: "4px 8px", color: "white", fontSize: 13 }}
+                          />
+                          <input
+                            value={editForm.destination}
+                            onChange={e => setEditForm({ ...editForm, destination: e.target.value })}
+                            style={{ background: "#1a2e28", border: "1px solid #3ecfb2", borderRadius: 6, padding: "4px 8px", color: "white", fontSize: 13 }}
+                          />
+                        </div>
+                      ) : (
+                        <>
+                          <div style={{ fontSize: 14, color: "white", fontWeight: 500 }}>{t.from}</div>
+                          <div style={{ fontSize: 13, color: "#888", marginTop: 2 }}>→ {t.to}</div>
+                        </>
+                      )}
                     </div>
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
-                      <div style={{ fontSize: 16, fontWeight: 700, color: "white", whiteSpace: "nowrap" }}>
+                    <div style={{display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6}}>
+                      <div style={{fontSize: 16, fontWeight: 700, color: "white", whiteSpace: "nowrap"}}>
                         {fmtDate(t.date)}
                       </div>
                       <button
-                        onClick={() => setExpanded(expanded === t.id ? null : t.id)}
-                        style={{ fontSize: 11, color: "#3ecfb2", background: "none", border: "1px solid #1a2e28", borderRadius: 20, cursor: "pointer", padding: "2px 10px", whiteSpace: "nowrap" }}
+                          onClick={() => setExpanded(expanded === t.id ? null : t.id)}
+                          style={{
+                            fontSize: 11,
+                            color: "#3ecfb2",
+                            background: "none",
+                            border: "1px solid #1a2e28",
+                            borderRadius: 20,
+                            cursor: "pointer",
+                            padding: "2px 10px",
+                            whiteSpace: "nowrap"
+                          }}
                       >
                         {expanded === t.id ? "Hide details" : "See details"}
                       </button>
+                      {editingId === t.id ? (
+                          <div style={{display: "flex", gap: 6}}>
+                            <button
+                                onClick={() => handleEditSave(t.id)}
+                                style={{
+                                  fontSize: 11,
+                                  color: "#0d1a16",
+                                  background: "#3ecfb2",
+                                  border: "none",
+                                  borderRadius: 20,
+                                  cursor: "pointer",
+                                  padding: "2px 10px"
+                                }}
+                            >
+                              Save
+                            </button>
+                            <button
+                                onClick={() => setEditingId(null)}
+                                style={{
+                                  fontSize: 11,
+                                  color: "#888",
+                                  background: "none",
+                                  border: "1px solid #1a2e28",
+                                  borderRadius: 20,
+                                  cursor: "pointer",
+                                  padding: "2px 10px"
+                                }}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                      ) : (
+                          <div style={{display: "flex", gap: 6}}>
+                            <button
+                                onClick={() => {
+                                  setEditingId(t.id);
+                                  setEditForm({origin: t.from, destination: t.to});
+                                }}
+                                style={{
+                                  fontSize: 11,
+                                  color: "#3ecfb2",
+                                  background: "none",
+                                  border: "1px solid #1a2e28",
+                                  borderRadius: 20,
+                                  cursor: "pointer",
+                                  padding: "2px 10px"
+                                }}
+                            >
+                              Edit
+                            </button>
+                            <button
+                                onClick={() => handleDelete(t.id)}
+                                style={{
+                                  fontSize: 11,
+                                  color: "#f87171",
+                                  background: "none",
+                                  border: "1px solid #1a2e28",
+                                  borderRadius: 20,
+                                  cursor: "pointer",
+                                  padding: "2px 10px"
+                                }}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                      )}
                     </div>
                   </div>
 
-                  <RouteVisualizer legs={t.legs} />
+                  <RouteVisualizer legs={t.legs}/>
 
                   {expanded === t.id && (
-                    <div style={{ marginTop: "1rem", paddingTop: "1rem", borderTop: "1px solid #1a2e28" }}>
-                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                        {t.legs.map((leg, i) =>
-                          leg.type === "walk" ? ( 
-                            <div key={i} style={{ fontSize: 13, color: "#888", display: "flex", gap: 8, alignItems: "center" }}>
-                              <span>🚶</span> Walk · {leg.duration}
-                            </div>
-                          ) : (
-                            <div key={i} style={{ fontSize: 13, color: "#aaa", display: "flex", gap: 8, alignItems: "center" }}>
-                              <span style={{ background: "#1a2e28", color: "#3ecfb2", fontSize: 11, padding: "2px 8px", borderRadius: 20 }}>
+                      <div style={{marginTop: "1rem", paddingTop: "1rem", borderTop: "1px solid #1a2e28"}}>
+                        <div style={{display: "flex", flexDirection: "column", gap: 8}}>
+                          {t.legs.map((leg, i) =>
+                              leg.type === "walk" ? (
+                                  <div key={i} style={{
+                                    fontSize: 13,
+                                    color: "#888",
+                                    display: "flex",
+                                    gap: 8,
+                                    alignItems: "center"
+                                  }}>
+                                    <span>🚶</span> Walk · {leg.duration}
+                                  </div>
+                              ) : (
+                                  <div key={i} style={{
+                                    fontSize: 13,
+                                    color: "#aaa",
+                                    display: "flex",
+                                    gap: 8,
+                                    alignItems: "center"
+                                  }}>
+                              <span style={{
+                                background: "#1a2e28",
+                                color: "#3ecfb2",
+                                fontSize: 11,
+                                padding: "2px 8px",
+                                borderRadius: 20
+                              }}>
                                 {leg.route}
                               </span>
-                              {leg.from} → {leg.to} · {leg.duration}
-                            </div>
-                          )
-                        )}
+                                    {leg.from} → {leg.to} · {leg.duration}
+                                  </div>
+                              )
+                          )}
+                        </div>
                       </div>
-                    </div>
                   )}
                 </div>
               ))}
@@ -185,6 +310,6 @@ export default function History() {
           </div>
         );
       })}
-    </main>
+      </main>
   );
 }
