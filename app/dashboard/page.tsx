@@ -8,7 +8,6 @@ export default function Dashboard() {
   const router = useRouter();
   useRequireAuth();
 
-  const user = getUser();
   const [trips, setTrips] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -30,7 +29,15 @@ export default function Dashboard() {
   ];
 
   const hour = new Date().getHours();
-  const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+
+  const [user, setUser] = useState<any>(null);
+  const [greeting, setGreeting] = useState("");
+
+  useEffect(() => {
+    setUser(getUser());
+    const hour = new Date().getHours();
+    setGreeting(hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening");
+  }, []);
 
   return (
     <main style={{ minHeight: "100vh", padding: "80px 2.5rem 2.5rem",
@@ -54,8 +61,12 @@ export default function Dashboard() {
         borderRadius: 12, padding: "13px 18px", marginBottom: "2.5rem",
         maxWidth: 560, cursor: "pointer",
       }} onClick={() => router.push("/trip")}>
-        <div style={{ width: 6, height: 6, borderRadius: "50%",
-          background: "#3ecfb2", flexShrink: 0 }} />
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+          stroke="#555" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+          style={{ flexShrink: 0 }}>
+          <circle cx="11" cy="11" r="8" />
+          <path d="m21 21-4.35-4.35" />
+        </svg>
         <span style={{ color: "#3a3a3a", fontSize: "0.9rem" }}>
           Search a destination...
         </span>
