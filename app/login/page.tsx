@@ -30,14 +30,14 @@ export default function Login() {
   }
 
   return (
-    <main className="bg-grid">
+    <main className="auth-page bg-grid">
       <div className="auth-card">
-        <h1 style={{ fontSize: "1.75rem", fontWeight: 700, margin: "0 0 1.5rem" }}>
+        <h1 className="auth-title">
           Welcome back!
         </h1>
 
         {error && (
-          <p style={{ color: "#ef4444", fontSize: "0.85rem", marginBottom: "1rem" }}>
+          <p className="auth-error">
             {error}
           </p>
         )}
@@ -50,10 +50,7 @@ export default function Login() {
         <input className="input" type="password" placeholder="Password"
           onChange={e => setPassword(e.target.value)} />
 
-        <a href="/forgot-password" style={{
-          fontSize: "0.78rem", color: "#3ecfb2",
-          display: "block", marginTop: 6, marginBottom: 4,
-        }}>
+        <a href="/forgot-password" className="auth-link">
           Forgot password?
         </a>
 

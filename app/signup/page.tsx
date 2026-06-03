@@ -1,7 +1,6 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import AuthInput from "../components/AuthInput";
 import AuthButton from "../components/AuthButton";
 import { signup } from "../lib/api";
 
@@ -47,14 +46,14 @@ export default function SignUp() {
   }
 
   return (
-    <main className="bg-grid">
+    <main className="auth-page bg-grid">
       <div className="auth-card">
-        <h1 style={{ fontSize: "1.75rem", fontWeight: 700, margin: "0 0 1.5rem" }}>
+        <h1 className="auth-title">
           Welcome to NextStop
         </h1>
 
         {error && (
-          <p style={{ color: "#ef4444", fontSize: "0.85rem", marginBottom: "1rem" }}>
+          <p className="auth-error">
             {error}
           </p>
         )}
