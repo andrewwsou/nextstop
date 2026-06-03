@@ -14,6 +14,7 @@ app.use(express.json());
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/trips', require('./routes/trips'));
 app.use('/api/transit', require('./routes/transit'));
+app.use('/api/locations', require('./routes/locations'));
 
 // Health check
 app.get('/', (req, res) => res.json({ message: 'NextStop API running' }));

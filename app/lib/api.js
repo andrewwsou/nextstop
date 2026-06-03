@@ -102,3 +102,8 @@ export async function deleteTrip(id) {
   });
   return res.json();
 }
+
+export async function getLocations() {
+  const res = await fetch(`${BASE_URL}/locations`);
+  return res.json();
+}

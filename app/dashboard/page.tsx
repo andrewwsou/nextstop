@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useRequireAuth, getUser } from "../lib/auth";
-import { getTrips } from "../lib/api";
+import { getTrips, getLocations } from "../lib/api";
 
 export default function Dashboard() {
   const router = useRouter();
@@ -10,11 +10,17 @@ export default function Dashboard() {
 
   const [trips, setTrips] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [locations, setLocations] = useState<any[]>([]);
+  const [query, setQuery] = useState("");
+  const [suggestions, setSuggestions] = useState<any[]>([]);
 
   useEffect(() => {
     getTrips().then(data => {
       if (Array.isArray(data)) setTrips(data);
       setLoading(false);
+    });
+    getLocations().then(data => {
+      if (Array.isArray(data)) setLocations(data);
     });
   }, []);
 
@@ -28,7 +34,18 @@ export default function Dashboard() {
     { label: "Profile", sub: "Settings & preferences", href: "/profile", color: "#f59e0b" },
   ];
 
-  const hour = new Date().getHours();
+  const categoryColors: Record<string, string> = {
+    "Campus": "#3ecfb2",
+    "Shopping": "#60a5fa",
+    "Airport": "#f59e0b",
+    "Transit Hub": "#a78bfa",
+  };
+
+  const popularDestinations = locations.filter(l =>
+    ["Campus", "Airport", "Shopping"].includes(l.category)
+  ).slice(0, 4);
+
+  const transitHubs = locations.filter(l => l.category === "Transit Hub");
 
   const [user, setUser] = useState<any>(null);
   const [greeting, setGreeting] = useState("");
@@ -41,7 +58,7 @@ export default function Dashboard() {
 
   return (
     <main style={{ minHeight: "100vh", padding: "80px 2.5rem 2.5rem",
-      background: "#0d1210", color: "white" }}>
+      background: "#0d1210", color: "white", maxWidth: 1100, marginLeft: "auto", marginRight: "auto"}}>
 
       {/* Header */}
       <div style={{ marginBottom: "2rem" }}>
@@ -54,25 +71,140 @@ export default function Dashboard() {
         </p>
       </div>
 
-      {/* Search bar */}
-      <div style={{
-        display: "flex", alignItems: "center", gap: 12,
-        background: "#111a17", border: "1px solid #1f3530",
-        borderRadius: 12, padding: "13px 18px", marginBottom: "2.5rem",
-        maxWidth: 560, cursor: "pointer",
-      }} onClick={() => router.push("/trip")}>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-          stroke="#555" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-          style={{ flexShrink: 0 }}>
-          <circle cx="11" cy="11" r="8" />
-          <path d="m21 21-4.35-4.35" />
-        </svg>
-        <span style={{ color: "#3a3a3a", fontSize: "0.9rem" }}>
-          Search a destination...
-        </span>
+      {/* Search bar with autocomplete */}
+      <div style={{ position: "relative", maxWidth: 560, marginBottom: "2.5rem" }}>
+        <div style={{
+          display: "flex", alignItems: "center", gap: 12,
+          background: "#111a17", border: "1px solid #1f3530",
+          borderRadius: query && suggestions.length ? "12px 12px 0 0" : 12,
+          padding: "13px 18px", cursor: "text",
+        }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+            stroke="#555" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+            style={{ flexShrink: 0 }}>
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.35-4.35" />
+          </svg>
+          <input
+            value={query}
+            onChange={async (e) => {
+              const val = e.target.value;
+              setQuery(val);
+              if (val.length < 2) { setSuggestions([]); return; }
+              const res = await fetch(
+                `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(val)}&countrycodes=us&limit=5&viewbox=-118.1,33.5,-117.5,33.9&bounded=1`
+              );
+              const data = await res.json();
+              setSuggestions(data);
+            }}
+            placeholder="Search a destination..."
+            style={{
+              background: "transparent", border: "none", outline: "none",
+              color: "white", fontSize: "0.9rem", width: "100%",
+            }}
+          />
+          {query && (
+            <button onClick={() => { setQuery(""); setSuggestions([]); }}
+              style={{ background: "none", border: "none", color: "#555", cursor: "pointer", fontSize: 16 }}>
+              ✕
+            </button>
+          )}
+        </div>
+
+        {suggestions.length > 0 && (
+          <div style={{
+            position: "absolute", top: "100%", left: 0, right: 0,
+            background: "#111a17", border: "1px solid #1f3530", borderTop: "none",
+            borderRadius: "0 0 12px 12px", zIndex: 100, overflow: "hidden",
+          }}>
+            {suggestions.map((s, i) => (
+              <div key={s.place_id}
+                onClick={() => {
+                  setQuery("");
+                  setSuggestions([]);
+                  router.push(`/trip?destination=${encodeURIComponent(s.display_name)}`);
+                }}
+                style={{
+                  padding: "10px 18px", fontSize: "0.85rem", cursor: "pointer",
+                  borderTop: i === 0 ? "none" : "1px solid #1a2e28",
+                  color: "#ccc",
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = "#1a2e28")}
+                onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+              >
+                {s.display_name}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Quick actions */}
+      {/* Popular Destinations */}
+      {popularDestinations.length > 0 && (
+        <div style={{ marginBottom: "2.5rem", maxWidth: 800 }}>
+          <p style={{ margin: "0 0 0.75rem", fontSize: "0.72rem", color: "#444",
+            textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 700 }}>
+            Popular Destinations
+          </p>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
+            {popularDestinations.map(loc => (
+              <div key={loc.id}
+                onClick={() => router.push(`/trip?destination=${encodeURIComponent(loc.name)}`)}
+                style={{ background: "#111a17", border: "1px solid #1a2e28",
+                  borderRadius: 14, padding: "1.1rem 1.25rem", cursor: "pointer",
+                  transition: "border-color 0.15s" }}
+                onMouseEnter={e => (e.currentTarget.style.borderColor = (categoryColors[loc.category] ?? "#555") + "55")}
+                onMouseLeave={e => (e.currentTarget.style.borderColor = "#1a2e28")}
+              >
+                <div style={{ width: 8, height: 8, borderRadius: "50%",
+                  background: categoryColors[loc.category] ?? "#555",
+                  marginBottom: 14 }} />
+                <p style={{ margin: 0, fontWeight: 600, fontSize: "0.9rem",
+                  letterSpacing: "-0.01em" }}>{loc.name}</p>
+                <p style={{ margin: "4px 0 0", fontSize: "0.75rem",
+                  color: "#555", lineHeight: 1.4 }}>{loc.category}</p>
+                <p style={{ margin: "10px 0 0", fontSize: "0.72rem", color: "#3ecfb2" }}>
+                  Plan Route →
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Transit Hubs */}
+      {transitHubs.length > 0 && (
+        <div style={{ marginBottom: "2.5rem", maxWidth: 800 }}>
+          <p style={{ margin: "0 0 0.75rem", fontSize: "0.72rem", color: "#444",
+            textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 700 }}>
+            Transit Hubs
+          </p>
+          <div style={{ display: "flex", gap: 12 }}>
+            {transitHubs.map(loc => (
+              <div key={loc.id}
+                onClick={() => router.push(`/trip?destination=${encodeURIComponent(loc.name)}`)}
+                style={{ background: "#111a17", border: "1px solid #1a2e28",
+                  borderRadius: 14, padding: "1rem 1.25rem", cursor: "pointer",
+                  display: "flex", alignItems: "center", gap: 12,
+                  transition: "border-color 0.15s" }}
+                onMouseEnter={e => (e.currentTarget.style.borderColor = "#a78bfa55")}
+                onMouseLeave={e => (e.currentTarget.style.borderColor = "#1a2e28")}
+              >
+                <div style={{ width: 8, height: 8, borderRadius: "50%",
+                  background: "#a78bfa", flexShrink: 0 }} />
+                <div>
+                  <p style={{ margin: 0, fontWeight: 600, fontSize: "0.85rem",
+                    letterSpacing: "-0.01em" }}>{loc.name}</p>
+                  <p style={{ margin: "3px 0 0", fontSize: "0.72rem",
+                    color: "#3ecfb2" }}>Plan Route →</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Quick Actions */}
       <p style={{ margin: "0 0 0.75rem", fontSize: "0.72rem", color: "#444",
         textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 700 }}>
         Quick Actions
