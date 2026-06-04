@@ -1,8 +1,15 @@
 "use client";
-import { useState, useEffect } from "react";  // merge into one line
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useRequireAuth, getUser, logout } from "../lib/auth";
 import { updateName, updateEmail, updatePassword } from "../lib/api";
+
+type ModalType = "name" | "email" | "password" | "about";
+type User = {
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+};
 
 const sections = [
   { label: "Account", items: ["Edit name", "Change email", "Change password"] },
@@ -10,16 +17,27 @@ const sections = [
   { label: "App", items: ["About NextStop", "Privacy policy", "Sign out"] },
 ];
 
+const aboutSections = [
+  {
+    title: "What NextStop does",
+    body: "NextStop helps UCI and OC riders plan trips without bouncing between a bunch of tabs. You can look for routes, check transit options, and keep track of the trips you care about.",
+  },
+  {
+    title: "Why it exists",
+    body: "The goal is simple: make local transit feel less confusing. It is built for quick decisions, like figuring out how to get across campus, around Irvine, or somewhere nearby without guessing.",
+  },
+  {
+    title: "Still being improved",
+    body: "Some parts are intentionally lightweight right now while the core features come together. More settings, saved preferences, and smarter trip tools can be added from this profile area next.",
+  },
+];
+
 export default function Profile() {
   const router = useRouter();
   useRequireAuth();
 
-  const [user, setUser] = useState<any>(null);
-
-  useEffect(() => {
-    setUser(getUser());
-  }, []);
-  const [modal, setModal] = useState<string | null>(null);
+  const [user, setUser] = useState<User | null>(() => getUser());
+  const [modal, setModal] = useState<ModalType | null>(null);
   const [error, setError] = useState("");
 
   const [firstName, setFirstName] = useState("");
@@ -50,6 +68,9 @@ export default function Profile() {
     }
     if (item === "Change password") {
       setModal("password");
+    }
+    if (item === "About NextStop") {
+      setModal("about");
     }
   }
 
@@ -107,6 +128,8 @@ export default function Profile() {
       setModal(null);
     }
   }
+
+  const isInfoModal = modal === "about";
 
   return (
     <main style={{
@@ -195,9 +218,34 @@ export default function Profile() {
               {modal === "name" && "Edit name"}
               {modal === "email" && "Change email"}
               {modal === "password" && "Change password"}
+              {modal === "about" && "About NextStop"}
             </h2>
 
             {error && <p style={{ color: "#ef4444", fontSize: "0.85rem" }}>{error}</p>}
+
+            {modal === "about" && (
+              <div style={{ display: "grid", gap: 14 }}>
+                {aboutSections.map(section => (
+                  <section key={section.title}>
+                    <h3 style={{
+                      margin: "0 0 6px",
+                      fontSize: "0.9rem",
+                      color: "#3ecfb2",
+                    }}>
+                      {section.title}
+                    </h3>
+                    <p style={{
+                      margin: 0,
+                      fontSize: "0.88rem",
+                      lineHeight: 1.55,
+                      color: "#b8c5c1",
+                    }}>
+                      {section.body}
+                    </p>
+                  </section>
+                ))}
+              </div>
+            )}
 
             {modal === "name" && (
               <>
@@ -239,17 +287,19 @@ export default function Profile() {
                   border: "1px solid #1a2e28", background: "transparent", color: "#888",
                 }}
               >
-                Cancel
+                {isInfoModal ? "Close" : "Cancel"}
               </button>
-              <button
-                onClick={handleSave}
-                style={{
-                  flex: 1, padding: 12, borderRadius: 10, border: "none",
-                  background: "#3ecfb2", color: "#0d1210", fontWeight: 700,
-                }}
-              >
-                Save
-              </button>
+              {!isInfoModal && (
+                <button
+                  onClick={handleSave}
+                  style={{
+                    flex: 1, padding: 12, borderRadius: 10, border: "none",
+                    background: "#3ecfb2", color: "#0d1210", fontWeight: 700,
+                  }}
+                >
+                  Save
+                </button>
+              )}
             </div>
           </div>
         </div>
