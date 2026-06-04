@@ -15,6 +15,26 @@ type Segment =
       transitType: "bus" | "train" | "express";
     };
 
+type PlanStep = {
+  type: "walking" | "transit";
+  instruction: string;
+  duration: string;
+  distance: string;
+  lineName?: string;
+  vehicleType?: string;
+};
+
+type PlanRoute = {
+  id: string;
+  summary: string;
+  duration: string;
+  arrivalTime: string;
+  departureTime: string;
+  steps: PlanStep[];
+  transitLines: string[];
+  totalWalkingTime?: string;
+};
+
 function RouteLine({ segments }: { segments: Segment[] }) {
   return (
     <div className="my-5 flex items-center w-full">
@@ -70,6 +90,50 @@ type Route = {
   segments: Segment[];
 };
 
+function getTransitType(vehicleType?: string): "bus" | "train" | "express" {
+  if (
+    vehicleType &&
+    ["HEAVY_RAIL", "COMMUTER_TRAIN", "RAIL", "TRAIN", "TRAM"].includes(vehicleType)
+  ) {
+    return "train";
+  }
+
+  return "bus";
+}
+
+function mapPlanRoute(route: PlanRoute, index: number): Route {
+  const transitSteps = route.steps.filter((step) => step.type === "transit");
+
+  return {
+    id: route.id,
+    label: index === 0 ? "Suggested Route" : undefined,
+    time:
+      route.departureTime && route.arrivalTime
+        ? `${route.departureTime} -> ${route.arrivalTime}`
+        : route.summary,
+    depart: route.summary || "Transit route",
+    duration: route.duration || "--",
+    transfers:
+      transitSteps.length > 1
+        ? `${transitSteps.length - 1} transfer${
+            transitSteps.length - 1 === 1 ? "" : "s"
+          }`
+        : "0 transfers",
+    walk: route.totalWalkingTime ? `${route.totalWalkingTime} walk` : "-- walk",
+    segments: route.steps.map((step) => {
+      if (step.type === "transit") {
+        return {
+          type: "transit",
+          label: step.lineName || "Transit",
+          transitType: getTransitType(step.vehicleType),
+        };
+      }
+
+      return { type: "walk" };
+    }),
+  };
+}
+
 {/* Main page component */}
 function TripResultsContent() {
   const router = useRouter();
@@ -92,22 +156,22 @@ function TripResultsContent() {
       setError("");
 
       const query = new URLSearchParams({
-        start,
+        origin: start,
         destination,
-        transit,
+        modes: transit,
         date: tripDate,
         time: tripTime,
       });
 
       try {
-        const res = await fetch(`/api/transit/routes?${query.toString()}`);
+        const res = await fetch(`/api/transit/plan?${query.toString()}`);
         const data = await res.json();
 
         if (!res.ok) {
           throw new Error(data.error || "Could not load routes.");
         }
 
-        setRoutes(data.routes || []);
+        setRoutes((data.routes || []).map(mapPlanRoute));
       } catch (err) {
         setRoutes([]);
         setError(
