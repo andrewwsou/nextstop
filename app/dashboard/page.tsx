@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { useRequireAuth, getUser } from "../lib/auth";
 import { getTrips } from "../lib/api";
@@ -23,14 +23,30 @@ function getGreeting() {
   return hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
 }
 
+function subscribeToClientSnapshot() {
+  return () => {};
+}
+
+function getClientFirstName() {
+  return (getUser() as DashboardUser | null)?.first_name || "";
+}
+
 export default function Dashboard() {
   const router = useRouter();
   useRequireAuth();
 
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
-  const [user] = useState<DashboardUser | null>(() => getUser() as DashboardUser | null);
-  const [greeting] = useState(getGreeting);
+  const firstName = useSyncExternalStore(
+    subscribeToClientSnapshot,
+    getClientFirstName,
+    () => ""
+  );
+  const greeting = useSyncExternalStore(
+    subscribeToClientSnapshot,
+    getGreeting,
+    () => "Good day"
+  );
 
   useEffect(() => {
     getTrips().then(data => {
@@ -64,7 +80,7 @@ export default function Dashboard() {
       <div style={{ marginBottom: "2rem" }}>
         <h1 style={{ fontSize: "1.8rem", fontWeight: 700, margin: "0 0 4px",
           letterSpacing: "-0.02em" }}>
-          {greeting}{user?.first_name ? `, ${user.first_name}` : ""}
+          {greeting}{firstName ? `, ${firstName}` : ""}
         </h1>
         <p style={{ color: "#555", margin: 0, fontSize: "0.9rem" }}>
           Where are you heading today?

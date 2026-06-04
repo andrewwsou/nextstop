@@ -120,7 +120,7 @@ export default function Onboarding() {
         {/* logo stuff (look over we can edit)*/}
         <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: "2.5rem" }}>
           <Image src="/logo2.png" alt="NextStop" width={200} height={150}
-            style={{ borderRadius: 14, objectFit: "contain" }} />
+            style={{ borderRadius: 14, objectFit: "contain", height: "auto" }} />
           <div>
             <p style={{ margin: 0, fontSize: "2.7rem", fontWeight: 800,
               letterSpacing: "-0.02em", lineHeight: 1 }}>

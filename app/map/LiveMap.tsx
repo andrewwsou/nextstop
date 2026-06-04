@@ -10,6 +10,27 @@ import {
     useMapEvents,
 } from "react-leaflet";
 
+type TransitRoute = {
+  global_route_id: string;
+  compact_display_short_name?: {
+    elements?: string[];
+  };
+  merged_itineraries?: {
+    closest_stop?: {
+      stop_lat?: number;
+      stop_lon?: number;
+      stop_name?: string;
+    };
+    itineraries?: {
+      direction_headsign?: string;
+    }[];
+    schedule_items?: unknown[];
+  }[];
+};
+
+type TransitResponse = {
+  nearby_routes?: TransitRoute[];
+};
 
 function DestinationSelector({
   setDestination,
@@ -33,7 +54,8 @@ function DestinationSelector({
 export default function LiveMap() {
   const [position, setPosition] = useState<[number, number] | null>(null);
   const [destination, setDestination] = useState<[number, number] | null>(null);
-  const [transitData, setTransitData] = useState<any>(null);
+  const [transitData, setTransitData] = useState<TransitResponse | null>(null);
+  const [transitError, setTransitError] = useState("");
   const [destinationName, setDestinationName] = useState<string>("");
   const [routeLoading, setRouteLoading] = useState(false);
   const [showTransitOptions, setShowTransitOptions] =
@@ -95,25 +117,51 @@ export default function LiveMap() {
 
 console.log("Fetching:", url);
 
-fetch(url)
-  .then(async (res) => {
+async function loadTransitData() {
+  try {
+    const res = await fetch(url);
     console.log("Status:", res.status);
     console.log("Final URL:", res.url);
 
-    const data = await res.json();
-    return data;
-  })
-  .then((data) => {
+    const text = await res.text();
+    let data: TransitResponse & { error?: string } = {};
+
+    if (text) {
+      try {
+        data = JSON.parse(text);
+      } catch {
+        setTransitData(null);
+        setTransitError(
+          text === "Internal Server Error"
+            ? "Backend is not running on port 5001."
+            : text
+        );
+        return;
+      }
+    }
+
+    if (!res.ok) {
+      const message = data.error || "Transit data could not be loaded.";
+      setTransitData(null);
+      setTransitError(message);
+      return;
+    }
+
     console.log(
       "FULL TRANSIT RESPONSE:",
       JSON.stringify(data, null, 2)
     );
 
+    setTransitError("");
     setTransitData(data);
-  })
-  .catch((err) =>
-    console.error("Transit API error:", err)
-  );
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Transit data could not be loaded.";
+    setTransitData(null);
+    setTransitError(message);
+  }
+}
+
+loadTransitData();
   }, [position]);
 
   if (!position) {
@@ -172,7 +220,7 @@ fetch(url)
 
         {/* Transit Stops */}
         {transitData?.nearby_routes?.map(
-          (route: any) => {
+          (route) => {
             const stop =
               route.merged_itineraries?.[0]
                 ?.closest_stop;
@@ -242,7 +290,7 @@ fetch(url)
             ? "Finding Route..."
             : "Get Transit Route"}
         </button>
-          {showTransitOptions &&
+      {showTransitOptions &&
   transitData?.nearby_routes?.length > 0 && (
     <div className="mt-4 border-t pt-4">
       <h3 className="font-semibold mb-3">
@@ -250,7 +298,7 @@ fetch(url)
       </h3>
 
       {transitData.nearby_routes.map(
-        (route: any) => {
+        (route) => {
           const routeName =
             route.compact_display_short_name?.elements
               ?.filter(Boolean)
@@ -312,6 +360,11 @@ fetch(url)
       <div className="absolute bottom-4 right-4 z-[1000] bg-white text-black px-3 py-2 rounded shadow">
         Powered by Transit
       </div>
+      {transitError && (
+        <div className="absolute top-4 left-1/2 z-[1000] max-w-[90vw] -translate-x-1/2 rounded bg-red-50 px-4 py-3 text-sm text-red-700 shadow">
+          {transitError}
+        </div>
+      )}
     </div>
   );
 }
