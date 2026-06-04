@@ -26,6 +26,12 @@ type PlanStep = {
   arrivalStop?: string;
   departureTime?: string;
   arrivalTime?: string;
+  live?: {
+    realtimeAvailable?: boolean;
+    routeColor?: string;
+    nextDeparture?: string;
+    status?: string;
+  };
 };
 
 type PlanRoute = {
@@ -95,6 +101,7 @@ type Route = {
   segments: Segment[];
   steps: PlanStep[];
   transitLines: string[];
+  hasLiveData: boolean;
 };
 
 function getTransitType(vehicleType?: string): "bus" | "train" | "express" {
@@ -130,6 +137,7 @@ function mapPlanRoute(route: PlanRoute, index: number): Route {
     walk: route.totalWalkingTime ? `${route.totalWalkingTime} walk` : "-- walk",
     steps: route.steps,
     transitLines: route.transitLines,
+    hasLiveData: route.steps.some((step) => step.live?.realtimeAvailable),
     segments: route.steps.map((step) => {
       if (step.type === "transit") {
         return {
@@ -268,6 +276,11 @@ function TripResultsContent() {
                 ? route.transitLines.join(" + ")
                 : route.depart}
             </p>
+            {route.hasLiveData && (
+              <p className="mt-1 text-xs font-semibold text-teal-200">
+                Live Transit data available
+              </p>
+            )}
 
             {/* Line graphic referenced at top */}
             <RouteLine segments={route.segments} />
@@ -306,6 +319,18 @@ function TripResultsContent() {
                         {(step.departureTime || step.arrivalTime) && (
                           <div className="text-xs text-zinc-400">
                             {step.departureTime || "--"} → {step.arrivalTime || "--"}
+                          </div>
+                        )}
+                        {step.live && (
+                          <div className="mt-1 text-xs text-teal-200">
+                            {step.live.realtimeAvailable ? "Realtime available" : "Scheduled data"}
+                            {step.live.nextDeparture && (
+                              <> · Next: {new Date(step.live.nextDeparture).toLocaleTimeString([], {
+                                hour: "numeric",
+                                minute: "2-digit",
+                              })}</>
+                            )}
+                            {step.live.status && <> · {step.live.status}</>}
                           </div>
                         )}
                       </>

@@ -1,5 +1,8 @@
 const express = require("express");
 const router = express.Router();
+const nearbyTransitCache = new Map();
+const NEARBY_TRANSIT_CACHE_MS = 60 * 1000;
+const TRANSIT_ENHANCEMENT_MAX_LOOKUPS = 4;
 
 const routeOptions = [
   {
@@ -80,6 +83,28 @@ function getTransitMode(transit) {
   return googleModes.join("|");
 }
 
+function getNearbyTransitCacheKey(lat, lon) {
+  return `${Number(lat).toFixed(4)},${Number(lon).toFixed(4)}`;
+}
+
+function getCachedNearbyTransitData(lat, lon) {
+  const key = getNearbyTransitCacheKey(lat, lon);
+  const cached = nearbyTransitCache.get(key);
+
+  if (!cached || Date.now() - cached.timestamp > NEARBY_TRANSIT_CACHE_MS) {
+    return null;
+  }
+
+  return cached.data;
+}
+
+function setCachedNearbyTransitData(lat, lon, data) {
+  nearbyTransitCache.set(getNearbyTransitCacheKey(lat, lon), {
+    data,
+    timestamp: Date.now(),
+  });
+}
+
 function uniqueValues(values) {
   return [...new Set(values.filter(Boolean))];
 }
@@ -98,6 +123,68 @@ function getRouteSummary(route, transitLines, index) {
 
 function getStepType(step) {
   return step.travel_mode === "TRANSIT" ? "transit" : "walking";
+}
+
+function normalizeRouteName(value) {
+  return (value || "").toString().toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function getTransitRouteName(route) {
+  return (
+    route.route_short_name ||
+    route.real_time_route_id ||
+    route.compact_display_short_name?.elements?.filter(Boolean).join(" ") ||
+    route.route_long_name ||
+    ""
+  );
+}
+
+function findTransitRouteMatch(routes, lineName) {
+  const normalizedLine = normalizeRouteName(lineName);
+  if (!normalizedLine) {
+    return null;
+  }
+
+  return routes.find((route) => {
+    const names = [
+      getTransitRouteName(route),
+      route.route_long_name,
+      route.real_time_route_id,
+    ];
+
+    return names.some((name) => normalizeRouteName(name) === normalizedLine);
+  });
+}
+
+function getNextDeparture(route) {
+  const scheduleItems =
+    route.merged_itineraries?.flatMap((itinerary) => itinerary.schedule_items || []) || [];
+  const nextItem = scheduleItems.find((item) => item.departure_time || item.arrival_time);
+  const timestamp = nextItem?.departure_time || nextItem?.arrival_time;
+
+  return timestamp ? new Date(timestamp * 1000).toISOString() : undefined;
+}
+
+function getLiveRouteFields(route) {
+  if (!route) {
+    return undefined;
+  }
+
+  const realtimeAvailable = route.merged_itineraries?.some((itinerary) =>
+    itinerary.schedule_items?.some((item) => item.is_real_time)
+  );
+
+  return {
+    realtimeAvailable: Boolean(realtimeAvailable),
+    routeColor: route.route_color ? `#${route.route_color}` : undefined,
+    nextDeparture: getNextDeparture(route),
+    status: route.alerts?.[0]?.title || undefined,
+  };
+}
+
+function removeInternalStepFields(step) {
+  const { departureLocation, ...publicStep } = step;
+  return publicStep;
 }
 
 function getTransitType(vehicleType) {
@@ -138,6 +225,7 @@ function mapGooglePlanStep(step) {
     arrivalStop: transit?.arrival_stop?.name || undefined,
     departureTime: transit?.departure_time?.text || undefined,
     arrivalTime: transit?.arrival_time?.text || undefined,
+    departureLocation: transit?.departure_stop?.location || undefined,
   };
 }
 
@@ -237,6 +325,146 @@ async function getGoogleRoutes({ start, destination, transit, date, time }) {
   return data.routes.map(mapGoogleRoute);
 }
 
+async function getNearbyTransitRoutes(lat, lon) {
+  if (!process.env.TRANSIT_API_KEY || lat === undefined || lon === undefined) {
+    return [];
+  }
+
+  const cached = getCachedNearbyTransitData(lat, lon);
+  if (cached) {
+    return cached.nearby_routes || [];
+  }
+
+  const params = new URLSearchParams({
+    lat: lat.toString(),
+    lon: lon.toString(),
+  });
+
+  const response = await fetch(
+    `https://external.transitapp.com/v4/public/nearby_routes?${params.toString()}`,
+    {
+      headers: {
+        apiKey: process.env.TRANSIT_API_KEY,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    return [];
+  }
+
+  const data = await response.json();
+  setCachedNearbyTransitData(lat, lon, data);
+  return data.nearby_routes || [];
+}
+
+async function getNearbyTransitData(lat, lon) {
+  if (!process.env.TRANSIT_API_KEY) {
+    const error = new Error("TRANSIT_API_KEY is not configured");
+    error.status = 500;
+    throw error;
+  }
+
+  const cached = getCachedNearbyTransitData(lat, lon);
+  if (cached) {
+    return cached;
+  }
+
+  const params = new URLSearchParams({
+    lat: lat.toString(),
+    lon: lon.toString(),
+  });
+
+  const response = await fetch(
+    `https://external.transitapp.com/v4/public/nearby_routes?${params.toString()}`,
+    {
+      headers: {
+        apiKey: process.env.TRANSIT_API_KEY,
+      },
+    }
+  );
+  const data = await response.json();
+
+  if (!response.ok) {
+    const error = new Error(
+      data.error || data.message || "Transit data could not be loaded"
+    );
+    error.status = response.status;
+    throw error;
+  }
+
+  setCachedNearbyTransitData(lat, lon, data);
+  return data;
+}
+
+async function enhanceRoutesWithTransitData(routes) {
+  if (!process.env.TRANSIT_API_KEY) {
+    return routes.map((route) => ({
+      ...route,
+      steps: route.steps.map(removeInternalStepFields),
+    }));
+  }
+
+  const localLookupCache = new Map();
+  let lookupCount = 0;
+  const enhancedRoutes = [];
+
+  for (const route of routes) {
+    const enhancedSteps = [];
+
+    for (const step of route.steps) {
+      let enhancedStep = step;
+
+      if (step.type === "transit" && step.departureLocation) {
+        const { lat, lng } = step.departureLocation;
+        const cacheKey = getNearbyTransitCacheKey(lat, lng);
+        const cachedTransitData = getCachedNearbyTransitData(lat, lng);
+
+        if (
+          cachedTransitData ||
+          localLookupCache.has(cacheKey) ||
+          lookupCount < TRANSIT_ENHANCEMENT_MAX_LOOKUPS
+        ) {
+          try {
+            if (!cachedTransitData && !localLookupCache.has(cacheKey)) {
+              lookupCount += 1;
+            }
+
+            if (!localLookupCache.has(cacheKey)) {
+              const nearbyRoutes = await getNearbyTransitRoutes(lat, lng);
+              localLookupCache.set(cacheKey, nearbyRoutes);
+            }
+
+            const match = findTransitRouteMatch(
+              localLookupCache.get(cacheKey),
+              step.lineName
+            );
+            const live = getLiveRouteFields(match);
+
+            if (live) {
+              enhancedStep = {
+                ...step,
+                live,
+              };
+            }
+          } catch {
+            enhancedStep = step;
+          }
+        }
+      }
+
+      enhancedSteps.push(removeInternalStepFields(enhancedStep));
+    }
+
+    enhancedRoutes.push({
+      ...route,
+      steps: enhancedSteps,
+    });
+  }
+
+  return enhancedRoutes;
+}
+
 async function getGooglePlanRoutes({ origin, destination, modes, date, time }) {
   if (!process.env.GOOGLE_MAPS_API_KEY) {
     const error = new Error("GOOGLE_MAPS_API_KEY is not configured");
@@ -288,7 +516,8 @@ async function getGooglePlanRoutes({ origin, destination, modes, date, time }) {
     throw error;
   }
 
-  return data.routes.map(mapGooglePlanRoute);
+  const routes = data.routes.map(mapGooglePlanRoute);
+  return enhanceRoutesWithTransitData(routes);
 }
 
 router.get("/plan", async (req, res) => {
@@ -382,33 +611,16 @@ router.get("/nearby", async (req, res) => {
   try {
     const { lat, lon } = req.query;
 
-    if (!process.env.TRANSIT_API_KEY) {
-      return res.status(500).json({ error: "TRANSIT_API_KEY is not configured" });
+    if (!lat || !lon) {
+      return res.status(400).json({ error: "Latitude and longitude are required" });
     }
 
-    const url = `https://external.transitapp.com/v4/public/nearby_routes?lat=${lat}&lon=${lon}`;
-
-    console.log("Request URL:", url);
-
-    const response = await fetch(url, {
-      headers: {
-        apiKey: process.env.TRANSIT_API_KEY,
-      },
-    });
-
-    console.log("Transit status:", response.status);
-
-    const data = await response.json();
-
-    console.log(
-      "Transit response:",
-      JSON.stringify(data, null, 2)
-    );
-
-    res.status(response.status).json(data);
+    const data = await getNearbyTransitData(lat, lon);
+    res.json(data);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Transit API error" });
+    res.status(err.status || 500).json({
+      error: err.message || "Transit API error",
+    });
   }
 });
 
