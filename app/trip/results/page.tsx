@@ -4,6 +4,7 @@ export const dynamic = "force-dynamic";
 
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { createTrip } from "../../lib/api";
 
 type Segment =
   | {
@@ -115,6 +116,29 @@ function getTransitType(vehicleType?: string): "bus" | "train" | "express" {
   return "bus";
 }
 
+function getDurationMinutes(duration: string) {
+  const hourMatch = duration.match(/(\d+)\s*hour/);
+  const minuteMatch = duration.match(/(\d+)\s*min/);
+
+  return (
+    (hourMatch ? Number(hourMatch[1]) * 60 : 0) +
+    (minuteMatch ? Number(minuteMatch[1]) : 0)
+  );
+}
+
+function getDepartureDateTime(date: string, time: string) {
+  if (!date) {
+    return null;
+  }
+
+  const departureDate = new Date(`${date}T${time || "00:00"}`);
+  if (Number.isNaN(departureDate.getTime())) {
+    return null;
+  }
+
+  return departureDate.toISOString();
+}
+
 function mapPlanRoute(route: PlanRoute, index: number): Route {
   const transitSteps = route.steps.filter((step) => step.type === "transit");
 
@@ -160,6 +184,9 @@ function TripResultsContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [expandedRouteId, setExpandedRouteId] = useState<string | null>(null);
+  const [savingRouteId, setSavingRouteId] = useState<string | null>(null);
+  const [savedRouteIds, setSavedRouteIds] = useState<string[]>([]);
+  const [saveError, setSaveError] = useState("");
   const tripDate = searchParams.get("date") || "";
   const tripTime = searchParams.get("time") || "";
 
@@ -204,6 +231,31 @@ function TripResultsContent() {
     loadRoutes();
   }, [destination, start, transit, tripDate, tripTime]);
 
+  async function handleSaveTrip(route: Route) {
+    setSavingRouteId(route.id);
+    setSaveError("");
+
+    try {
+      const data = await createTrip({
+        origin: start,
+        destination,
+        departure_time: getDepartureDateTime(tripDate, tripTime),
+        transit_modes: transit.split(",").filter(Boolean),
+        duration_minutes: getDurationMinutes(route.duration),
+      });
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      setSavedRouteIds((currentIds) => [...currentIds, route.id]);
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "Could not save trip.");
+    } finally {
+      setSavingRouteId(null);
+    }
+  }
+
   return (
     <main
       className="min-h-screen bg-[#111] text-white"
@@ -245,6 +297,12 @@ function TripResultsContent() {
         </p>
       )}
 
+      {saveError && (
+        <p className="mb-5 rounded-xl border border-red-500/40 bg-red-950/40 px-4 py-3 text-sm text-red-200">
+          {saveError}
+        </p>
+      )}
+
       {!isLoading && !error && routes.length === 0 && (
         <p className="mb-5 rounded-xl border border-zinc-700 bg-[#262626] px-4 py-3 text-sm text-zinc-300">
           No routes match those transit filters.
@@ -255,6 +313,8 @@ function TripResultsContent() {
         {/* Renders label if exists */}
         {routes.map((route, index) => {
           const isExpanded = expandedRouteId === route.id;
+          const isSaving = savingRouteId === route.id;
+          const isSaved = savedRouteIds.includes(route.id);
 
           return (
             <section
@@ -292,12 +352,21 @@ function TripResultsContent() {
               <span>🚶 {route.walk}</span>
             </div>
 
-            <button
-              onClick={() => setExpandedRouteId(isExpanded ? null : route.id)}
-              className="mt-4 text-sm font-semibold text-teal-200"
-            >
-              {isExpanded ? "Hide details" : "Show details"}
-            </button>
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <button
+                onClick={() => setExpandedRouteId(isExpanded ? null : route.id)}
+                className="text-sm font-semibold text-teal-200"
+              >
+                {isExpanded ? "Hide details" : "Show details"}
+              </button>
+              <button
+                onClick={() => handleSaveTrip(route)}
+                disabled={isSaving || isSaved}
+                className="rounded-lg border border-teal-300/60 px-3 py-2 text-sm font-semibold text-teal-100 disabled:cursor-not-allowed disabled:border-zinc-600 disabled:text-zinc-400"
+              >
+                {isSaved ? "Saved" : isSaving ? "Saving..." : "Save trip"}
+              </button>
+            </div>
 
             {isExpanded && (
               <div className="mt-4 space-y-3 border-t border-zinc-700 pt-4">

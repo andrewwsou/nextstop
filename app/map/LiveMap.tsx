@@ -60,6 +60,7 @@ export default function LiveMap() {
   const [routeLoading, setRouteLoading] = useState(false);
   const [showTransitOptions, setShowTransitOptions] =
   useState(false);
+  const nearbyRoutes = transitData?.nearby_routes || [];
 
   // Get user GPS
   useEffect(() => {
@@ -291,13 +292,13 @@ loadTransitData();
             : "Get Transit Route"}
         </button>
       {showTransitOptions &&
-  transitData?.nearby_routes?.length > 0 && (
+  nearbyRoutes.length > 0 && (
     <div className="mt-4 border-t pt-4">
       <h3 className="font-semibold mb-3">
         Nearby Transit Routes
       </h3>
 
-      {transitData.nearby_routes.map(
+      {nearbyRoutes.map(
         (route) => {
           const routeName =
             route.compact_display_short_name?.elements
@@ -349,7 +350,7 @@ loadTransitData();
     </div>
 )}
           {showTransitOptions &&
-  transitData?.nearby_routes?.length === 0 && (
+  nearbyRoutes.length === 0 && (
     <div className="mt-4 border-t pt-4 text-sm text-gray-500">
       No nearby transit routes found.
     </div>
