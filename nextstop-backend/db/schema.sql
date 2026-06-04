@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS trips (
   departure_time TIMESTAMP,
   transit_modes TEXT[],
   duration_minutes INTEGER,
+  route_summary JSONB,
   status VARCHAR(50) DEFAULT 'completed',
   created_at TIMESTAMP DEFAULT NOW()
 );

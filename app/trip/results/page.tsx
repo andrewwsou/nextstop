@@ -139,6 +139,29 @@ function getDepartureDateTime(date: string, time: string) {
   return departureDate.toISOString();
 }
 
+function getRouteSummary(route: Route) {
+  return {
+    summary: route.summary,
+    duration: route.duration,
+    departureTime: route.time.split(" -> ")[0] || null,
+    arrivalTime: route.time.split(" -> ")[1] || null,
+    transitLines: route.transitLines,
+    steps: route.steps.map((step) => ({
+      type: step.type,
+      instruction: step.instruction,
+      duration: step.duration,
+      distance: step.distance,
+      lineName: step.lineName,
+      vehicleType: step.vehicleType,
+      departureStop: step.departureStop,
+      arrivalStop: step.arrivalStop,
+      departureTime: step.departureTime,
+      arrivalTime: step.arrivalTime,
+      live: step.live,
+    })),
+  };
+}
+
 function mapPlanRoute(route: PlanRoute, index: number): Route {
   const transitSteps = route.steps.filter((step) => step.type === "transit");
 
@@ -242,6 +265,7 @@ function TripResultsContent() {
         departure_time: getDepartureDateTime(tripDate, tripTime),
         transit_modes: transit.split(",").filter(Boolean),
         duration_minutes: getDurationMinutes(route.duration),
+        route_summary: getRouteSummary(route),
       });
 
       if (data.error) {

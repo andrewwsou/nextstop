@@ -2,31 +2,141 @@
 import { useEffect, useState } from "react";
 import { getTrips } from "../lib/api";
 import { useRequireAuth } from "../lib/auth";
-import type { Leg, Trip } from "./mockdata";
+import type { Leg, RouteSummaryStep, Trip } from "./mockdata";
 
 function mapApiTrip(t: {
   id: number;
   origin: string;
   destination: string;
   created_at?: string;
+  departure_time?: string | null;
   transit_modes?: string[];
-  duration_minutes?: number;
+  duration_minutes?: number | null;
+  route_summary?: Trip["routeSummary"];
 }): Trip {
-  const date = t.created_at?.slice(0, 10) ?? "";
-  const legs: Leg[] = (t.transit_modes ?? []).map((route) => ({
-    type: "bus",
-    route,
+  const savedDate = t.created_at?.slice(0, 10) ?? "";
+  const tripDate = t.departure_time?.slice(0, 10) || savedDate;
+  const modes = t.transit_modes ?? [];
+  const legs = getPreviewLegs(t.route_summary?.steps, modes, t);
+  return {
+    id: t.id,
     from: t.origin,
     to: t.destination,
-    duration: t.duration_minutes ? `${t.duration_minutes} min` : "—",
-  }));
-  return { id: t.id, from: t.origin, to: t.destination, date, legs };
+    date: tripDate,
+    savedDate,
+    departureTime: t.departure_time,
+    durationMinutes: t.duration_minutes,
+    modes,
+    routeSummary: t.route_summary,
+    legs,
+  };
 }
 
 function fmtDate(d: string) {
   return new Date(d + "T00:00:00").toLocaleDateString("en-US", {
     month: "numeric", day: "numeric", year: "2-digit",
   });
+}
+
+function fmtDateTime(value?: string | null) {
+  if (!value) {
+    return "No departure time set";
+  }
+
+  return new Date(value).toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+function formatMode(mode: string) {
+  return mode.charAt(0).toUpperCase() + mode.slice(1);
+}
+
+function getPreviewLegs(
+  steps: RouteSummaryStep[] | undefined,
+  modes: string[],
+  trip: { origin: string; destination: string; duration_minutes?: number | null }
+): Leg[] {
+  if (steps?.length) {
+    return steps.map((step) => {
+      if (step.type === "walking") {
+        return {
+          type: "walk",
+          duration: step.duration || "Walk",
+        };
+      }
+
+      return {
+        type: "bus",
+        route: step.lineName || getVehicleLabel(step),
+        from: step.departureStop || trip.origin,
+        to: step.arrivalStop || trip.destination,
+        duration: step.duration || "—",
+      };
+    });
+  }
+
+  return modes.map((route) => ({
+    type: "bus",
+    route: formatMode(route),
+    from: trip.origin,
+    to: trip.destination,
+    duration: trip.duration_minutes ? `${trip.duration_minutes} min` : "—",
+  }));
+}
+
+function getVehicleLabel(step: RouteSummaryStep) {
+  if (step.vehicleType?.includes("RAIL")) {
+    return "Train";
+  }
+
+  return "Bus";
+}
+
+function RouteStepDetails({ step }: { step: RouteSummaryStep }) {
+  if (step.type === "walking") {
+    return (
+      <div style={{ fontSize: 13, color: "#aaa", display: "flex", gap: 8 }}>
+        <span>Walk</span>
+        <span>
+          {step.distance || "Walking segment"}
+          {step.duration ? ` · ${step.duration}` : ""}
+          {step.instruction ? ` · ${step.instruction}` : ""}
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ fontSize: 13, color: "#aaa", display: "grid", gap: 3 }}>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
+        <span style={{ background: "#1a2e28", color: "#3ecfb2", fontSize: 11, padding: "2px 8px", borderRadius: 20 }}>
+          {step.lineName || "Transit"}
+        </span>
+        <span style={{ color: "white" }}>
+          {getVehicleLabel(step)}
+          {step.duration ? ` · ${step.duration}` : ""}
+        </span>
+      </div>
+      <div>
+        {step.departureStop || "Departure stop"} → {step.arrivalStop || "Arrival stop"}
+      </div>
+      {(step.departureTime || step.arrivalTime) && (
+        <div style={{ color: "#777" }}>
+          {step.departureTime || "--"} → {step.arrivalTime || "--"}
+        </div>
+      )}
+      {step.live && (
+        <div style={{ color: "#3ecfb2" }}>
+          {step.live.realtimeAvailable ? "Realtime available" : "Scheduled data"}
+          {step.live.status ? ` · ${step.live.status}` : ""}
+        </div>
+      )}
+    </div>
+  );
 }
 
 function getGroup(dateStr: string): "this-week" | "this-month" | "last-6-months" | null {
@@ -148,6 +258,9 @@ export default function History() {
                       <div style={{ fontSize: 16, fontWeight: 700, color: "white", whiteSpace: "nowrap" }}>
                         {fmtDate(t.date)}
                       </div>
+                      <div style={{ fontSize: 12, color: "#888", whiteSpace: "nowrap" }}>
+                        {t.durationMinutes ? `${t.durationMinutes} min` : "Duration unavailable"}
+                      </div>
                       <button
                         onClick={() => setExpanded(expanded === t.id ? null : t.id)}
                         style={{ fontSize: 11, color: "#3ecfb2", background: "none", border: "1px solid #1a2e28", borderRadius: 20, cursor: "pointer", padding: "2px 10px", whiteSpace: "nowrap" }}
@@ -161,20 +274,34 @@ export default function History() {
 
                   {expanded === t.id && (
                     <div style={{ marginTop: "1rem", paddingTop: "1rem", borderTop: "1px solid #1a2e28" }}>
-                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                        {t.legs.map((leg, i) =>
-                          leg.type === "walk" ? ( 
-                            <div key={i} style={{ fontSize: 13, color: "#888", display: "flex", gap: 8, alignItems: "center" }}>
-                              <span>🚶</span> Walk · {leg.duration}
-                            </div>
-                          ) : (
-                            <div key={i} style={{ fontSize: 13, color: "#aaa", display: "flex", gap: 8, alignItems: "center" }}>
-                              <span style={{ background: "#1a2e28", color: "#3ecfb2", fontSize: 11, padding: "2px 8px", borderRadius: 20 }}>
-                                {leg.route}
-                              </span>
-                              {leg.from} → {leg.to} · {leg.duration}
-                            </div>
-                          )
+                      <div style={{ display: "grid", gap: 8, fontSize: 13, color: "#aaa" }}>
+                        <div>
+                          <span style={{ color: "#666" }}>Planned departure: </span>
+                          {fmtDateTime(t.departureTime)}
+                        </div>
+                        <div>
+                          <span style={{ color: "#666" }}>Saved: </span>
+                          {t.savedDate ? fmtDate(t.savedDate) : "Unknown"}
+                        </div>
+                        <div>
+                          <span style={{ color: "#666" }}>Transit modes: </span>
+                          {t.modes?.length ? t.modes.map(formatMode).join(", ") : "Not specified"}
+                        </div>
+                        <div>
+                          <span style={{ color: "#666" }}>Estimated duration: </span>
+                          {t.durationMinutes ? `${t.durationMinutes} min` : "Unavailable"}
+                        </div>
+                        {t.routeSummary?.steps?.length ? (
+                          <div style={{ display: "grid", gap: 10, marginTop: 6 }}>
+                            <div style={{ color: "#666" }}>Route steps</div>
+                            {t.routeSummary.steps.map((step, index) => (
+                              <RouteStepDetails key={`${t.id}-${index}`} step={step} />
+                            ))}
+                          </div>
+                        ) : (
+                          <div style={{ color: "#666" }}>
+                            Detailed bus/train steps were not saved for this older trip.
+                          </div>
                         )}
                       </div>
                     </div>

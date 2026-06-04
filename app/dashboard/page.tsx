@@ -16,6 +16,7 @@ type Trip = {
   created_at: string;
   departure_time?: string | null;
   duration_minutes?: number | null;
+  transit_modes?: string[] | null;
 };
 
 function getGreeting() {
@@ -29,6 +30,29 @@ function subscribeToClientSnapshot() {
 
 function getClientFirstName() {
   return (getUser() as DashboardUser | null)?.first_name || "";
+}
+
+function formatTripDate(value?: string | null) {
+  if (!value) {
+    return "No departure set";
+  }
+
+  return new Date(value).toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+function formatModes(modes?: string[] | null) {
+  if (!modes?.length) {
+    return "Modes not set";
+  }
+
+  return modes
+    .map((mode) => mode.charAt(0).toUpperCase() + mode.slice(1))
+    .join(", ");
 }
 
 export default function Dashboard() {
@@ -158,7 +182,7 @@ export default function Dashboard() {
                   <div style={{ display: "flex", justifyContent: "space-between",
                     marginTop: 5 }}>
                     <span style={{ fontSize: "0.73rem", color: "#444" }}>
-                      {new Date(t.created_at).toLocaleString()}
+                      {formatTripDate(t.departure_time)}
                     </span>
                     {t.duration_minutes && (
                       <span style={{ fontSize: "0.73rem", color: "#3ecfb2" }}>
@@ -166,6 +190,9 @@ export default function Dashboard() {
                       </span>
                     )}
                   </div>
+                  <p style={{ margin: "5px 0 0", fontSize: "0.72rem", color: "#555" }}>
+                    {formatModes(t.transit_modes)}
+                  </p>
                 </div>
               ))}
               <button onClick={() => router.push("/history")} style={{
@@ -198,10 +225,12 @@ export default function Dashboard() {
                     {t.origin} → {t.destination}
                   </p>
                   <span style={{ fontSize: "0.73rem", color: "#f59e0b" }}>
-                    {t.departure_time
-                      ? new Date(t.departure_time).toLocaleString()
-                      : "No time set"}
+                    {formatTripDate(t.departure_time)}
                   </span>
+                  <p style={{ margin: "5px 0 0", fontSize: "0.72rem", color: "#555" }}>
+                    {formatModes(t.transit_modes)}
+                    {t.duration_minutes ? ` · ${t.duration_minutes} min` : ""}
+                  </p>
                 </div>
               ))}
             </div>

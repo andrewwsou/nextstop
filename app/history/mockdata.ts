@@ -2,11 +2,43 @@ export type Leg =
   | { type: "walk"; duration: string }
   | { type: "bus"; route: string; from: string; to: string; duration: string };
 
+export type RouteSummaryStep = {
+  type: "walking" | "transit";
+  instruction?: string;
+  duration?: string;
+  distance?: string;
+  lineName?: string;
+  vehicleType?: string;
+  departureStop?: string;
+  arrivalStop?: string;
+  departureTime?: string;
+  arrivalTime?: string;
+  live?: {
+    realtimeAvailable?: boolean;
+    nextDeparture?: string;
+    status?: string;
+  };
+};
+
+export type RouteSummary = {
+  summary?: string;
+  duration?: string;
+  departureTime?: string | null;
+  arrivalTime?: string | null;
+  transitLines?: string[];
+  steps?: RouteSummaryStep[];
+};
+
 export type Trip = {
   id: number;
   from: string;
   to: string;
   date: string;
+  savedDate?: string;
+  departureTime?: string | null;
+  durationMinutes?: number | null;
+  modes?: string[];
+  routeSummary?: RouteSummary | null;
   legs: Leg[];
 };
 

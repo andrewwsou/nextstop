@@ -6,9 +6,21 @@ const authMiddleware = require('../middleware/auth');
 // All trip routes require auth
 router.use(authMiddleware);
 
+let routeSummaryColumnReady = false;
+
+async function ensureRouteSummaryColumn() {
+  if (routeSummaryColumnReady) {
+    return;
+  }
+
+  await pool.query('ALTER TABLE trips ADD COLUMN IF NOT EXISTS route_summary JSONB');
+  routeSummaryColumnReady = true;
+}
+
 // GET /api/trips — get all trips for logged-in user
 router.get('/', async (req, res) => {
   try {
+    await ensureRouteSummaryColumn();
     const result = await pool.query(
       'SELECT * FROM trips WHERE user_id = $1 ORDER BY created_at DESC',
       [req.user.id]
@@ -21,17 +33,41 @@ router.get('/', async (req, res) => {
 
 // POST /api/trips — save a new trip
 router.post('/', async (req, res) => {
-  const { origin, destination, departure_time, transit_modes, duration_minutes } = req.body;
+  const {
+    origin,
+    destination,
+    departure_time,
+    transit_modes,
+    duration_minutes,
+    route_summary,
+  } = req.body;
 
   if (!origin || !destination) {
     return res.status(400).json({ error: 'Origin and destination are required' });
   }
 
   try {
+    await ensureRouteSummaryColumn();
     const result = await pool.query(
-      `INSERT INTO trips (user_id, origin, destination, departure_time, transit_modes, duration_minutes)
-       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-      [req.user.id, origin, destination, departure_time, transit_modes, duration_minutes]
+      `INSERT INTO trips (
+        user_id,
+        origin,
+        destination,
+        departure_time,
+        transit_modes,
+        duration_minutes,
+        route_summary
+      )
+       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+      [
+        req.user.id,
+        origin,
+        destination,
+        departure_time,
+        transit_modes,
+        duration_minutes,
+        route_summary || null,
+      ]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
