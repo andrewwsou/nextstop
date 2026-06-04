@@ -1,25 +1,31 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
-export default function Trip() {
+type TransitTypes = {
+  bus: boolean;
+  train: boolean;
+  express: boolean;
+};
+
+function TripForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [start, setStart] = useState("");
-  const [destination, setDestination] = useState("");
+  const [destination, setDestination] = useState(searchParams.get("destination") || "");
   const [formError, setFormError] = useState("");
-
   const [tripDate, setTripDate] = useState("");
   const [tripTime, setTripTime] = useState("");
 
-  const [transitTypes, setTransitTypes] = useState({
+  const [transitTypes, setTransitTypes] = useState<TransitTypes>({
     bus: true,
     train: true,
     express: true,
   });
 
-  const toggleTransitType = (type: "bus" | "train" | "express") => {
+  const toggleTransitType = (type: keyof TransitTypes) => {
     setTransitTypes((prev) => ({
       ...prev,
       [type]: !prev[type],
@@ -64,47 +70,46 @@ export default function Trip() {
     setFormError("");
 
     router.push(
-      `/trip/results?start=${encodeURIComponent(trimmedStart)}&destination=${encodeURIComponent(trimmedDestination
-      )}&transit=${encodeURIComponent(allowedTransit)}&date=${encodeURIComponent(tripDate
+      `/trip/results?start=${encodeURIComponent(trimmedStart)}&destination=${encodeURIComponent(
+        trimmedDestination
+      )}&transit=${encodeURIComponent(allowedTransit)}&date=${encodeURIComponent(
+        tripDate
       )}&time=${encodeURIComponent(tripTime)}`
     );
   };
 
   return (
-    <main
-      className="min-h-screen bg-[#111] text-white"
-      style={{ justifyContent: "flex-start", padding: "6rem 1.5rem 2rem" }}
-    >
-      <div className="flex items-center gap-4 mb-6">
+    <main className="min-h-screen bg-[#111] px-6 pt-24 text-white">
+      <div className="mb-6 mt-2 flex items-center gap-3">
         <button
-          className="text-4xl leading-none"
+          className="text-2xl opacity-70 transition hover:opacity-100"
           onClick={() => router.push("/dashboard")}
         >
           ←
         </button>
 
-        <h1 className="text-3xl font-bold leading-tight sm:text-4xl">
+        <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">
           Where do you want to go?
         </h1>
       </div>
 
-      <section className="rounded-3xl border border-zinc-600 bg-[#262626] p-4 mb-6">
-        <div className="flex justify-between items-center mb-3">
+      <section className="mb-6 rounded-2xl border border-zinc-800 bg-[#1a1a1a] p-4">
+        <div className="mb-3 flex items-center justify-between">
           <span className="text-xs text-zinc-400">START</span>
 
           <button
             onClick={handleUseCurrentLocation}
-            className="text-xs text-teal-300 border border-teal-400 rounded-full px-3 py-1"
+            className="rounded-full border border-teal-500/40 px-3 py-1 text-xs text-teal-200 transition hover:bg-teal-500/10"
           >
-            ↗ Use my current location
+            Use my current location
           </button>
         </div>
 
         <input
           value={start}
           onChange={(e) => setStart(e.target.value)}
-          placeholder="Enter location"
-          className="w-full bg-transparent border-b border-zinc-500 pb-2 mb-4 text-sm outline-none placeholder:text-zinc-500"
+          placeholder="Enter starting location"
+          className="mb-4 w-full rounded-lg border border-zinc-800 bg-transparent px-3 py-2 text-sm outline-none transition placeholder:text-zinc-600 focus:border-teal-500/50"
         />
 
         <span className="text-xs text-zinc-400">DESTINATION</span>
@@ -112,75 +117,67 @@ export default function Trip() {
         <input
           value={destination}
           onChange={(e) => setDestination(e.target.value)}
-          placeholder="Enter location"
-          className="w-full bg-transparent border-b border-zinc-500 pb-2 mt-2 text-sm outline-none placeholder:text-zinc-500"
+          placeholder="Enter destination"
+          className="mt-2 w-full rounded-lg border border-zinc-800 bg-transparent px-3 py-2 text-sm outline-none transition placeholder:text-zinc-600 focus:border-teal-500/50"
         />
       </section>
 
-      <div className="grid grid-cols-2 gap-3 mb-7">
+      <div className="mb-7 grid grid-cols-2 gap-3">
         <div>
-          <p className="mb-2">Day</p>
+          <p className="mb-2 text-sm text-zinc-300">Day</p>
           <input
             type="date"
             value={tripDate}
             onChange={(e) => setTripDate(e.target.value)}
-            className="w-full rounded-xl border border-zinc-600 bg-[#262626] px-4 py-3 text-left text-white"
+            className="w-full rounded-lg border border-zinc-800 bg-[#1a1a1a] px-3 py-2 text-sm text-white transition focus:border-teal-500/50"
           />
         </div>
 
         <div>
-          <p className="mb-2">Time</p>
+          <p className="mb-2 text-sm text-zinc-300">Time</p>
           <input
             type="time"
             value={tripTime}
             onChange={(e) => setTripTime(e.target.value)}
-            className="w-full rounded-xl border border-zinc-600 bg-[#262626] px-4 py-3 text-left text-white"
+            className="w-full rounded-lg border border-zinc-800 bg-[#1a1a1a] px-3 py-2 text-sm text-white transition focus:border-teal-500/50"
           />
         </div>
       </div>
 
-      <p className="mb-3">Transit types</p>
+      <p className="mb-3 text-sm text-zinc-300">Transit types</p>
 
       <div className="grid grid-cols-3 gap-2">
         <button
           onClick={() => toggleTransitType("bus")}
-          className={`rounded-xl border-4 py-4 font-semibold ${
+          className={`rounded-xl px-3 py-3 text-sm font-medium transition ${
             transitTypes.bus
-              ? "border-teal-300 bg-teal-700"
-              : "border-zinc-600 bg-zinc-800 text-zinc-500 opacity-50"
+              ? "border border-teal-400 bg-teal-400/10 text-teal-200"
+              : "border border-zinc-800 bg-[#1a1a1a] text-zinc-500"
           }`}
         >
-          🚌
-          <br />
           OC Bus
         </button>
 
         <button
           onClick={() => toggleTransitType("train")}
-          className={`rounded-xl border-4 py-4 font-semibold ${
+          className={`rounded-xl px-3 py-3 text-sm font-medium transition ${
             transitTypes.train
-              ? "border-indigo-400 bg-indigo-500/60"
-              : "border-zinc-600 bg-zinc-800 text-zinc-500 opacity-50"
+              ? "border border-indigo-400 bg-indigo-400/10 text-indigo-200"
+              : "border border-zinc-800 bg-[#1a1a1a] text-zinc-500"
           }`}
         >
-          🚆
-          <br />
           Metrolink
         </button>
 
         <button
           onClick={() => toggleTransitType("express")}
-          className={`rounded-xl border-2 py-4 text-sm font-semibold ${
+          className={`rounded-xl px-3 py-3 text-sm font-medium transition ${
             transitTypes.express
-              ? "border-cyan-700 bg-cyan-950"
-              : "border-zinc-600 bg-zinc-800 text-zinc-500 opacity-50"
+              ? "border border-cyan-400 bg-cyan-400/10 text-cyan-200"
+              : "border border-zinc-800 bg-[#1a1a1a] text-zinc-500"
           }`}
         >
-          🚌
-          <br />
-          Anteater
-          <br />
-          Express
+          Anteater Express
         </button>
       </div>
 
@@ -192,10 +189,24 @@ export default function Trip() {
 
       <button
         onClick={handlePlanTrip}
-        className="mt-10 w-full rounded-xl bg-teal-400 py-4 font-bold text-black"
+        className="mt-10 w-full rounded-xl bg-teal-400 py-3 font-semibold text-black transition hover:bg-teal-300"
       >
         Plan Trip
       </button>
     </main>
+  );
+}
+
+export default function Trip() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-[#111] text-white">
+          Loading...
+        </div>
+      }
+    >
+      <TripForm />
+    </Suspense>
   );
 }

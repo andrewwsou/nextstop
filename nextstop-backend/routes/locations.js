@@ -1,0 +1,17 @@
+const express = require('express');
+const router = express.Router();
+const pool = require('../db');
+
+// GET /api/locations — get all static locations
+router.get('/', async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT * FROM locations ORDER BY category, name'
+    );
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+module.exports = router;
