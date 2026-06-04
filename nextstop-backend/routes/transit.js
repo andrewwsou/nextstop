@@ -48,11 +48,287 @@ const routeOptions = [
   },
 ];
 
+function stripHtml(value) {
+  return value.replace(/<[^>]*>/g, "");
+}
+
+function getDepartureTime(date, time) {
+  if (!date) {
+    return "now";
+  }
+
+  const tripDate = new Date(`${date}T${time || "00:00"}`);
+  if (Number.isNaN(tripDate.getTime())) {
+    return "now";
+  }
+
+  return Math.floor(tripDate.getTime() / 1000).toString();
+}
+
+function getTransitMode(transit) {
+  const modes = transit.split(",").filter(Boolean);
+  const googleModes = [];
+
+  if (modes.includes("bus") || modes.includes("express")) {
+    googleModes.push("bus");
+  }
+
+  if (modes.includes("train")) {
+    googleModes.push("rail");
+  }
+
+  return googleModes.join("|");
+}
+
+function uniqueValues(values) {
+  return [...new Set(values.filter(Boolean))];
+}
+
+function getRouteSummary(route, transitLines, index) {
+  if (route.summary) {
+    return route.summary;
+  }
+
+  if (transitLines.length > 0) {
+    return transitLines.join(" + ");
+  }
+
+  return `Route option ${index + 1}`;
+}
+
+function getStepType(step) {
+  return step.travel_mode === "TRANSIT" ? "transit" : "walking";
+}
+
+function getTransitType(vehicleType) {
+  if (vehicleType === "BUS") {
+    return "bus";
+  }
+
+  if (
+    [
+      "COMMUTER_TRAIN",
+      "HEAVY_RAIL",
+      "HIGH_SPEED_TRAIN",
+      "INTERCITY_BUS",
+      "METRO_RAIL",
+      "RAIL",
+      "TRAIN",
+      "TRAM",
+    ].includes(vehicleType)
+  ) {
+    return "train";
+  }
+
+  return "bus";
+}
+
+function mapGooglePlanStep(step) {
+  const transit = step.transit_details;
+  const line = transit?.line;
+
+  return {
+    type: getStepType(step),
+    instruction: stripHtml(step.html_instructions || ""),
+    duration: step.duration?.text || "",
+    distance: step.distance?.text || "",
+    lineName: line?.short_name || line?.name || undefined,
+    vehicleType: line?.vehicle?.type || line?.vehicle?.name || undefined,
+    departureStop: transit?.departure_stop?.name || undefined,
+    arrivalStop: transit?.arrival_stop?.name || undefined,
+    departureTime: transit?.departure_time?.text || undefined,
+    arrivalTime: transit?.arrival_time?.text || undefined,
+  };
+}
+
+function mapGooglePlanRoute(route, index) {
+  const leg = route.legs?.[0];
+  const steps = leg?.steps?.map(mapGooglePlanStep) || [];
+  const transitLines = uniqueValues(
+    steps
+      .filter((step) => step.type === "transit")
+      .map((step) => step.lineName)
+  );
+  const walkSeconds =
+    leg?.steps
+      ?.filter((step) => step.travel_mode === "WALKING")
+      .reduce((total, step) => total + (step.duration?.value || 0), 0) || 0;
+
+  return {
+    id: `google-${index}`,
+    summary: getRouteSummary(route, transitLines, index),
+    duration: leg?.duration?.text || "",
+    arrivalTime: leg?.arrival_time?.text || "",
+    departureTime: leg?.departure_time?.text || "",
+    steps,
+    transitLines,
+    totalWalkingTime: walkSeconds ? `${Math.round(walkSeconds / 60)} min` : undefined,
+    warnings: route.warnings || [],
+  };
+}
+
+function mapGoogleRoute(route, index) {
+  const leg = route.legs?.[0];
+  const transitSteps =
+    leg?.steps?.filter((step) => step.travel_mode === "TRANSIT") || [];
+  const walkSeconds =
+    leg?.steps
+      ?.filter((step) => step.travel_mode === "WALKING")
+      .reduce((total, step) => total + (step.duration?.value || 0), 0) || 0;
+
+  return {
+    id: `google-${index}`,
+    label: index === 0 ? "Suggested Route" : undefined,
+    time:
+      leg?.departure_time && leg?.arrival_time
+        ? `${leg.departure_time.text} -> ${leg.arrival_time.text}`
+        : "Route option",
+    depart: leg?.start_address
+      ? `Leaves from ${leg.start_address}`
+      : "Transit route",
+    duration: leg?.duration?.text || "--",
+    transfers:
+      transitSteps.length > 1
+        ? `${transitSteps.length - 1} transfer${
+            transitSteps.length - 1 === 1 ? "" : "s"
+          }`
+        : "0 transfers",
+    walk: `${Math.round(walkSeconds / 60)} min walk`,
+    segments:
+      leg?.steps?.map((step) => {
+        if (step.travel_mode === "TRANSIT") {
+          const line = step.transit_details?.line;
+          return {
+            type: "transit",
+            label: line?.short_name || line?.name || stripHtml(step.html_instructions),
+            transitType: getTransitType(line?.vehicle?.type),
+          };
+        }
+
+        return { type: "walk" };
+      }) || [],
+  };
+}
+
+async function getGoogleRoutes({ start, destination, transit, date, time }) {
+  const params = new URLSearchParams({
+    origin: start,
+    destination,
+    mode: "transit",
+    alternatives: "true",
+    departure_time: getDepartureTime(date, time),
+    key: process.env.GOOGLE_MAPS_API_KEY,
+  });
+
+  const transitMode = getTransitMode(transit);
+  if (transitMode) {
+    params.append("transit_mode", transitMode);
+  }
+
+  const response = await fetch(
+    `https://maps.googleapis.com/maps/api/directions/json?${params.toString()}`
+  );
+  const data = await response.json();
+
+  if (data.status !== "OK") {
+    throw new Error(data.error_message || `Google Directions returned ${data.status}`);
+  }
+
+  return data.routes.map(mapGoogleRoute);
+}
+
+async function getGooglePlanRoutes({ origin, destination, modes, date, time }) {
+  if (!process.env.GOOGLE_MAPS_API_KEY) {
+    const error = new Error("GOOGLE_MAPS_API_KEY is not configured");
+    error.status = 500;
+    throw error;
+  }
+
+  const params = new URLSearchParams({
+    origin,
+    destination,
+    mode: "transit",
+    alternatives: "true",
+    departure_time: getDepartureTime(date, time),
+    key: process.env.GOOGLE_MAPS_API_KEY,
+  });
+
+  const transitMode = getTransitMode(modes || "bus,train,express");
+  if (transitMode) {
+    params.append("transit_mode", transitMode);
+  }
+
+  const response = await fetch(
+    `https://maps.googleapis.com/maps/api/directions/json?${params.toString()}`
+  );
+
+  if (!response.ok) {
+    const error = new Error(`Google Directions request failed with ${response.status}`);
+    error.status = 502;
+    throw error;
+  }
+
+  const data = await response.json();
+
+  if (data.status === "ZERO_RESULTS") {
+    const error = new Error("No routes found");
+    error.status = 404;
+    throw error;
+  }
+
+  if (data.status !== "OK") {
+    const error = new Error(data.error_message || `Google Directions returned ${data.status}`);
+    error.status = 502;
+    throw error;
+  }
+
+  if (!Array.isArray(data.routes) || data.routes.length === 0) {
+    const error = new Error("No routes found");
+    error.status = 404;
+    throw error;
+  }
+
+  return data.routes.map(mapGooglePlanRoute);
+}
+
+router.get("/plan", async (req, res) => {
+  const origin = req.query.origin?.trim();
+  const destination = req.query.destination?.trim();
+
+  if (!origin || !destination) {
+    return res.status(400).json({
+      error: "Origin and destination are required",
+    });
+  }
+
+  try {
+    const routes = await getGooglePlanRoutes({
+      origin,
+      destination,
+      modes: req.query.modes,
+      date: req.query.date,
+      time: req.query.time,
+    });
+
+    res.json({
+      origin,
+      destination,
+      source: "google",
+      routes,
+    });
+  } catch (err) {
+    res.status(err.status || 500).json({
+      error: err.message || "Route planning failed",
+    });
+  }
+});
+
 router.get("/routes", async (req, res) => {
   const start = req.query.start?.trim();
   const destination = req.query.destination?.trim();
+  const transit = req.query.transit || "bus,train,express";
   const allowedTransit = new Set(
-    (req.query.transit || "bus,train,express")
+    transit
       .split(",")
       .filter(Boolean)
   );
@@ -61,6 +337,27 @@ router.get("/routes", async (req, res) => {
     return res.status(400).json({
       error: "Start and destination are required",
     });
+  }
+
+  if (process.env.GOOGLE_MAPS_API_KEY) {
+    try {
+      const routes = await getGoogleRoutes({
+        start,
+        destination,
+        transit,
+        date: req.query.date,
+        time: req.query.time,
+      });
+
+      return res.json({
+        start,
+        destination,
+        source: "google",
+        routes,
+      });
+    } catch (err) {
+      console.error("Google Directions error:", err.message);
+    }
   }
 
   const routes = routeOptions.filter((route) =>
@@ -76,6 +373,7 @@ router.get("/routes", async (req, res) => {
   res.json({
     start,
     destination,
+    source: "mock",
     routes,
   });
 });
@@ -83,6 +381,10 @@ router.get("/routes", async (req, res) => {
 router.get("/nearby", async (req, res) => {
   try {
     const { lat, lon } = req.query;
+
+    if (!process.env.TRANSIT_API_KEY) {
+      return res.status(500).json({ error: "TRANSIT_API_KEY is not configured" });
+    }
 
     const url = `https://external.transitapp.com/v4/public/nearby_routes?lat=${lat}&lon=${lon}`;
 
