@@ -9,8 +9,15 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });
 
+pool.on('error', (err) => {
+  console.error('Unexpected PostgreSQL client error:', err.message);
+});
+
 pool.connect()
-  .then(() => console.log('Connected to PostgreSQL'))
+  .then((client) => {
+    client.release();
+    console.log('Connected to PostgreSQL');
+  })
   .catch(err => console.error('DB connection error:', err));
 
 module.exports = pool;
