@@ -22,6 +22,10 @@ type PlanStep = {
   distance: string;
   lineName?: string;
   vehicleType?: string;
+  departureStop?: string;
+  arrivalStop?: string;
+  departureTime?: string;
+  arrivalTime?: string;
 };
 
 type PlanRoute = {
@@ -82,12 +86,15 @@ function RouteLine({ segments }: { segments: Segment[] }) {
 type Route = {
   id: string;
   label?: string;
+  summary: string;
   time: string;
   depart: string;
   duration: string;
   transfers: string;
   walk: string;
   segments: Segment[];
+  steps: PlanStep[];
+  transitLines: string[];
 };
 
 function getTransitType(vehicleType?: string): "bus" | "train" | "express" {
@@ -106,7 +113,8 @@ function mapPlanRoute(route: PlanRoute, index: number): Route {
 
   return {
     id: route.id,
-    label: index === 0 ? "Suggested Route" : undefined,
+    label: `Route option ${index + 1}${index === 0 ? " · Suggested" : ""}`,
+    summary: route.summary,
     time:
       route.departureTime && route.arrivalTime
         ? `${route.departureTime} -> ${route.arrivalTime}`
@@ -120,6 +128,8 @@ function mapPlanRoute(route: PlanRoute, index: number): Route {
           }`
         : "0 transfers",
     walk: route.totalWalkingTime ? `${route.totalWalkingTime} walk` : "-- walk",
+    steps: route.steps,
+    transitLines: route.transitLines,
     segments: route.steps.map((step) => {
       if (step.type === "transit") {
         return {
@@ -141,6 +151,7 @@ function TripResultsContent() {
   const [routes, setRoutes] = useState<Route[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [expandedRouteId, setExpandedRouteId] = useState<string | null>(null);
   const tripDate = searchParams.get("date") || "";
   const tripTime = searchParams.get("time") || "";
 
@@ -234,22 +245,29 @@ function TripResultsContent() {
 
       <div className="space-y-5">
         {/* Renders label if exists */}
-        {routes.map((route, index) => (
-          <section
-            key={route.id}
-            className={`rounded-2xl p-4 border ${
-              index === 0
-                ? "bg-teal-900/50 border-teal-300"
-                : "bg-[#2b2b2b] border-zinc-700"
-            }`}
-          >
+        {routes.map((route, index) => {
+          const isExpanded = expandedRouteId === route.id;
+
+          return (
+            <section
+              key={route.id}
+              className={`rounded-2xl p-4 border ${
+                index === 0
+                  ? "bg-teal-900/50 border-teal-300"
+                  : "bg-[#2b2b2b] border-zinc-700"
+              }`}
+            >
             {/* Route time and departure info */}
             {route.label && (
               <p className="text-teal-200 font-bold mb-1">{route.label}</p>
             )}
 
             <h2 className="text-2xl font-bold">{route.time}</h2>
-            <p className="text-sm text-zinc-300">{route.depart}</p>
+            <p className="text-sm text-zinc-300">
+              {route.transitLines.length > 0
+                ? route.transitLines.join(" + ")
+                : route.depart}
+            </p>
 
             {/* Line graphic referenced at top */}
             <RouteLine segments={route.segments} />
@@ -260,8 +278,53 @@ function TripResultsContent() {
               <span>→ {route.transfers}</span>
               <span>🚶 {route.walk}</span>
             </div>
+
+            <button
+              onClick={() => setExpandedRouteId(isExpanded ? null : route.id)}
+              className="mt-4 text-sm font-semibold text-teal-200"
+            >
+              {isExpanded ? "Hide details" : "Show details"}
+            </button>
+
+            {isExpanded && (
+              <div className="mt-4 space-y-3 border-t border-zinc-700 pt-4">
+                {route.steps.map((step, stepIndex) => (
+                  <div key={`${route.id}-${stepIndex}`} className="text-sm">
+                    {step.type === "transit" ? (
+                      <>
+                        <div className="font-semibold text-white">
+                          {step.vehicleType?.includes("RAIL") ? "Train" : "Bus"}{" "}
+                          {step.lineName || "Transit"}
+                          {step.duration && (
+                            <span className="font-normal text-zinc-400"> · {step.duration}</span>
+                          )}
+                        </div>
+                        <div className="text-zinc-300">
+                          {step.departureStop || "Departure stop"} →{" "}
+                          {step.arrivalStop || "Arrival stop"}
+                        </div>
+                        {(step.departureTime || step.arrivalTime) && (
+                          <div className="text-xs text-zinc-400">
+                            {step.departureTime || "--"} → {step.arrivalTime || "--"}
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="text-zinc-300">
+                        Walk {step.distance && `${step.distance} `}
+                        {step.duration && `(${step.duration})`}
+                        {step.instruction && (
+                          <span className="text-zinc-500"> · {step.instruction}</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </section>
-        ))}
+          );
+        })}
       </div>
     </main>
   );
