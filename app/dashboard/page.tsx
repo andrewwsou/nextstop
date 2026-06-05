@@ -77,7 +77,6 @@ export default function Dashboard() {
   const [lastUpdatedDisplay, setLastUpdatedDisplay] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const firstName = "Test User";
   const firstName = useSyncExternalStore(subscribeToClientSnapshot, getClientFirstName, () => "");
   const greeting = useSyncExternalStore(subscribeToClientSnapshot, getGreeting, () => "Good day");
 
