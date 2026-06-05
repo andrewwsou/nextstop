@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useRequireAuth, getUser, logout } from "../lib/auth";
 import { updateName, updateEmail, updatePassword } from "../lib/api";
@@ -46,7 +46,7 @@ export default function Profile() {
   const router = useRouter();
   useRequireAuth();
 
-  const [user, setUser] = useState<User | null>(() => getUser());
+  const [user, setUser] = useState<User | null>(null);
   const [modal, setModal] = useState<ModalType | null>(null);
   const [error, setError] = useState("");
 
@@ -56,6 +56,10 @@ export default function Profile() {
   const [password, setPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+
+  useEffect(() => {
+    setUser(getUser());
+  }, []);
 
   function onRowClick(item: string) {
     if (item === "Sign out") {
