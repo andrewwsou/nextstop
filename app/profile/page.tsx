@@ -146,38 +146,44 @@ export default function Profile() {
   const isInfoModal = modal === "about" || modal === "privacy";
 
   return (
-    <main style={{
-      minHeight: "100vh",
-      padding: "80px 5rem 2.5rem",
-      background: "#0d1210",
-      color: "white",
-    }}>
-
+    <main
+      className="profile-main"
+      style={{
+        minHeight: "100vh",
+        padding: "80px 5rem 2.5rem",
+        background: "#0d1210",
+        color: "white",
+      }}
+    >
       <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: "3rem" }}>
         <div style={{
           width: 72, height: 72, borderRadius: "50%",
           background: "#1a2e28", border: "1px solid #2a4a3e",
           display: "flex", alignItems: "center", justifyContent: "center",
           fontSize: "1.6rem", fontWeight: 700, color: "#3ecfb2",
+          flexShrink: 0,
         }}>
           {user?.first_name?.[0] || "U"}
         </div>
-        <div>
-          <p style={{ margin: 0, fontSize: "1.4rem", fontWeight: 700 }}>
+        <div style={{ minWidth: 0 }}>
+          <p style={{ margin: 0, fontSize: "1.4rem", fontWeight: 700, wordBreak: "break-word" }}>
             {user?.first_name} {user?.last_name}
           </p>
-          <p style={{ margin: "4px 0 0", fontSize: "0.85rem", color: "#555" }}>
+          <p style={{ margin: "4px 0 0", fontSize: "0.85rem", color: "#555", wordBreak: "break-all" }}>
             {user?.email}
           </p>
         </div>
       </div>
 
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: "1fr 1fr 1fr",
-        gap: 24,
-        alignItems: "start",
-      }}>
+      <div
+        className="profile-grid"
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr 1fr",
+          gap: 24,
+          alignItems: "start",
+        }}
+      >
         {sections.map(s => (
           <div key={s.label}>
             <p style={{
@@ -218,10 +224,12 @@ export default function Profile() {
             position: "fixed", inset: 0, zIndex: 200,
             background: "rgba(0,0,0,0.6)",
             display: "flex", alignItems: "center", justifyContent: "center",
+            padding: "0 1rem",
           }}
           onClick={() => setModal(null)}
         >
           <div
+            className="profile-modal"
             style={{
               width: 400, background: "#111a17", border: "1px solid #1a2e28",
               borderRadius: 14, padding: "1.5rem",
@@ -343,6 +351,20 @@ export default function Profile() {
           </div>
         </div>
       )}
+
+      <style>{`
+        @media (max-width: 768px) {
+          .profile-main {
+            padding: 80px 1.25rem 2rem !important;
+          }
+          .profile-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .profile-modal {
+            width: calc(100vw - 2rem) !important;
+          }
+        }
+      `}</style>
     </main>
   );
 }

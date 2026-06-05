@@ -77,17 +77,18 @@ router.post('/', async (req, res) => {
 
 // PUT /api/trips/:id — update a trip (e.g. reschedule)
 router.put('/:id', async (req, res) => {
-  const { origin, destination, departure_time, status } = req.body;
+  const { origin, destination, departure_time, status, transit_modes } = req.body;
 
   try {
     const result = await pool.query(
-      `UPDATE trips
+      `UPDATE trips 
        SET origin = COALESCE($1, origin),
            destination = COALESCE($2, destination),
            departure_time = COALESCE($3, departure_time),
-           status = COALESCE($4, status)
-       WHERE id = $5 AND user_id = $6 RETURNING *`,
-      [origin, destination, departure_time, status, req.params.id, req.user.id]
+           status = COALESCE($4, status),
+           transit_modes = COALESCE($5, transit_modes)
+       WHERE id = $6 AND user_id = $7 RETURNING *`,
+      [origin, destination, departure_time, status, transit_modes, req.params.id, req.user.id]
     );
 
     if (result.rows.length === 0) {
@@ -96,6 +97,7 @@ router.put('/:id', async (req, res) => {
 
     res.json(result.rows[0]);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Server error' });
   }
 });

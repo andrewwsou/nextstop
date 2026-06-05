@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import "leaflet/dist/leaflet.css";
 import {
   CircleMarker,
@@ -42,11 +43,16 @@ function DestinationSelector({
       setDestination([e.latlng.lat, e.latlng.lng]);
     },
   });
-
   return null;
 }
 
+function shortenName(displayName: string) {
+  // Just return the first part before the first comma
+  return displayName.split(",")[0].trim();
+}
+
 export default function LiveMap() {
+  const router = useRouter();
   const [position, setPosition] = useState<[number, number] | null>(null);
   const [destination, setDestination] = useState<[number, number] | null>(null);
   const [transitData, setTransitData] = useState<TransitResponse | null>(null);
@@ -54,6 +60,7 @@ export default function LiveMap() {
   const [destinationName, setDestinationName] = useState("");
   const [routeLoading, setRouteLoading] = useState(false);
   const [showTransitOptions, setShowTransitOptions] = useState(false);
+  const [panelOpen, setPanelOpen] = useState(false);
   const nearbyRoutes = transitData?.nearby_routes || [];
 
   useEffect(() => {
@@ -67,31 +74,31 @@ export default function LiveMap() {
 
   const handleRouteRequest = async () => {
     setRouteLoading(true);
-
     setTimeout(() => {
       setShowTransitOptions(true);
       setRouteLoading(false);
     }, 500);
   };
 
+  // Reset panel when destination changes
+  useEffect(() => {
+    setShowTransitOptions(false);
+    setPanelOpen(true);
+  }, [destination]);
+
   useEffect(() => {
     if (!destination) return;
-
     const [lat, lon] = destination;
-
     fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`)
       .then((res) => res.json())
       .then((data) => {
         setDestinationName(data.display_name || "Unknown Location");
       })
-      .catch((err) => {
-        console.error("Reverse geocoding error:", err);
-      });
+      .catch((err) => console.error("Reverse geocoding error:", err));
   }, [destination]);
 
   useEffect(() => {
     if (!position) return;
-
     const url = `/api/transit/nearby?lat=${position[0]}&lon=${position[1]}`;
 
     async function loadTransitData() {
@@ -133,59 +140,77 @@ export default function LiveMap() {
   }, [position]);
 
   if (!position) {
-    return <div>Getting your location...</div>;
+    return (
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", background: "#0d1a16", color: "#aaa", fontSize: 14 }}>
+        Getting your location...
+      </div>
+    );
   }
-
-  const destinationMarker = destination ? (
-    <CircleMarker
-      center={destination}
-      radius={10}
-      pathOptions={{
-        color: "#3ecfb2",
-        fillColor: "#3ecfb2",
-        fillOpacity: 0.7,
-        weight: 3,
-      }}
-    >
-      <Popup>
-        <strong>Destination</strong>
-        <br />
-        {destinationName || "Loading..."}
-      </Popup>
-    </CircleMarker>
-  ) : null;
 
   return (
     <div className="relative h-full w-full">
+      {/* ── RESPONSIVE PANEL STYLES ── */}
+      <style>{`
+        .map-panel {
+          position: absolute;
+          bottom: 80px;
+          right: 16px;
+          left: 16px;
+          top: auto;
+          z-index: 1001;
+          width: auto;
+          max-height: 60vh;
+          background: #0d1a16;
+          border: 1px solid #1a2e28;
+          border-radius: 14px;
+          box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+          color: white;
+          display: flex;
+          flex-direction: column;
+        }
+        @media (min-width: 640px) {
+          .map-panel {
+            top: 80px !important;
+            bottom: auto !important;
+            left: auto !important;
+            right: 16px !important;
+            width: 426px !important;
+          }
+        }
+      `}</style>
+
       <MapContainer
         center={position}
         zoom={15}
-        style={{
-          height: "100%",
-          width: "100%",
-        }}
+        style={{ height: "100%", width: "100%" }}
+        aria-label="Interactive transit map. Use the nearby routes list below for screen reader access."
       >
         <DestinationSelector setDestination={setDestination} />
-
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
-        <CircleMarker center={position} radius={10}>
+        {/* User location */}
+        <CircleMarker center={position} radius={10} pathOptions={{ color: "#3ecfb2", fillColor: "#3ecfb2", fillOpacity: 0.9, weight: 2 }}>
           <Popup>You are here</Popup>
         </CircleMarker>
 
-        {destinationMarker}
+        {/* Destination marker */}
+        {destination && (
+          <CircleMarker
+            center={destination}
+            radius={10}
+            pathOptions={{ color: "#60a5fa", fillColor: "#60a5fa", fillOpacity: 0.7, weight: 3 }}
+          >
+            <Popup>{shortenName(destinationName) || "Destination"}</Popup>
+          </CircleMarker>
+        )}
 
+        {/* Transit stop markers */}
         {nearbyRoutes.map((route) => {
           const stop = route.merged_itineraries?.[0]?.closest_stop;
-
-          if (!stop?.stop_lat || !stop?.stop_lon) {
-            return null;
-          }
+          if (!stop?.stop_lat || !stop?.stop_lon) return null;
 
           const routeName =
-            route.compact_display_short_name?.elements?.filter(Boolean).join(" ") ||
-            "Transit Route";
-
+            route.compact_display_short_name?.elements?.filter(Boolean).join(" ") || "Transit Route";
           const routeLabel = routeName === "PS" ? "Pacific Surfliner" : routeName;
 
           return (
@@ -193,126 +218,195 @@ export default function LiveMap() {
               key={route.global_route_id}
               center={[stop.stop_lat, stop.stop_lon]}
               radius={7}
-              pathOptions={{
-                color: "#FFD700",
-                fillColor: "#FFD700",
-                fillOpacity: 0.35,
-                weight: 3,
-              }}
+              pathOptions={{ color: "#FFD700", fillColor: "#FFD700", fillOpacity: 0.35, weight: 3 }}
             >
               <Popup>
                 <strong>{stop.stop_name}</strong>
                 <br />
-                Transit Route: {routeLabel}
+                Route: {routeLabel}
               </Popup>
             </CircleMarker>
           );
         })}
       </MapContainer>
 
-      {destination && (
+      {/* Destination panel */}
+      {destination && panelOpen && (
         <div
-          className="absolute bottom-6 left-1/2 z-[1001] min-w-[320px] -translate-x-1/2 rounded-xl p-4 shadow-lg"
-          style={{
-            background: "#0d1a16",
-            border: "1px solid #1a2e28",
-            color: "white",
-          }}
+          role="region"
+          aria-label="Destination details"
+          aria-live="polite"
+          className="map-panel"
         >
-          <div style={{ fontWeight: 700, marginBottom: 6, fontSize: 14 }}>
-            Destination
-          </div>
-
-          <div style={{ fontSize: 13, color: "#aaa", marginBottom: 16 }}>
-            {destinationName || "Loading location..."}
-          </div>
-
-          <button
-            onClick={handleRouteRequest}
-            disabled={routeLoading}
-            style={{
-              width: "100%",
-              background: "#3ecfb2",
-              color: "#0d1a16",
-              border: "none",
-              borderRadius: 8,
-              padding: "8px 0",
-              fontWeight: 700,
-              fontSize: 14,
-              cursor: "pointer",
-            }}
-          >
-            {routeLoading ? "Finding Route..." : "Get Transit Route"}
-          </button>
-
-          {showTransitOptions && nearbyRoutes.length > 0 && (
-            <div style={{ marginTop: 16, borderTop: "1px solid #1a2e28", paddingTop: 16 }}>
-              <div style={{ fontWeight: 600, marginBottom: 12, fontSize: 13 }}>
-                Nearby Transit Routes
+          {/* Panel header */}
+          <div style={{ padding: "12px 14px 10px", borderBottom: "1px solid #1a2e28", display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexShrink: 0 }}>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 13 }}>
+                {shortenName(destinationName) || "Loading..."}
               </div>
-
-              {nearbyRoutes.map((route) => {
-                const routeName =
-                  route.compact_display_short_name?.elements?.filter(Boolean).join(" ") ||
-                  "Unknown Route";
-                const itinerary = route.merged_itineraries?.[0];
-                const direction =
-                  itinerary?.itineraries?.[0]?.direction_headsign || "Unknown Direction";
-                const stopName = itinerary?.closest_stop?.stop_name || "Unknown Stop";
-                const arrival = itinerary?.schedule_items?.[0];
-
-                return (
-                  <div
-                    key={`${route.global_route_id}-${direction}`}
-                    style={{
-                      background: "#1a2e28",
-                      borderRadius: 8,
-                      padding: "10px 12px",
-                      marginBottom: 10,
-                    }}
-                  >
-                    <div style={{ fontWeight: 600, color: "#3ecfb2", fontSize: 13 }}>
-                      Route {routeName}
-                    </div>
-
-                    <div style={{ fontSize: 12, color: "#aaa", marginTop: 2 }}>
-                      → {direction}
-                    </div>
-
-                    <div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>
-                      Stop: {stopName}
-                    </div>
-
-                    <div style={{ fontSize: 12, color: "#3ecfb2", marginTop: 2 }}>
-                      {arrival ? "Arrival data available" : "No arrival data"}
-                    </div>
-                  </div>
-                );
-              })}
+              <div style={{ fontSize: 11, color: "#555", marginTop: 2 }}>
+                {destination[0].toFixed(4)}, {destination[1].toFixed(4)}
+              </div>
             </div>
-          )}
-
-          {showTransitOptions && nearbyRoutes.length === 0 && (
-            <div
+            <button
+              onClick={() => setPanelOpen(false)}
+              aria-label="Close destination panel"
               style={{
-                marginTop: 16,
-                borderTop: "1px solid #1a2e28",
-                paddingTop: 12,
-                fontSize: 13,
-                color: "#888",
+                background: "none",
+                border: "none",
+                color: "#555",
+                cursor: "pointer",
+                fontSize: 16,
+                lineHeight: 1,
+                padding: 0,
+                marginLeft: 8,
+                flexShrink: 0
               }}
             >
-              No nearby transit routes found.
+              ✕
+            </button>
+          </div>
+
+          {/* Get routes button */}
+          <div style={{ padding: "10px 14px", flexShrink: 0 }}>
+            <button
+              onClick={handleRouteRequest}
+              disabled={routeLoading}
+              aria-label="Get nearby transit routes"
+              style={{
+                width: "100%", background: "#3ecfb2", color: "#0d1a16",
+                border: "none", borderRadius: 8, padding: "7px 0",
+                fontWeight: 700, fontSize: 13, cursor: "pointer",
+              }}
+            >
+              {routeLoading ? "Finding Routes..." : "Get Transit Routes"}
+            </button>
+          </div>
+
+          {/* Route list — scrollable */}
+          {showTransitOptions && (
+            <div style={{ overflowY: "auto", padding: "0 14px 14px", flexGrow: 1 }}>
+              {nearbyRoutes.length === 0 ? (
+                <div style={{ fontSize: 12, color: "#555", textAlign: "center", paddingTop: 8 }}>
+                  No nearby routes found.
+                </div>
+              ) : (
+                nearbyRoutes.map((route) => {
+                  const routeName =
+                    route.compact_display_short_name?.elements?.filter(Boolean).join(" ") || "Unknown";
+                  const routeLabel = routeName === "PS" ? "Pacific Surfliner" : routeName;
+                  const itinerary = route.merged_itineraries?.[0];
+                  const direction = itinerary?.itineraries?.[0]?.direction_headsign || "Unknown direction";
+                  const stopName = itinerary?.closest_stop?.stop_name || "Unknown stop";
+
+                  return (
+                    <div
+                      key={`${route.global_route_id}-${direction}`}
+                      style={{
+                        background: "#1a2e28", borderRadius: 8,
+                        padding: "8px 10px", marginBottom: 8,
+                        cursor: "pointer",
+                      }}
+                      onClick={() => router.push(`/trip?destination=${encodeURIComponent(shortenName(destinationName))}`)}
+                      onMouseEnter={e => (e.currentTarget.style.borderColor = "#3ecfb2")}
+                      onMouseLeave={e => (e.currentTarget.style.borderColor = "transparent")}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <div style={{ fontWeight: 600, color: "#3ecfb2", fontSize: 12 }}>
+                          Route {routeLabel}
+                        </div>
+                        <span style={{ fontSize: 10, color: "#3ecfb2" }}>Plan →</span>
+                      </div>
+                      <div style={{ fontSize: 11, color: "#aaa", marginTop: 2 }}>→ {direction}</div>
+                      <div style={{ fontSize: 11, color: "#555", marginTop: 1 }}>Stop: {stopName}</div>
+                    </div>
+                  );
+                })
+              )}
             </div>
           )}
         </div>
       )}
 
-      <div className="absolute bottom-4 right-4 z-[1000] rounded bg-white px-3 py-2 text-black shadow">
+      {/* Show panel button when dismissed */}
+      {destination && !panelOpen && (
+        <button
+          onClick={() => setPanelOpen(true)}
+          aria-label={`Show destination panel for ${shortenName(destinationName) || "selected destination"}`}
+          style={{
+            position: "absolute", bottom: 24, left: "50%", transform: "translateX(-50%)",
+            zIndex: 1001, background: "#0d1a16", border: "1px solid #1a2e28",
+            borderRadius: 20, padding: "8px 20px", color: "#3ecfb2",
+            fontSize: 13, fontWeight: 600, cursor: "pointer",
+          }}
+        >
+          {shortenName(destinationName) || "Show destination"}
+        </button>
+      )}
+
+      {/* Accessible route list for screen readers */}
+      <div
+        aria-label="Nearby transit routes"
+        style={{
+          position: "absolute",
+          width: 1,
+          height: 1,
+          overflow: "hidden",
+          clip: "rect(0,0,0,0)",
+          whiteSpace: "nowrap",
+        }}
+      >
+        <h2>Nearby Transit Routes</h2>
+
+        {nearbyRoutes.length === 0 ? (
+          <p>No nearby transit routes found.</p>
+        ) : (
+          <ul>
+            {nearbyRoutes.map((route) => {
+              const routeName =
+                route.compact_display_short_name?.elements?.filter(Boolean).join(" ") ||
+                "Unknown";
+
+              const itinerary = route.merged_itineraries?.[0];
+              const direction =
+                itinerary?.itineraries?.[0]?.direction_headsign ||
+                "Unknown direction";
+
+              const stopName =
+                itinerary?.closest_stop?.stop_name ||
+                "Unknown stop";
+
+              return (
+                <li key={route.global_route_id}>
+                  Route {routeName}, direction {direction}, stop {stopName}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+
+        {destination && (
+          <p>Selected destination: {destinationName}</p>
+        )}
+      </div>
+
+      {/* Attribution */}
+      <div style={{
+        position: "absolute", bottom: 16, right: 16, zIndex: 1000,
+        background: "white", color: "black", padding: "4px 10px",
+        borderRadius: 6, fontSize: 11,
+      }}>
         Powered by Transit
       </div>
+
+      {/* Transit error */}
       {transitError && (
-        <div className="absolute top-4 left-1/2 z-[1000] max-w-[90vw] -translate-x-1/2 rounded bg-red-50 px-4 py-3 text-sm text-red-700 shadow">
+        <div style={{
+          position: "absolute", top: 16, left: "50%", transform: "translateX(-50%)",
+          zIndex: 1000, background: "#1a0a0a", border: "1px solid #f87171",
+          borderRadius: 8, padding: "8px 16px", fontSize: 12, color: "#f87171",
+          maxWidth: "90vw",
+        }}>
           {transitError}
         </div>
       )}

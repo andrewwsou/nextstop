@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { deleteTrip, getTrips, updateTrip } from "../lib/api";
 import { useRequireAuth } from "../lib/auth";
 import type { Leg, RouteSummaryStep, Trip } from "./mockdata";
+import { useRouter } from "next/navigation";
 
 function mapApiTrip(t: {
   id: number;
@@ -201,12 +202,20 @@ function RouteVisualizer({ legs }: { legs: Leg[] }) {
 
 export default function History() {
   useRequireAuth();
+  const router = useRouter();
   const [expanded, setExpanded] = useState<number | null>(null);
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [editForm, setEditForm] = useState({ origin: "", destination: "" });
+  const [editForm, setEditForm] = useState({
+  origin: "",
+  destination: "",
+  departure_date: "",
+  departure_time: "",
+  transit_modes: [] as string[],
+});
+
 
   useEffect(() => {
     getTrips()
@@ -245,26 +254,51 @@ export default function History() {
     setTrips((currentTrips) => currentTrips.filter((trip) => trip.id !== id));
   }
 
-  async function handleEditSave(id: number) {
-    const data = await updateTrip(id, {
-      origin: editForm.origin,
-      destination: editForm.destination,
-    });
+async function handleEditSave(id: number) {
+  const departure_time = editForm.departure_date && editForm.departure_time
+    ? `${editForm.departure_date}T${editForm.departure_time}:00`
+    : undefined;
 
-    if (data.error) {
-      setError(data.error);
-      return;
-    }
+  const trip = trips.find(t => t.id === id);
+  const routeChanged = trip && (editForm.origin !== trip.from || editForm.destination !== trip.to);
 
-    setTrips((currentTrips) =>
-      currentTrips.map((trip) =>
-        trip.id === id
-          ? { ...trip, from: editForm.origin, to: editForm.destination }
-          : trip
-      )
-    );
-    setEditingId(null);
+  const updatePayload: any = {
+    origin: editForm.origin,
+    destination: editForm.destination,
+    departure_time,
+    transit_modes: editForm.transit_modes,
+  };
+
+  if (routeChanged) {
+    updatePayload.duration_minutes = null;
+    updatePayload.transit_modes = [];
   }
+
+  const data = await updateTrip(id, updatePayload);
+
+  if (data.error) {
+    setError(data.error);
+    return;
+  }
+
+  setTrips(currentTrips =>
+    currentTrips.map(t =>
+      t.id === id
+        ? {
+            ...t,
+            from: editForm.origin,
+            to: editForm.destination,
+            departureTime: departure_time ?? t.departureTime,
+            modes: routeChanged ? [] : editForm.transit_modes,
+            durationMinutes: routeChanged ? null : t.durationMinutes,
+            routeSummary: routeChanged ? undefined : t.routeSummary,
+            legs: routeChanged ? [] : t.legs,
+          }
+        : t
+    )
+  );
+  setEditingId(null);
+}
 
   return (
     <main style={{ padding: "2rem", width: "100%", maxWidth: 1000, marginTop: 60, marginLeft: "auto", marginRight: "auto" }}>
@@ -294,59 +328,172 @@ export default function History() {
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
                     <div>
                       {editingId === trip.id ? (
-                        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                          <input
-                            value={editForm.origin}
-                            onChange={(event) => setEditForm({ ...editForm, origin: event.target.value })}
-                            style={{ background: "#1a2e28", border: "1px solid #3ecfb2", borderRadius: 6, padding: "4px 8px", color: "white", fontSize: 13 }}
-                          />
-                          <input
-                            value={editForm.destination}
-                            onChange={(event) => setEditForm({ ...editForm, destination: event.target.value })}
-                            style={{ background: "#1a2e28", border: "1px solid #3ecfb2", borderRadius: 6, padding: "4px 8px", color: "white", fontSize: 13 }}
-                          />
-                        </div>
+                          <div style={{display: "flex", flexDirection: "column", gap: 8, minWidth: 220}}>
+                            <div>
+                              <div style={{fontSize: 11, color: "#666", marginBottom: 3}}>ORIGIN</div>
+                              <input
+                                  value={editForm.origin}
+                                  onChange={e => setEditForm({...editForm, origin: e.target.value})}
+                                  style={{
+                                    background: "#1a2e28",
+                                    border: "1px solid #3ecfb2",
+                                    borderRadius: 6,
+                                    padding: "4px 8px",
+                                    color: "white",
+                                    fontSize: 13,
+                                    width: "100%"
+                                  }}
+                              />
+                            </div>
+                            <div>
+                              <div style={{fontSize: 11, color: "#666", marginBottom: 3}}>DESTINATION</div>
+                              <input
+                                  value={editForm.destination}
+                                  onChange={e => setEditForm({...editForm, destination: e.target.value})}
+                                  style={{
+                                    background: "#1a2e28",
+                                    border: "1px solid #3ecfb2",
+                                    borderRadius: 6,
+                                    padding: "4px 8px",
+                                    color: "white",
+                                    fontSize: 13,
+                                    width: "100%"
+                                  }}
+                              />
+                            </div>
+                            <div style={{display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6}}>
+                              <div>
+                                <div style={{fontSize: 11, color: "#666", marginBottom: 3}}>DATE</div>
+                                <input
+                                    type="date"
+                                    value={editForm.departure_date}
+                                    onChange={e => setEditForm({...editForm, departure_date: e.target.value})}
+                                    style={{
+                                      background: "#1a2e28",
+                                      border: "1px solid #3ecfb2",
+                                      borderRadius: 6,
+                                      padding: "4px 8px",
+                                      color: "white",
+                                      fontSize: 13,
+                                      width: "100%"
+                                    }}
+                                />
+                              </div>
+                              <div>
+                                <div style={{fontSize: 11, color: "#666", marginBottom: 3}}>TIME</div>
+                                <input
+                                    type="time"
+                                    value={editForm.departure_time}
+                                    onChange={e => setEditForm({...editForm, departure_time: e.target.value})}
+                                    style={{
+                                      background: "#1a2e28",
+                                      border: "1px solid #3ecfb2",
+                                      borderRadius: 6,
+                                      padding: "4px 8px",
+                                      color: "white",
+                                      fontSize: 13,
+                                      width: "100%"
+                                    }}
+                                />
+                              </div>
+                            </div>
+                            <div>
+                              <div style={{fontSize: 11, color: "#666", marginBottom: 6}}>TRANSIT MODES</div>
+                              <div style={{display: "flex", gap: 6, flexWrap: "wrap"}}>
+                                {["bus", "train"].map(mode => (
+                                    <button
+                                        key={mode}
+                                        onClick={() => setEditForm(f => ({
+                                          ...f,
+                                          transit_modes: f.transit_modes.includes(mode)
+                                              ? f.transit_modes.filter(m => m !== mode)
+                                              : [...f.transit_modes, mode]
+                                        }))}
+                                        style={{
+                                          fontSize: 11, padding: "3px 10px", borderRadius: 20, cursor: "pointer",
+                                          background: editForm.transit_modes.includes(mode) ? "#3ecfb2" : "#1a2e28",
+                                          color: editForm.transit_modes.includes(mode) ? "#0d1a16" : "#888",
+                                          border: "1px solid #3ecfb2"
+                                        }}
+                                    >
+                                      {mode === "bus" ? "OC Bus" : "Metrolink"}
+                                    </button>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
                       ) : (
-                        <>
-                          <div style={{ fontSize: 14, color: "white", fontWeight: 500 }}>{trip.from}</div>
-                          <div style={{ fontSize: 13, color: "#888", marginTop: 2 }}>→ {trip.to}</div>
-                        </>
+                          <>
+                            <div style={{fontSize: 14, color: "white", fontWeight: 500}}>{trip.from}</div>
+                            <div style={{fontSize: 13, color: "#888", marginTop: 2}}>→ {trip.to}</div>
+                          </>
                       )}
                     </div>
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
-                      <div style={{ fontSize: 16, fontWeight: 700, color: "white", whiteSpace: "nowrap" }}>
+                    <div style={{display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6}}>
+                      <div style={{fontSize: 16, fontWeight: 700, color: "white", whiteSpace: "nowrap"}}>
                         {fmtDate(trip.date)}
                       </div>
-                      <div style={{ fontSize: 12, color: "#888", whiteSpace: "nowrap" }}>
+                      <div style={{fontSize: 12, color: "#888", whiteSpace: "nowrap"}}>
                         {trip.durationMinutes ? `${trip.durationMinutes} min` : "Duration unavailable"}
                       </div>
                       <button
-                        onClick={() => setExpanded(expanded === trip.id ? null : trip.id)}
-                        style={{ fontSize: 11, color: "#3ecfb2", background: "none", border: "1px solid #1a2e28", borderRadius: 20, cursor: "pointer", padding: "2px 10px", whiteSpace: "nowrap" }}
+                          onClick={() => setExpanded(expanded === trip.id ? null : trip.id)}
+                          style={{
+                            fontSize: 11,
+                            color: "#3ecfb2",
+                            background: "none",
+                            border: "1px solid #1a2e28",
+                            borderRadius: 20,
+                            cursor: "pointer",
+                            padding: "2px 10px",
+                            whiteSpace: "nowrap"
+                          }}
                       >
                         {expanded === trip.id ? "Hide details" : "See details"}
                       </button>
                       {editingId === trip.id ? (
-                        <div style={{ display: "flex", gap: 6 }}>
-                          <button
-                            onClick={() => handleEditSave(trip.id)}
-                            style={{ fontSize: 11, color: "#0d1a16", background: "#3ecfb2", border: "none", borderRadius: 20, cursor: "pointer", padding: "2px 10px" }}
-                          >
-                            Save
-                          </button>
-                          <button
-                            onClick={() => setEditingId(null)}
-                            style={{ fontSize: 11, color: "#888", background: "none", border: "1px solid #1a2e28", borderRadius: 20, cursor: "pointer", padding: "2px 10px" }}
-                          >
-                            Cancel
-                          </button>
-                        </div>
+                          <div style={{display: "flex", gap: 6}}>
+                            <button
+                                onClick={() => handleEditSave(trip.id)}
+                                style={{
+                                  fontSize: 11,
+                                  color: "#0d1a16",
+                                  background: "#3ecfb2",
+                                  border: "none",
+                                  borderRadius: 20,
+                                  cursor: "pointer",
+                                  padding: "2px 10px"
+                                }}
+                            >
+                              Save
+                            </button>
+                            <button
+                                onClick={() => setEditingId(null)}
+                                style={{
+                                  fontSize: 11,
+                                  color: "#888",
+                                  background: "none",
+                                  border: "1px solid #1a2e28",
+                                  borderRadius: 20,
+                                  cursor: "pointer",
+                                  padding: "2px 10px"
+                                }}
+                            >
+                              Cancel
+                            </button>
+                          </div>
                       ) : (
-                        <div style={{ display: "flex", gap: 6 }}>
-                          <button
-                            onClick={() => {
-                              setEditingId(trip.id);
-                              setEditForm({ origin: trip.from, destination: trip.to });
+                          <div style={{display: "flex", gap: 6}}>
+                            <button
+                                onClick={() => {
+                                  setEditingId(trip.id);
+                                  setEditForm({
+                                    origin: trip.from,
+                                    destination: trip.to,
+                                    departure_date: trip.departureTime?.slice(0, 10) ?? "",
+                                    departure_time: trip.departureTime?.slice(11, 16) ?? "",
+                                transit_modes: trip.modes ?? [],
+                              });
                             }}
                             style={{ fontSize: 11, color: "#3ecfb2", background: "none", border: "1px solid #1a2e28", borderRadius: 20, cursor: "pointer", padding: "2px 10px" }}
                           >
@@ -363,7 +510,19 @@ export default function History() {
                     </div>
                   </div>
 
-                  <RouteVisualizer legs={trip.legs} />
+                  {trip.legs.length === 0 ? (
+                    <div style={{ marginTop: "0.75rem", display: "flex", alignItems: "center", gap: 12 }}>
+                      <span style={{ fontSize: 12, color: "#888" }}>Route info unavailable —</span>
+                      <button
+                        onClick={() => router.push(`/trip?destination=${encodeURIComponent(trip.to)}`)}
+                        style={{ fontSize: 12, color: "#3ecfb2", background: "none", border: "1px solid #3ecfb2", borderRadius: 20, cursor: "pointer", padding: "2px 10px" }}
+                      >
+                        Re-plan trip →
+                      </button>
+                    </div>
+                  ) : (
+                    <RouteVisualizer legs={trip.legs} />
+                  )}
 
                   {expanded === trip.id && (
                     <div style={{ marginTop: "1rem", paddingTop: "1rem", borderTop: "1px solid #1a2e28" }}>
