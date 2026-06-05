@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import AuthButton from "../components/AuthButton";
 
-// this is the hardcoded stops for the map overlap....
 const STOPS = [
   { id: "ALP", x: 48, y: 44 },
   { id: "MES", x: 24, y: 28 },
@@ -45,11 +44,10 @@ function routePath(ri: number) {
   return pts.map((s, i) => `${i === 0 ? "M" : "L"} ${s.x} ${s.y}`).join(" ");
 }
 
-// actual content
 export default function Onboarding() {
   const router = useRouter();
   const [vehicles, setVehicles] = useState(INITIAL_VEHICLES);
-  const [drawn, setDrawn] = useState(0); //fade effect
+  const [drawn, setDrawn] = useState(0);
   const animRef = useRef<number | null>(null);
   const lastRef = useRef<number | null>(null);
 
@@ -86,7 +84,10 @@ export default function Onboarding() {
         gap: "3rem",
       }}
     >
+      {/* Decorative animated map — hidden from screen readers */}
       <svg
+        aria-hidden="true"
+        focusable="false"
         viewBox="0 0 100 100"
         preserveAspectRatio="none"
         style={{ position: "absolute", inset: 0, width: "100%", height: "100%",
@@ -117,11 +118,11 @@ export default function Onboarding() {
 
       <div style={{ zIndex: 1, maxWidth: 500, display: "flex", flexDirection: "column", flex: 1 }}>
 
-        {/* logo stuff (look over we can edit)*/}
+        {/* Logo — alt text already handles the name, hide the visual "NextStop" text */}
         <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: "2.5rem" }}>
-          <Image src="/logo2.png" alt="NextStop" width={200} height={150}
+          <Image src="/logo2.png" alt="NextStop logo" width={200} height={150}
             style={{ borderRadius: 14, objectFit: "contain", height: "auto" }} />
-          <div>
+          <div aria-hidden="true">
             <p style={{ margin: 0, fontSize: "2.7rem", fontWeight: 800,
               letterSpacing: "-0.02em", lineHeight: 1 }}>
               NextStop
@@ -133,29 +134,38 @@ export default function Onboarding() {
           </div>
         </div>
 
-        {/* main header */}
-        <h1 style={{
-          fontSize: "clamp(2.6rem, 4.5vw, 3.8rem)",
-          fontWeight: 800,
-          lineHeight: 1.1,
-          margin: "0 0 1.25rem",
-          letterSpacing: "-0.03em",
-        }}>
-          Plan your commute.<br />
-          <span style={{ color: "#3ecfb2" }}>Beat the delay.</span>
+        {/* Page heading — first focusable element */}
+        <h1
+          tabIndex={0}
+          style={{
+            fontSize: "clamp(2.6rem, 4.5vw, 3.8rem)",
+            fontWeight: 800,
+            lineHeight: 1.1,
+            margin: "0 0 1.25rem",
+            letterSpacing: "-0.03em",
+          }}
+        >
+          Plan your commute. Beat the delay.
         </h1>
 
         <p style={{ color: "#fff", margin: "0 0 0.75rem", fontSize: "1.15rem", lineHeight: 1.65 }}>
-          Buses, trains & UCI shuttles —<br />unified in one live map.
+          Buses, trains and UCI shuttles — unified in one live map.
         </p>
 
+        {/* Bullet points — hide the decorative dot, just read the text */}
         <p style={{ color: "#fff", margin: "0 0 2.5rem", fontSize: "0.95rem",
           fontWeight: 600, letterSpacing: "0.04em" }}>
-          ● Live in Irvine &nbsp;·&nbsp; Free to use &nbsp;·&nbsp; Built for UCI
+          <span aria-hidden="true">● </span>Live in Irvine
+          <span aria-hidden="true"> · </span>
+          <span className="sr-only">, </span>
+          Free to use
+          <span aria-hidden="true"> · </span>
+          <span className="sr-only">, </span>
+          Built for UCI
         </p>
 
         <div style={{ maxWidth: 400 }}>
-          <AuthButton text="Create Account →" onClick={() => router.push("/signup")} />
+          <AuthButton text="Create Account" onClick={() => router.push("/signup")} />
           <div style={{ marginTop: 10 }}>
             <AuthButton text="Sign In" variant="secondary" onClick={() => router.push("/login")} />
           </div>
@@ -163,6 +173,17 @@ export default function Onboarding() {
       </div>
 
       <style>{`
+        .sr-only {
+          position: absolute;
+          width: 1px;
+          height: 1px;
+          padding: 0;
+          margin: -1px;
+          overflow: hidden;
+          clip: rect(0,0,0,0);
+          white-space: nowrap;
+          border: 0;
+        }
         .primary-btn {
           transition: transform 0.2s ease, box-shadow 0.2s ease !important;
         }
