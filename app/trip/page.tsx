@@ -77,123 +77,134 @@ function TripForm() {
   };
 
   return (
-      <main className="min-h-screen bg-[#111] px-6 pt-24 text-white">
-        <div className="mb-6 mt-2 flex items-center gap-3">
-          <button
-              className="text-2xl opacity-70 transition hover:opacity-100"
-              onClick={() => router.push("/dashboard")}
-          >
-            ←
-          </button>
+    <main className="min-h-screen bg-[#18181b] text-zinc-100 font-sans px-6 py-16 max-w-4xl mx-auto">
+      {/* Header Deck */}
+      <div className="border-b border-zinc-800 pb-6 mb-8 flex items-center gap-4">
+        <button
+          className="text-zinc-400 hover:text-white transition-colors text-sm font-mono"
+          onClick={() => router.push("/dashboard")}
+        >
+          [← BACK]
+        </button>
 
-          <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">
-            Where do you want to go?
-          </h1>
-        </div>
+        <h1 className="text-2xl font-bold tracking-tight text-white font-sans">
+          Route Planner
+        </h1>
+      </div>
 
-        <section className="mb-6 rounded-2xl border border-zinc-800 bg-[#1a1a1a] p-4">
-          <div className="mb-3 flex items-center justify-between">
-            <span className="text-xs text-zinc-400">START</span>
-
-            <button
+      <div className="space-y-6">
+        {/* Core Coordinates Section (No background block, separated by thin stack lines) */}
+        <section className="space-y-5">
+          <div>
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-[10px] font-mono font-bold tracking-widest text-zinc-500">START COORDINATES</span>
+              <button
                 onClick={handleUseCurrentLocation}
-                className="rounded-full border border-teal-500/40 px-3 py-1 text-xs text-teal-200 transition hover:bg-teal-500/10"
-            >
-              Use my current location
-            </button>
-          </div>
-
-          <input
+                className="rounded border border-teal-500/30 bg-teal-950/10 px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider text-teal-400 transition hover:border-teal-400 hover:bg-teal-950/30"
+              >
+                Use Current Location
+              </button>
+            </div>
+            <input
               value={start}
               onChange={(e) => setStart(e.target.value)}
-              placeholder="Enter starting location"
-              className="mb-4 w-full rounded-lg border border-zinc-800 bg-transparent px-3 py-2 text-sm outline-none transition placeholder:text-zinc-600 focus:border-teal-500/50"
-          />
+              placeholder="Enter starting location or coordinates"
+              className="w-full rounded border border-zinc-700 bg-zinc-900/40 px-3 py-2 text-sm text-zinc-100 font-mono placeholder:text-zinc-600 outline-none transition focus:border-teal-500/50 focus:bg-zinc-900"
+            />
+          </div>
 
-          <span className="text-xs text-zinc-400">DESTINATION</span>
-
-          <input
+          <div>
+            <div className="mb-2">
+              <span className="text-[10px] font-mono font-bold tracking-widest text-zinc-500">TARGET DESTINATION</span>
+            </div>
+            <input
               value={destination}
               onChange={(e) => setDestination(e.target.value)}
-              placeholder="Enter destination"
-              className="mt-2 w-full rounded-lg border border-zinc-800 bg-transparent px-3 py-2 text-sm outline-none transition placeholder:text-zinc-600 focus:border-teal-500/50"
-          />
+              placeholder="Enter destination location"
+              className="w-full rounded border border-zinc-700 bg-zinc-900/40 px-3 py-2 text-sm text-zinc-100 font-mono placeholder:text-zinc-600 outline-none transition focus:border-teal-500/50 focus:bg-zinc-900"
+            />
+          </div>
         </section>
 
-        <div className="mb-7 grid grid-cols-2 gap-3">
+        {/* Temporal Parameters (Date / Time picker grid) */}
+        <div className="grid grid-cols-2 gap-4 pt-2">
           <div>
-            <p className="mb-2 text-sm text-zinc-300">Day</p>
+            <p className="mb-2 text-[10px] font-mono font-bold tracking-widest text-zinc-500 uppercase">Date //</p>
             <input
-                type="date"
-                value={tripDate}
-                onChange={(e) => setTripDate(e.target.value)}
-                className="w-full rounded-lg border border-zinc-800 bg-[#1a1a1a] px-3 py-2 text-sm text-white transition focus:border-teal-500/50"
+              type="date"
+              value={tripDate}
+              onChange={(e) => setTripDate(e.target.value)}
+              className="w-full rounded border border-zinc-700 bg-zinc-900/40 px-3 py-2 text-sm text-zinc-100 font-mono outline-none transition focus:border-teal-500/50 color-scheme-dark"
             />
           </div>
 
           <div>
-            <p className="mb-2 text-sm text-zinc-300">Time</p>
+            <p className="mb-2 text-[10px] font-mono font-bold tracking-widest text-zinc-500 uppercase">Time //</p>
             <input
-                type="time"
-                value={tripTime}
-                onChange={(e) => setTripTime(e.target.value)}
-                className="w-full rounded-lg border border-zinc-800 bg-[#1a1a1a] px-3 py-2 text-sm text-white transition focus:border-teal-500/50"
+              type="time"
+              value={tripTime}
+              onChange={(e) => setTripTime(e.target.value)}
+              className="w-full rounded border border-zinc-700 bg-zinc-900/40 px-3 py-2 text-sm text-zinc-100 font-mono outline-none transition focus:border-teal-500/50 color-scheme-dark"
             />
           </div>
         </div>
 
-        <p className="mb-3 text-sm text-zinc-300">Transit types</p>
-
-        <div className="grid grid-cols-2 gap-2">
-          <button
+        {/* Transit Network Configuration */}
+        <div className="pt-2">
+          <p className="mb-3 text-[10px] font-mono font-bold tracking-widest text-zinc-500 uppercase">Network Protocols</p>
+          <div className="grid grid-cols-2 gap-3">
+            <button
               onClick={() => toggleTransitType("bus")}
-              className={`rounded-xl px-3 py-3 text-sm font-medium transition ${
-                  transitTypes.bus
-                      ? "border border-teal-400 bg-teal-400/10 text-teal-200"
-                      : "border border-zinc-800 bg-[#1a1a1a] text-zinc-500"
+              className={`rounded border px-4 py-2.5 text-xs font-mono font-bold tracking-wider uppercase transition-all ${
+                transitTypes.bus
+                  ? "border-teal-500 text-teal-400 bg-teal-950/20"
+                  : "border-zinc-700 text-zinc-500 bg-transparent hover:border-zinc-500"
               }`}
-          >
-            OC Bus
-          </button>
+            >
+              OC Bus
+            </button>
 
-          <button
+            <button
               onClick={() => toggleTransitType("train")}
-              className={`rounded-xl px-3 py-3 text-sm font-medium transition ${
-                  transitTypes.train
-                      ? "border border-indigo-400 bg-indigo-400/10 text-indigo-200"
-                      : "border border-zinc-800 bg-[#1a1a1a] text-zinc-500"
+              className={`rounded border px-4 py-2.5 text-xs font-mono font-bold tracking-wider uppercase transition-all ${
+                transitTypes.train
+                  ? "border-indigo-500/50 text-indigo-400 bg-indigo-950/20"
+                  : "border-zinc-700 text-zinc-500 bg-transparent hover:border-zinc-500"
               }`}
-          >
-            Metrolink
-          </button>
+            >
+              Metrolink
+            </button>
+          </div>
         </div>
+      </div>
 
-        {formError && (
-            <p className="mt-4 rounded-xl border border-red-500/40 bg-red-950/40 px-4 py-3 text-sm text-red-200">
-              {formError}
-            </p>
-        )}
+      {formError && (
+        <div className="mt-6 rounded border border-red-500/20 bg-red-950/10 p-4 text-xs font-mono text-red-400">
+          SYSTEM_ERR // {formError}
+        </div>
+      )}
 
-        <button
-            onClick={handlePlanTrip}
-            className="mt-10 w-full rounded-xl bg-teal-400 py-3 font-semibold text-black transition hover:bg-teal-300"
-        >
-          Plan Trip
-        </button>
-      </main>
+      {/* Primary Navigation Trigger */}
+      <button
+        onClick={handlePlanTrip}
+        className="mt-10 w-full rounded border border-teal-500 bg-teal-500/10 hover:bg-teal-500/20 py-3 text-xs font-mono font-bold uppercase tracking-widest text-teal-400 shadow-sm transition-all active:scale-[0.99]"
+      >
+        Execute Trajectory Planning
+      </button>
+    </main>
   );
 }
 
 export default function Trip() {
   return (
-      <Suspense
-          fallback={
-            <div className="flex min-h-screen items-center justify-center bg-[#111] text-white">
-              Loading...
-            </div>
-          }
-      >
-        <TripForm/>
-      </Suspense>
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-[#18181b] font-mono text-xs text-zinc-500 tracking-widest">
+          INITIALIZING GEOLOCATION SYSTEMS...
+        </div>
+      }
+    >
+      <TripForm />
+    </Suspense>
   );
 }

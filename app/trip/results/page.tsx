@@ -48,48 +48,47 @@ type PlanRoute = {
 
 function RouteLine({ segments }: { segments: Segment[] }) {
   return (
-    <div className="my-5 flex items-center w-full">
-      {/* Start circle */}
-      <div className="h-6 w-6 rounded-full border-2 border-teal-300 flex items-center justify-center shrink-0">
-        <div className="h-3 w-3 rounded-full bg-teal-300" />
+    <div className="my-6 flex items-center w-full font-mono text-xs">
+      {/* Start Dot - Tactical border style matching the dashboard */}
+      <div className="h-4 w-4 rounded-full border border-teal-500 flex items-center justify-center shrink-0">
+        <div className="h-1.5 w-1.5 rounded-full bg-teal-500" />
       </div>
 
       {/* Dynamic route pieces */}
       {segments.map((segment, index) => (
         <div key={index} className="flex flex-1 items-center">
-          <div className="h-[2px] flex-1 bg-teal-200" />
+          <div className="h-[1px] flex-1 bg-zinc-700" />
 
           {/* WALK */}
           {segment.type === "walk" && (
-            <div className="mx-2 text-sm">🚶</div>
+            <span className="mx-2 text-xs uppercase tracking-wider text-zinc-500 font-medium">WK</span>
           )}
 
           {/* TRANSIT */}
           {segment.type === "transit" && (
             <div
-              className={`rounded-md px-4 py-1 text-xs font-bold whitespace-nowrap ${
+              className={`mx-2 rounded border px-2 py-0.5 text-[10px] font-bold tracking-wide uppercase ${
                 segment.transitType === "train"
-                  ? "bg-indigo-500"
+                  ? "border-indigo-500/40 text-indigo-400 bg-indigo-950/20"
                   : segment.transitType === "express"
-                  ? "bg-cyan-700"
-                  : "bg-teal-700"
+                  ? "border-cyan-500/40 text-cyan-400 bg-cyan-950/20"
+                  : "border-teal-500/40 text-teal-400 bg-teal-950/20"
               }`}
             >
               {segment.label}
             </div>
           )}
 
-          <div className="h-[2px] flex-1 bg-teal-200" />
+          <div className="h-[1px] flex-1 bg-zinc-700" />
         </div>
       ))}
 
-      {/* End circle */}
-      <div className="h-6 w-6 rounded-full border-2 border-teal-700 shrink-0" />
+      {/* End Dot */}
+      <div className="h-4 w-4 rounded-full border border-zinc-500 shrink-0" />
     </div>
   );
 }
 
-{/* Placeholder for Live Route API Data*/}
 type Route = {
   id: string;
   label?: string;
@@ -112,14 +111,12 @@ function getTransitType(vehicleType?: string): "bus" | "train" | "express" {
   ) {
     return "train";
   }
-
   return "bus";
 }
 
 function getDurationMinutes(duration: string) {
   const hourMatch = duration.match(/(\d+)\s*hour/);
   const minuteMatch = duration.match(/(\d+)\s*min/);
-
   return (
     (hourMatch ? Number(hourMatch[1]) * 60 : 0) +
     (minuteMatch ? Number(minuteMatch[1]) : 0)
@@ -127,15 +124,9 @@ function getDurationMinutes(duration: string) {
 }
 
 function getDepartureDateTime(date: string, time: string) {
-  if (!date) {
-    return null;
-  }
-
+  if (!date) return null;
   const departureDate = new Date(`${date}T${time || "00:00"}`);
-  if (Number.isNaN(departureDate.getTime())) {
-    return null;
-  }
-
+  if (Number.isNaN(departureDate.getTime())) return null;
   return departureDate.toISOString();
 }
 
@@ -164,23 +155,20 @@ function getRouteSummary(route: Route) {
 
 function mapPlanRoute(route: PlanRoute, index: number): Route {
   const transitSteps = route.steps.filter((step) => step.type === "transit");
-
   return {
     id: route.id,
-    label: `Route option ${index + 1}${index === 0 ? " · Suggested" : ""}`,
+    label: index === 0 ? "SUGGESTED ROUTE" : undefined,
     summary: route.summary,
     time:
       route.departureTime && route.arrivalTime
-        ? `${route.departureTime} -> ${route.arrivalTime}`
+        ? `${route.departureTime} → ${route.arrivalTime}`
         : route.summary,
     depart: route.summary || "Transit route",
     duration: route.duration || "--",
     transfers:
       transitSteps.length > 1
-        ? `${transitSteps.length - 1} transfer${
-            transitSteps.length - 1 === 1 ? "" : "s"
-          }`
-        : "0 transfers",
+        ? `${transitSteps.length - 1} transfer${transitSteps.length - 1 === 1 ? "" : "s"}`
+        : "Direct",
     walk: route.totalWalkingTime ? `${route.totalWalkingTime} walk` : "-- walk",
     steps: route.steps,
     transitLines: route.transitLines,
@@ -193,13 +181,11 @@ function mapPlanRoute(route: PlanRoute, index: number): Route {
           transitType: getTransitType(step.vehicleType),
         };
       }
-
       return { type: "walk" };
     }),
   };
 }
 
-{/* Main page component */}
 function TripResultsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -213,17 +199,14 @@ function TripResultsContent() {
   const tripDate = searchParams.get("date") || "";
   const tripTime = searchParams.get("time") || "";
 
-  {/* Reads START/Dest location from prior pages and defaults to fill in if nothing */}
   const start = searchParams.get("start") || "";
   const destination = searchParams.get("destination") || "";
-  const transit =
-    searchParams.get("transit") || "bus,train,express";
+  const transit = searchParams.get("transit") || "bus,train,express";
 
   useEffect(() => {
     async function loadRoutes() {
       setIsLoading(true);
       setError("");
-
       const query = new URLSearchParams({
         origin: start,
         destination,
@@ -235,29 +218,21 @@ function TripResultsContent() {
       try {
         const res = await fetch(`/api/transit/plan?${query.toString()}`);
         const data = await res.json();
-
-        if (!res.ok) {
-          throw new Error(data.error || "Could not load routes.");
-        }
-
+        if (!res.ok) throw new Error(data.error || "Could not load routes.");
         setRoutes((data.routes || []).map(mapPlanRoute));
       } catch (err) {
         setRoutes([]);
-        setError(
-          err instanceof Error ? err.message : "Could not load routes."
-        );
+        setError(err instanceof Error ? err.message : "Could not load routes.");
       } finally {
         setIsLoading(false);
       }
     }
-
     loadRoutes();
   }, [destination, start, transit, tripDate, tripTime]);
 
   async function handleSaveTrip(route: Route) {
     setSavingRouteId(route.id);
     setSaveError("");
-
     try {
       const data = await createTrip({
         origin: start,
@@ -267,11 +242,7 @@ function TripResultsContent() {
         duration_minutes: getDurationMinutes(route.duration),
         route_summary: getRouteSummary(route),
       });
-
-      if (data.error) {
-        throw new Error(data.error);
-      }
-
+      if (data.error) throw new Error(data.error);
       setSavedRouteIds((currentIds) => [...currentIds, route.id]);
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : "Could not save trip.");
@@ -281,166 +252,185 @@ function TripResultsContent() {
   }
 
   return (
-    <main
-      className="min-h-screen bg-[#111] text-white"
-      style={{ justifyContent: "flex-start", padding: "6rem 1.5rem 2rem" }}
-    >
-      {/* Back button */}
+    <main className="min-h-screen bg-[#18181b] text-zinc-100 font-sans px-6 py-16 max-w-4xl mx-auto">
+      {/* Navigation */}
       <button
         onClick={() => router.back()}
-        className="block text-left text-4xl mb-4"
+        className="text-zinc-400 hover:text-white transition-colors text-sm font-medium tracking-wide uppercase mb-8 flex items-center gap-2"
       >
-        ←
+        <span>←</span> Back to Planner
       </button>
 
-      {/* grabs routes found */}
-      <h1 className="text-3xl font-bold leading-tight sm:text-4xl">
-        {isLoading ? "Finding routes..." : `${routes.length} routes found`}
-      </h1>
-
-      <p className="text-lg underline text-zinc-200 mt-1">
-        {start} → {destination}
-      </p>
-
-      {/* Shows Today's date */}
-      <p className="text-sm text-zinc-400 mb-5">
-        Departing{" "}
-        {tripDate
-          ? new Date(tripDate).toLocaleDateString("en-US", {
-              weekday: "short",
-              month: "short",
-              day: "numeric",
-            })
-          : "today"}
-        {tripTime && ` · ${tripTime}`}
-      </p>
+      {/* Header Info */}
+      <div className="border-b border-zinc-800 pb-6 mb-8">
+        <h1 className="text-2xl font-bold tracking-tight text-white font-sans">
+          {isLoading ? "Finding paths..." : `${routes.length} Available Routes`}
+        </h1>
+        <div className="mt-2 text-sm text-zinc-400 font-medium">
+          <span className="text-teal-400">{start}</span>
+          <span className="mx-2 text-zinc-600">→</span>
+          <span className="text-zinc-200">{destination}</span>
+        </div>
+        <p className="text-xs font-mono text-zinc-500 mt-1.5 uppercase tracking-wider">
+          DEPARTURE:{" "}
+          {tripDate
+            ? new Date(tripDate).toLocaleDateString("en-US", {
+                weekday: "short",
+                month: "short",
+                day: "numeric",
+              })
+            : "Today"}
+          {tripTime && ` @ ${tripTime}`}
+        </p>
+      </div>
 
       {error && (
-        <p className="mb-5 rounded-xl border border-red-500/40 bg-red-950/40 px-4 py-3 text-sm text-red-200">
-          {error}
-        </p>
+        <div className="mb-6 rounded border border-red-500/20 bg-red-950/10 p-4 text-xs font-mono text-red-400">
+          ERR // {error}
+        </div>
       )}
 
       {saveError && (
-        <p className="mb-5 rounded-xl border border-red-500/40 bg-red-950/40 px-4 py-3 text-sm text-red-200">
-          {saveError}
-        </p>
+        <div className="mb-6 rounded border border-red-500/20 bg-red-950/10 p-4 text-xs font-mono text-red-400">
+          ERR_SAVE // {saveError}
+        </div>
       )}
 
       {!isLoading && !error && routes.length === 0 && (
-        <p className="mb-5 rounded-xl border border-zinc-700 bg-[#262626] px-4 py-3 text-sm text-zinc-300">
-          No routes match those transit filters.
-        </p>
+        <div className="mb-6 rounded border border-zinc-800 bg-zinc-900/50 p-4 text-xs font-mono text-zinc-400">
+          SYSTEM // No routes match filters.
+        </div>
       )}
 
-      <div className="space-y-5">
-        {/* Renders label if exists */}
+      {/* Route List Container */}
+      <div className="divide-y divide-zinc-800/60">
         {routes.map((route, index) => {
           const isExpanded = expandedRouteId === route.id;
           const isSaving = savingRouteId === route.id;
           const isSaved = savedRouteIds.includes(route.id);
+          const isSuggested = index === 0;
 
           return (
             <section
               key={route.id}
-              className={`rounded-2xl p-4 border ${
-                index === 0
-                  ? "bg-teal-900/50 border-teal-300"
-                  : "bg-[#2b2b2b] border-zinc-700"
+              className={`py-8 first:pt-0 last:pb-0 transition-all ${
+                isSuggested
+                  ? "bg-gradient-to-r from-teal-950/10 via-transparent to-transparent border-l-2 border-teal-500/40 pl-4 -ml-4"
+                  : ""
               }`}
             >
-            {/* Route time and departure info */}
-            {route.label && (
-              <p className="text-teal-200 font-bold mb-1">{route.label}</p>
-            )}
+              {/* Tactical Top Tag */}
+              {isSuggested && (
+                <span className="inline-block text-[10px] font-bold tracking-widest text-teal-400 font-mono mb-2 bg-teal-950/40 border border-teal-500/30 px-2 py-0.5 rounded-sm">
+                  {route.label}
+                </span>
+              )}
 
-            <h2 className="text-2xl font-bold">{route.time}</h2>
-            <p className="text-sm text-zinc-300">
-              {route.transitLines.length > 0
-                ? route.transitLines.join(" + ")
-                : route.depart}
-            </p>
-            {route.hasLiveData && (
-              <p className="mt-1 text-xs font-semibold text-teal-200">
-                Live Transit data available
-              </p>
-            )}
+              <div className="flex flex-col md:flex-row md:items-baseline justify-between gap-2">
+                <h2 className="text-xl font-bold tracking-tight text-white font-mono">{route.time}</h2>
+                <span className="text-xs font-mono text-zinc-400 uppercase tracking-wider">
+                  {route.transitLines.length > 0
+                    ? route.transitLines.join(" + ")
+                    : route.depart}
+                </span>
+              </div>
 
-            {/* Line graphic referenced at top */}
-            <RouteLine segments={route.segments} />
-            
-            {/* Duration, Transfer, and Walk Time */}
-            <div className="flex justify-between text-sm text-teal-100 border-t border-teal-200/40 pt-3">
-              <span>◷ {route.duration}</span>
-              <span>→ {route.transfers}</span>
-              <span>🚶 {route.walk}</span>
-            </div>
+              {route.hasLiveData && (
+                <div className="mt-1 flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-teal-400 animate-pulse" />
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-teal-400">
+                    Live Feed Intercepted
+                  </span>
+                </div>
+              )}
 
-            <div className="mt-4 flex flex-wrap items-center gap-3">
-              <button
-                onClick={() => setExpandedRouteId(isExpanded ? null : route.id)}
-                className="text-sm font-semibold text-teal-200"
-              >
-                {isExpanded ? "Hide details" : "Show details"}
-              </button>
-              <button
-                onClick={() => handleSaveTrip(route)}
-                disabled={isSaving || isSaved}
-                className="rounded-lg border border-teal-300/60 px-3 py-2 text-sm font-semibold text-teal-100 disabled:cursor-not-allowed disabled:border-zinc-600 disabled:text-zinc-400"
-              >
-                {isSaved ? "Saved" : isSaving ? "Saving..." : "Save trip"}
-              </button>
-            </div>
+              {/* Graphic Timeline component */}
+              <RouteLine segments={route.segments} />
 
-            {isExpanded && (
-              <div className="mt-4 space-y-3 border-t border-zinc-700 pt-4">
-                {route.steps.map((step, stepIndex) => (
-                  <div key={`${route.id}-${stepIndex}`} className="text-sm">
-                    {step.type === "transit" ? (
-                      <>
-                        <div className="font-semibold text-white">
-                          {step.vehicleType?.includes("RAIL") ? "Train" : "Bus"}{" "}
-                          {step.lineName || "Transit"}
-                          {step.duration && (
-                            <span className="font-normal text-zinc-400"> · {step.duration}</span>
+              {/* Micro-metrics Panel */}
+              <div className="flex gap-6 text-xs font-mono text-zinc-400">
+                <span className="flex items-center gap-1"><span className="text-zinc-600">DUR:</span> {route.duration}</span>
+                <span className="flex items-center gap-1"><span className="text-zinc-600">XFER:</span> {route.transfers}</span>
+                <span className="flex items-center gap-1"><span className="text-zinc-600">WALK:</span> {route.walk}</span>
+              </div>
+
+              {/* Control Deck */}
+              <div className="mt-5 flex items-center gap-4">
+                <button
+                  onClick={() => setExpandedRouteId(isExpanded ? null : route.id)}
+                  className="text-xs font-mono uppercase tracking-widest text-zinc-400 hover:text-white transition-colors"
+                >
+                  [{isExpanded ? "Collapse -" : "Expand +"}]
+                </button>
+                <button
+                  onClick={() => handleSaveTrip(route)}
+                  disabled={isSaving || isSaved}
+                  className="rounded border border-zinc-700 bg-zinc-900/30 px-3 py-1 text-xs font-mono uppercase tracking-wider text-zinc-300 hover:border-zinc-500 hover:bg-zinc-800/40 transition-all disabled:cursor-not-allowed disabled:border-zinc-800 disabled:text-zinc-600 disabled:bg-transparent"
+                >
+                  {isSaved ? "Saved" : isSaving ? "Processing..." : "Save Route"}
+                </button>
+              </div>
+
+              {/* Expanded Vertical Timeline View */}
+              {isExpanded && (
+                <div className="mt-8 ml-2 pl-4 relative before:absolute before:top-2 before:bottom-2 before:left-[3px] before:w-[1px] before:bg-zinc-800 space-y-6">
+                  {route.steps.map((step, stepIndex) => (
+                    <div key={`${route.id}-${stepIndex}`} className="relative text-xs pl-6">
+
+                      {/* Technical Line Node */}
+                      <span className={`absolute left-[-4px] top-[4px] h-2 w-2 rounded-full border bg-[#18181b] ${
+                        step.type === 'transit' ? 'border-teal-500' : 'border-zinc-600'
+                      }`} />
+
+                      {step.type === "transit" ? (
+                        <div className="space-y-1">
+                          <div className="font-semibold text-white tracking-wide">
+                            {step.vehicleType?.includes("RAIL") ? "Train Service" : "Bus Service"}{" "}
+                            <span className="text-teal-400 font-mono font-bold bg-teal-950/30 px-1.5 py-0.5 rounded border border-teal-500/20 text-[10px] ml-1">
+                              {step.lineName || "Transit"}
+                            </span>
+                            {step.duration && (
+                              <span className="font-mono text-[10px] text-zinc-500 uppercase ml-2">// {step.duration}</span>
+                            )}
+                          </div>
+                          <div className="text-zinc-400 text-xs">
+                            {step.departureStop || "Origin Station"} <span className="text-zinc-600">→</span> {step.arrivalStop || "Terminus Station"}
+                          </div>
+                          {(step.departureTime || step.arrivalTime) && (
+                            <div className="text-[10px] font-mono text-zinc-500">
+                              {step.departureTime || "--:--"} — {step.arrivalTime || "--:--"}
+                            </div>
+                          )}
+                          {step.live && (
+                            <div className="mt-1.5 text-[10px] font-mono text-teal-400/90 flex items-center gap-1">
+                              <span>▪</span>
+                              <span>{step.live.realtimeAvailable ? "Telemetry Live" : "Scheduled Track"}</span>
+                              {step.live.nextDeparture && (
+                                <><span>·</span> Next Arr: {new Date(step.live.nextDeparture).toLocaleTimeString([], {
+                                  hour: "numeric",
+                                  minute: "2-digit",
+                                })}</>
+                              )}
+                              {step.live.status && <><span className="text-zinc-600">/</span> <span className="uppercase text-teal-300">{step.live.status}</span></>}
+                            </div>
                           )}
                         </div>
-                        <div className="text-zinc-300">
-                          {step.departureStop || "Departure stop"} →{" "}
-                          {step.arrivalStop || "Arrival stop"}
+                      ) : (
+                        <div className="text-zinc-400 space-y-0.5">
+                          <div className="font-medium text-zinc-300">
+                            Pedestrian Transfer {step.distance && `(${step.distance})`}
+                            {step.duration && <span className="font-mono text-[10px] text-zinc-500 ml-2">// {step.duration}</span>}
+                          </div>
+                          {step.instruction && (
+                            <div className="text-zinc-500 italic text-[11px]">{step.instruction}</div>
+                          )}
                         </div>
-                        {(step.departureTime || step.arrivalTime) && (
-                          <div className="text-xs text-zinc-400">
-                            {step.departureTime || "--"} → {step.arrivalTime || "--"}
-                          </div>
-                        )}
-                        {step.live && (
-                          <div className="mt-1 text-xs text-teal-200">
-                            {step.live.realtimeAvailable ? "Realtime available" : "Scheduled data"}
-                            {step.live.nextDeparture && (
-                              <> · Next: {new Date(step.live.nextDeparture).toLocaleTimeString([], {
-                                hour: "numeric",
-                                minute: "2-digit",
-                              })}</>
-                            )}
-                            {step.live.status && <> · {step.live.status}</>}
-                          </div>
-                        )}
-                      </>
-                    ) : (
-                      <div className="text-zinc-300">
-                        Walk {step.distance && `${step.distance} `}
-                        {step.duration && `(${step.duration})`}
-                        {step.instruction && (
-                          <span className="text-zinc-500"> · {step.instruction}</span>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
           );
         })}
       </div>
@@ -450,7 +440,7 @@ function TripResultsContent() {
 
 export default function TripResults() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div className="p-8 text-xs font-mono text-zinc-500">SYNCHRONIZING RECONNAISSANCE...</div>}>
       <TripResultsContent />
     </Suspense>
   );
