@@ -77,6 +77,7 @@ export default function Dashboard() {
   const [lastUpdatedDisplay, setLastUpdatedDisplay] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const firstName = "Test User";
   const firstName = useSyncExternalStore(subscribeToClientSnapshot, getClientFirstName, () => "");
   const greeting = useSyncExternalStore(subscribeToClientSnapshot, getGreeting, () => "Good day");
 
@@ -376,7 +377,6 @@ export default function Dashboard() {
           </div>
         </aside>
       </div>
-
       <style>{`
         :root {
           --bg-main: #0b0c0e;
@@ -716,6 +716,13 @@ export default function Dashboard() {
           outline: 2px solid var(--brand-primary);
           outline-offset: 2px;
         }
+        
+        .transit-attribution {
+          margin-top: 24px;
+          display: flex;
+          justify-content: flex-end;
+          opacity: 0.9;
+        }   
 
         .loading-text, .empty-text { font-size: 0.85rem; color: var(--text-ghost); margin: 0; font-weight: 500; }
 

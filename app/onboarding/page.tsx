@@ -72,7 +72,7 @@ export default function Onboarding() {
 
   return (
     <main
-      className="bg-grid"
+      className="bg-grid onboarding-main"
       style={{
         minHeight: "100vh",
         display: "flex",
@@ -119,18 +119,51 @@ export default function Onboarding() {
       <div style={{ zIndex: 1, maxWidth: 500, display: "flex", flexDirection: "column", flex: 1 }}>
 
         {/* Logo — alt text already handles the name, hide the visual "NextStop" text */}
-        <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: "2.5rem" }}>
+        <div className="hero-logo" style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: "2.5rem", }} >
           <Image src="/logo2.png" alt="NextStop logo" width={200} height={150}
             style={{ borderRadius: 14, objectFit: "contain", height: "auto" }} />
-          <div aria-hidden="true">
-            <p style={{ margin: 0, fontSize: "2.7rem", fontWeight: 800,
-              letterSpacing: "-0.02em", lineHeight: 1 }}>
-              NextStop
-            </p>
-            <p style={{ margin: "5px 0 0", fontSize: "0.75rem", color: "#3ecfb2",
-              letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: 600 }}>
+        <div aria-hidden="true">
+          <div
+            style={{
+              margin: 0,
+              fontSize: "2.7rem",
+              fontWeight: 800,
+              letterSpacing: "-0.02em",
+              lineHeight: 1,
+            }}
+          >
+            NextStop
+          </div>
+
+          <div
+            style={{
+              marginTop: "5px",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+            }}
+          >
+            <span
+              style={{
+                fontSize: "0.75rem",
+                color: "#3ecfb2",
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+                fontWeight: 600,
+                whiteSpace: "nowrap",
+              }}
+            >
               UCI + OC Transit
-            </p>
+            </span>
+
+            <Image
+              src="/transitlogo.png"
+              alt="Powered by Transit"
+              width={19}
+              height={4}
+              style={{ objectFit: "contain" }}
+            />
+            </div>
           </div>
         </div>
 
@@ -172,32 +205,47 @@ export default function Onboarding() {
         </div>
       </div>
 
-      <style>{`
-        .sr-only {
-          position: absolute;
-          width: 1px;
-          height: 1px;
-          padding: 0;
-          margin: -1px;
-          overflow: hidden;
-          clip: rect(0,0,0,0);
-          white-space: nowrap;
-          border: 0;
+    <style>{`
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0,0,0,0);
+        white-space: nowrap;
+        border: 0;
+      }
+
+      .primary-btn {
+        transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+      }
+
+      .primary-btn:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 0 24px rgba(62,207,178,0.3) !important;
+      }
+
+      .secondary-btn {
+        transition: transform 0.2s ease !important;
+      }
+
+      .secondary-btn:hover {
+        transform: translateY(-1px) !important;
+      }
+
+      @media (max-width: 768px) {
+        .onboarding-main {
+          padding: 2rem 1.5rem !important;
         }
-        .primary-btn {
-          transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+
+        .hero-logo {
+          flex-direction: column;
+          align-items: flex-start !important;
         }
-        .primary-btn:hover {
-          transform: translateY(-2px) !important;
-          box-shadow: 0 0 24px rgba(62,207,178,0.3) !important;
-        }
-        .secondary-btn {
-          transition: transform 0.2s ease !important;
-        }
-        .secondary-btn:hover {
-          transform: translateY(-1px) !important;
-        }
-      `}</style>
+      }
+    `}</style>
     </main>
   );
 }

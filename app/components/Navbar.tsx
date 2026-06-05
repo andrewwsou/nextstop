@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 
@@ -125,6 +126,12 @@ export default function Navbar() {
         <Link href="/dashboard" style={styles.logo} aria-label="NextStop, go to dashboard">
           <span style={styles.logoText} aria-hidden="true">NextStop</span>
           <span style={styles.logoSub} aria-hidden="true">UCI + OC Transit</span>
+          <Image src="/transitlogo.png" 
+            alt="Powered by Transit"
+            width={19}
+            height={4}
+            style={{ objectFit: "contain" }}
+          />
         </Link>
 
         {/* Desktop links — aria-current tells screen readers which page is active */}
