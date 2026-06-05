@@ -1,14 +1,20 @@
 import type { NextConfig } from "next";
 import withPWA from "@ducanh2912/next-pwa";
 
+const configuredApiUrl = process.env.NEXT_PUBLIC_API_URL;
+const apiUrl =
+  configuredApiUrl && configuredApiUrl !== "undefined"
+    ? configuredApiUrl
+    : "http://localhost:5001";
+
 const nextConfig: NextConfig = {
   turbopack: {},
   async rewrites() {
     return {
-      fallback: [
+      beforeFiles: [
         {
           source: "/api/:path*",
-          destination: `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001"}/api/:path*`,
+          destination: `${apiUrl}/api/:path*`,
         },
       ],
     };
