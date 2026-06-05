@@ -19,18 +19,12 @@ export default function SignUp() {
 
   async function handleSubmit() {
     setError("");
-    if (form.password !== form.confirm) {
-      setError("Passwords do not match");
-      return;
-    }
+    if (form.password !== form.confirm) { setError("Passwords do not match"); return; }
     setLoading(true);
     try {
       const res = await signup({
-        first_name: form.first_name,
-        last_name: form.last_name,
-        email: form.email,
-        password: form.password,
-        affiliation: form.affiliation,
+        first_name: form.first_name, last_name: form.last_name,
+        email: form.email, password: form.password, affiliation: form.affiliation,
       });
       if (res.token) {
         localStorage.setItem("token", res.token);
@@ -49,22 +43,27 @@ export default function SignUp() {
     <main className="auth-page bg-grid">
       <div className="auth-card">
 
-        {/* Page heading — first in DOM so screen reader announces it immediately */}
-        <h1 tabIndex={0} className="auth-title">
+        {/* Back button */}
+        <button
+          onClick={() => router.push("/onboarding")}
+          className="auth-back-btn"
+        >
+          <span aria-hidden="true">←</span> Back
+        </button>
+
+        <h1 className="auth-title">
           Welcome to NextStop
         </h1>
         <p className="sr-only">Create an account to start planning your transit trips.</p>
 
-        {/* Error announced immediately when it appears */}
-        {error && (
-          <p role="alert" className="auth-error">{error}</p>
-        )}
+        {error && <p role="alert" className="auth-error">{error}</p>}
 
         {/* Name */}
         <section aria-labelledby="name-heading">
-          <h2 id="name-heading" tabIndex={0} className="field-section-label">Name</h2>
 
-          <label htmlFor="first-name" className="sr-only">First name</label>
+          <h2 id="name-heading" className="field-section-label">Name</h2>
+
+          <label htmlFor="first-name" className="field-label">First name</label>
           <input
             id="first-name"
             className="input"
@@ -73,7 +72,7 @@ export default function SignUp() {
             onChange={e => handle("first_name", e.target.value)}
           />
 
-          <label htmlFor="last-name" className="sr-only">Last name</label>
+          <label htmlFor="last-name" className="field-label">Last name</label>
           <input
             id="last-name"
             className="input"
@@ -85,14 +84,14 @@ export default function SignUp() {
 
         {/* Email */}
         <section aria-labelledby="email-heading">
-          <h2 id="email-heading" tabIndex={0} className="field-section-label" style={{ marginTop: 6 }}>Email</h2>
+          <h2 id="email-heading" className="field-section-label" style={{ marginTop: 6 }}>Email</h2>
 
-          <label htmlFor="email" className="sr-only">Email address</label>
+          <label htmlFor="email" className="field-label">Email address</label>
           <input
             id="email"
             className="input"
             type="email"
-            placeholder="Email"
+            placeholder="you@example.com"
             aria-describedby="email-hint"
             onChange={e => handle("email", e.target.value)}
           />
@@ -101,9 +100,9 @@ export default function SignUp() {
 
         {/* Affiliation */}
         <section aria-labelledby="affiliation-heading">
-          <h2 id="affiliation-heading" tabIndex={0} className="field-section-label" style={{ marginTop: 6 }}>Affiliation</h2>
+          <h2 id="affiliation-heading" className="field-section-label" style={{ marginTop: 6 }}>Affiliation</h2>
 
-          <label htmlFor="affiliation" className="sr-only">Select your school or organization</label>
+          <label htmlFor="affiliation" className="field-label">School or organization</label>
           <select
             id="affiliation"
             className="input"
@@ -120,24 +119,25 @@ export default function SignUp() {
 
         {/* Password */}
         <section aria-labelledby="password-heading">
-          <h2 id="password-heading" tabIndex={0} className="field-section-label" style={{ marginTop: 6 }}>Password</h2>
+          <h2 id="password-heading" className="field-section-label" style={{ marginTop: 6 }}>Password</h2>
 
-          <label htmlFor="password" className="sr-only">Password</label>
+
+          <label htmlFor="password" className="field-label">Password</label>
           <input
             id="password"
             className="input"
             type="password"
-            placeholder="Password"
+            placeholder="Create a password"
             aria-describedby="password-hint"
             onChange={e => handle("password", e.target.value)}
           />
 
-          <label htmlFor="confirm-password" className="sr-only">Confirm password</label>
+          <label htmlFor="confirm-password" className="field-label">Confirm password</label>
           <input
             id="confirm-password"
             className="input"
             type="password"
-            placeholder="Confirm Password"
+            placeholder="Re-enter your password"
             aria-describedby="confirm-hint"
             onChange={e => handle("confirm", e.target.value)}
           />
@@ -150,6 +150,54 @@ export default function SignUp() {
           onClick={handleSubmit}
         />
       </div>
+
+      <style>{`
+        .sr-only {
+          position: absolute; width: 1px; height: 1px; padding: 0;
+          margin: -1px; overflow: hidden; clip: rect(0,0,0,0);
+          white-space: nowrap; border: 0;
+        }
+
+        /* Visible field label above each input */
+        .field-label {
+          display: block;
+          font-size: 0.72rem;
+          font-weight: 600;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: #848d9a;
+          margin-bottom: 5px;
+          margin-top: 14px;
+        }
+
+        /* Back button */
+        .auth-back-btn {
+          background: none;
+          border: none;
+          color: #848d9a;
+          font-size: 0.75rem;
+          font-weight: 600;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          padding: 0;
+          margin-bottom: 1.5rem;
+          font-family: inherit;
+          transition: color 0.15s;
+        }
+        .auth-back-btn:hover { color: #f3f4f6; }
+        /* FIX 4: explicit focus-visible outline (keyboard focus indicator warning) */
+        .auth-back-btn:focus-visible,
+        .input:focus-visible,
+        select.input:focus-visible {
+          outline: 2px solid #3ecfb2;
+          outline-offset: 2px;
+          border-radius: 4px;
+        }
+      `}</style>
     </main>
   );
 }

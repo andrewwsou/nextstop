@@ -58,6 +58,7 @@ const styles = {
     flexDirection: "column" as const,
     gap: 5,
   },
+  // FIX: was plain <div> — now typed as a <nav> style object (same values)
   mobileMenu: {
     position: "fixed" as const,
     top: 60,
@@ -119,14 +120,12 @@ export default function Navbar() {
 
   return (
     <>
-      {/* role="navigation" + aria-label distinguishes this from any other nav on the page */}
       <nav role="navigation" aria-label="Main navigation" style={styles.nav}>
 
-        {/* Logo — "NextStop" is enough, hide the redundant subtitle */}
-        <Link href="/dashboard" style={styles.logo} aria-label="NextStop, go to dashboard">
+        <Link href="/dashboard" style={styles.logo} >
           <span style={styles.logoText} aria-hidden="true">NextStop</span>
           <span style={styles.logoSub} aria-hidden="true">UCI + OC Transit</span>
-          <Image src="/transitlogo.png" 
+          <Image src="/transitlogo.png"
             alt="Powered by Transit"
             width={19}
             height={4}
@@ -134,7 +133,6 @@ export default function Navbar() {
           />
         </Link>
 
-        {/* Desktop links — aria-current tells screen readers which page is active */}
         <div className="nav-desktop-links" style={styles.desktopLinks}>
           {links.map(l => (
             <Link
@@ -148,7 +146,6 @@ export default function Navbar() {
           ))}
         </div>
 
-        {/* Hamburger — aria-expanded tells screen readers whether the menu is open */}
         <button
           className="nav-hamburger"
           style={styles.hamburger}
@@ -163,9 +160,9 @@ export default function Navbar() {
         </button>
       </nav>
 
-      {/* Mobile menu — id matches aria-controls above */}
-      <div
+      <nav
         id="mobile-menu"
+        aria-label="Mobile navigation"
         className="nav-mobile-menu"
         aria-hidden={!menuOpen}
         style={{
@@ -187,7 +184,7 @@ export default function Navbar() {
             {l.label}
           </Link>
         ))}
-      </div>
+      </nav>
 
       <style>{`
         @media (max-width: 768px) {

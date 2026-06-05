@@ -84,7 +84,7 @@ export default function Onboarding() {
         gap: "3rem",
       }}
     >
-      {/* Decorative animated map — hidden from screen readers */}
+      {/* hidden map from screen readers */}
       <svg
         aria-hidden="true"
         focusable="false"
@@ -118,58 +118,23 @@ export default function Onboarding() {
 
       <div style={{ zIndex: 1, maxWidth: 500, display: "flex", flexDirection: "column", flex: 1 }}>
 
-        {/* Logo — alt text already handles the name, hide the visual "NextStop" text */}
-        <div className="hero-logo" style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: "2.5rem", }} >
+        <div className="hero-logo" style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: "2.5rem" }}>
           <Image src="/logo2.png" alt="NextStop logo" width={200} height={150}
             style={{ borderRadius: 14, objectFit: "contain", height: "auto" }} />
-        <div aria-hidden="true">
-          <div
-            style={{
-              margin: 0,
-              fontSize: "2.7rem",
-              fontWeight: 800,
-              letterSpacing: "-0.02em",
-              lineHeight: 1,
-            }}
-          >
-            NextStop
-          </div>
-
-          <div
-            style={{
-              marginTop: "5px",
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-            }}
-          >
-            <span
-              style={{
-                fontSize: "0.75rem",
-                color: "#3ecfb2",
-                letterSpacing: "0.1em",
-                textTransform: "uppercase",
-                fontWeight: 600,
-                whiteSpace: "nowrap",
-              }}
-            >
-              UCI + OC Transit
-            </span>
-
-            <Image
-              src="/transitlogo.png"
-              alt="Powered by Transit"
-              width={19}
-              height={4}
-              style={{ objectFit: "contain" }}
-            />
+          <div aria-hidden="true">
+            <div style={{ margin: 0, fontSize: "2.7rem", fontWeight: 800, letterSpacing: "-0.02em", lineHeight: 1 }}>
+              NextStop
+            </div>
+            <div style={{ marginTop: "5px", display: "flex", alignItems: "center", gap: "8px" }}>
+              <span style={{ fontSize: "0.75rem", color: "#3ecfb2", letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: 600, whiteSpace: "nowrap" }}>
+                UCI + OC Transit
+              </span>
+              <Image src="/transitlogo.png" alt="Powered by Transit" width={19} height={4} style={{ objectFit: "contain" }} />
             </div>
           </div>
         </div>
 
-        {/* Page heading — first focusable element */}
         <h1
-          tabIndex={0}
           style={{
             fontSize: "clamp(2.6rem, 4.5vw, 3.8rem)",
             fontWeight: 800,
@@ -185,9 +150,7 @@ export default function Onboarding() {
           Buses, trains and UCI shuttles — unified in one live map.
         </p>
 
-        {/* Bullet points — hide the decorative dot, just read the text */}
-        <p style={{ color: "#fff", margin: "0 0 2.5rem", fontSize: "0.95rem",
-          fontWeight: 600, letterSpacing: "0.04em" }}>
+        <p style={{ color: "#fff", margin: "0 0 2.5rem", fontSize: "0.95rem", fontWeight: 600, letterSpacing: "0.04em" }}>
           <span aria-hidden="true">● </span>Live in Irvine
           <span aria-hidden="true"> · </span>
           <span className="sr-only">, </span>
@@ -202,50 +165,50 @@ export default function Onboarding() {
           <div style={{ marginTop: 10 }}>
             <AuthButton text="Sign In" variant="secondary" onClick={() => router.push("/login")} />
           </div>
+          {/* Back button*/}
+          <button
+            onClick={() => router.push("/")}
+            style={{
+              marginTop: 16,
+              background: "none",
+              border: "none",
+              color: "#848d9a",
+              fontSize: "0.75rem",
+              fontWeight: 600,
+              letterSpacing: "0.06em",
+              textTransform: "uppercase",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              padding: 0,
+              fontFamily: "inherit",
+              transition: "color 0.15s",
+            }}
+            onMouseOver={e => (e.currentTarget.style.color = "#f3f4f6")}
+            onMouseOut={e => (e.currentTarget.style.color = "#848d9a")}
+          >
+            <span aria-hidden="true">←</span> Back
+          </button>
         </div>
       </div>
 
-    <style>{`
-      .sr-only {
-        position: absolute;
-        width: 1px;
-        height: 1px;
-        padding: 0;
-        margin: -1px;
-        overflow: hidden;
-        clip: rect(0,0,0,0);
-        white-space: nowrap;
-        border: 0;
-      }
-
-      .primary-btn {
-        transition: transform 0.2s ease, box-shadow 0.2s ease !important;
-      }
-
-      .primary-btn:hover {
-        transform: translateY(-2px) !important;
-        box-shadow: 0 0 24px rgba(62,207,178,0.3) !important;
-      }
-
-      .secondary-btn {
-        transition: transform 0.2s ease !important;
-      }
-
-      .secondary-btn:hover {
-        transform: translateY(-1px) !important;
-      }
-
-      @media (max-width: 768px) {
-        .onboarding-main {
-          padding: 2rem 1.5rem !important;
+      <style>{`
+        .sr-only {
+          position: absolute; width: 1px; height: 1px; padding: 0;
+          margin: -1px; overflow: hidden; clip: rect(0,0,0,0);
+          white-space: nowrap; border: 0;
         }
-
-        .hero-logo {
-          flex-direction: column;
-          align-items: flex-start !important;
+        .primary-btn { transition: transform 0.2s ease, box-shadow 0.2s ease !important; }
+        .primary-btn:hover { transform: translateY(-2px) !important; box-shadow: 0 0 24px rgba(62,207,178,0.3) !important; }
+        .secondary-btn { transition: transform 0.2s ease !important; }
+        .secondary-btn:hover { transform: translateY(-1px) !important; }
+        button:focus-visible { outline: 2px solid #3ecfb2; outline-offset: 2px; border-radius: 4px; }
+        @media (max-width: 768px) {
+          .onboarding-main { padding: 2rem 1.5rem !important; }
+          .hero-logo { flex-direction: column; align-items: flex-start !important; }
         }
-      }
-    `}</style>
+      `}</style>
     </main>
   );
 }

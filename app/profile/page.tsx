@@ -57,7 +57,6 @@ export default function Profile() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  // focus modal when it opens so tab order starts inside it
   const modalRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (modal) modalRef.current?.focus();
@@ -113,22 +112,24 @@ export default function Profile() {
   }
 
   const isInfoModal = modal === "about" || modal === "privacy";
+  const fullName = [user?.first_name, user?.last_name].filter(Boolean).join(" ");
 
   return (
     <main className="profile-main min-h-screen bg-[#0b0c0e] text-[#f3f4f6] px-20 py-16 max-w-5xl mx-auto" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
 
-      {/* Page heading — sr-only but first in DOM so it's announced on page load */}
-      <h1 tabIndex={0} className="sr-only">Profile</h1>
+      {/* FIX 1: sr-only h1 is the page title; visible name is now an h2 heading */}
+      <h1 className="sr-only">Profile</h1>
 
-      {/* Avatar is decorative, name/email carry the actual info */}
       <div className="flex items-center gap-4 mb-12">
+        {/* Avatar is decorative */}
         <div aria-hidden="true" className="w-16 h-16 rounded-full bg-[#13151a] border border-[#222630] flex items-center justify-center text-2xl font-bold text-[#3ecfb2] shrink-0">
           {user?.first_name?.[0] || "U"}
         </div>
         <div className="min-w-0">
-          <p className="margin-0 text-xl font-bold tracking-tight text-white break-words">
-            {user?.first_name} {user?.last_name}
-          </p>
+
+          <h2 className="margin-0 text-xl font-bold tracking-tight text-white break-words">
+            {fullName || "User"}
+          </h2>
           <p className="margin-0 text-sm text-[#848d9a] mt-1 break-all font-medium">
             {user?.email}
           </p>
@@ -139,13 +140,13 @@ export default function Profile() {
       <div className="profile-grid grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
         {sections.map(s => (
           <section key={s.label} aria-labelledby={`section-${s.label}`}>
-            <h2
+
+            <h3
               id={`section-${s.label}`}
-              tabIndex={0}
-              className="mb-3 text-xs font-bold tracking-widest text-[#4b5363] uppercase focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#3ecfb2] rounded"
+              className="mb-3 text-xs font-bold tracking-widest text-[#848d9a] uppercase"
             >
               {s.label}
-            </h2>
+            </h3>
             <div className="bg-[#13151a]/40 border border-[#222630] rounded-xl overflow-hidden">
               {s.items.map((item, i) => (
                 <button
@@ -161,7 +162,7 @@ export default function Profile() {
                 >
                   {item}
                   {item !== "Sign out" && (
-                    <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4b5363" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#848d9a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <path d="m9 18 6-6-6-6"/>
                     </svg>
                   )}

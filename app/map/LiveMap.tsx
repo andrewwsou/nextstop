@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { useRouter } from "next/navigation";
 import "leaflet/dist/leaflet.css";
 import { CircleMarker, MapContainer, Popup, TileLayer, useMapEvents } from "react-leaflet";
@@ -25,6 +25,32 @@ function DestinationSelector({ setDestination }: { setDestination: (pos: [number
 function shortenName(displayName: string) {
   return displayName.split(",")[0].trim();
 }
+function RouteButton({
+  routeLabel, direction, stopName, onClick,
+}: {
+  routeLabel: string; direction: string; stopName: string; onClick: () => void;
+}) {
+  const descId = useId();
+  return (
+    <button
+      className="route-btn"
+      onClick={onClick}
+      aria-describedby={descId}
+      style={{ all: "unset", display: "block", width: "100%", background: "#1a2e28", borderRadius: 8, padding: "10px 12px", cursor: "pointer", boxSizing: "border-box" }}
+    >
+      <span id={descId} style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0,0,0,0)", whiteSpace: "nowrap" }}>
+        Direction: {direction}. Nearest stop: {stopName}. Tap to plan this trip.
+      </span>
+
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+        <span style={{ fontWeight: 700, color: "#3ecfb2", fontSize: 13 }}>Route {routeLabel}</span>
+        <span aria-hidden="true" style={{ fontSize: 10, color: "#3ecfb2" }}>Plan →</span>
+      </div>
+      <div style={{ fontSize: 11, color: "#aaa" }}>Direction: {direction}</div>
+      <div style={{ fontSize: 11, color: "#8a9492", marginTop: 2 }}>Stop: {stopName}</div>
+    </button>
+  );
+}
 
 export default function LiveMap() {
   const router = useRouter();
@@ -45,7 +71,6 @@ export default function LiveMap() {
           ? "Based on your current location. No nearby transit routes found."
           : `Based on your current location. ${nearbyRoutes.length} nearby transit routes found.`;
 
-  // Get user location
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
       (pos) => setPosition([pos.coords.latitude, pos.coords.longitude]),
@@ -53,7 +78,6 @@ export default function LiveMap() {
     );
   }, []);
 
-  // Load nearby transit once we have location
   useEffect(() => {
     if (!position) return;
     setTransitLoading(true);
@@ -64,7 +88,6 @@ export default function LiveMap() {
       .finally(() => setTransitLoading(false));
   }, [position]);
 
-  // Reverse geocode when destination is picked on map
   useEffect(() => {
     if (!destination) return;
     fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${destination[0]}&lon=${destination[1]}`)
@@ -73,10 +96,9 @@ export default function LiveMap() {
       .catch(() => {});
   }, [destination]);
 
-  // Hide Leaflet zoom buttons from screen readers
   useEffect(() => {
     const t = setTimeout(() => {
-      document.querySelectorAll(".leaflet-control-zoom, .leaflet-control-zoom a, .leaflet-control-attribution").forEach(el => {
+      document.querySelectorAll(".leaflet-control-zoom, .leaflet-control-zoom a, .leaflet-control-attribution, .leaflet-pane, .leaflet-marker-pane, .leaflet-overlay-pane").forEach(el => {
         el.setAttribute("aria-hidden", "true");
         el.setAttribute("tabindex", "-1");
       });
@@ -86,7 +108,12 @@ export default function LiveMap() {
 
   if (!position && !transitError) {
     return (
-      <div role="status" aria-live="polite" style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", background: "#0d1a16", color: "#aaa", fontSize: 14 }}>
+      // No tabIndex — a status region is not an interactive widget
+      <div
+        role="status"
+        aria-live="polite"
+        style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", background: "#0d1a16", color: "#aaa", fontSize: 14 }}
+      >
         Getting your location...
       </div>
     );
@@ -94,18 +121,10 @@ export default function LiveMap() {
 
   return (
     <>
-      {/* sr-only live region */}
       <div
-        role="status"
-        aria-live="assertive"
+        aria-live="polite"
         aria-atomic="true"
-        style={{
-          position: "absolute",
-          width: 1,
-          height: 1,
-          overflow: "hidden",
-          clip: "rect(0,0,0,0)"
-        }}
+        style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0,0,0,0)", whiteSpace: "nowrap" }}
       >
         {transitSummary}
       </div>
@@ -136,39 +155,32 @@ export default function LiveMap() {
               padding-bottom: 140px;
               background: #050806;
             }
-
-            .live-map-page > div[aria-hidden="true"] {
+            .live-map-page > div[inert] {
               height: 55vh !important;
               min-height: 360px;
             }
-
             .map-panel {
               position: relative;
-              top: auto;
-              bottom: auto;
-              left: auto;
-              right: auto;
+              top: auto; bottom: auto; left: auto; right: auto;
               width: calc(100% - 24px);
               max-height: none;
               margin: 12px auto 120px;
               border-radius: 18px;
             }
-
-            .map-panel h2 {
-              font-size: 20px !important;
-            }
+            .map-panel h2 { font-size: 20px !important; }
           }
-          }
-          button:focus-visible { outline: 2px solid #3ecfb2; outline-offset: 2px; border-radius: 6px; }
-          a:focus-visible { outline: 2px solid #3ecfb2; outline-offset: 2px; border-radius: 6px; }
+          button:focus-visible  { outline: 2px solid #3ecfb2; outline-offset: 2px; border-radius: 6px; }
+          a:focus-visible       { outline: 2px solid #3ecfb2; outline-offset: 2px; border-radius: 6px; }
+          .route-btn:focus-visible { outline: 2px solid #3ecfb2 !important; outline-offset: 2px; border-radius: 8px; }
+          .trip-link:focus-visible { outline: 2px solid #3ecfb2 !important; outline-offset: 2px; border-radius: 8px; }
         `}</style>
 
-        {/* Map — aria-hidden entirely, sighted-only visual */}
+
         <div
-            aria-hidden="true"
-            role="presentation"
-            style={{ height: "100%", width: "100%" }}
-          >
+          aria-hidden="true"
+          inert={true}
+          style={{ height: "100%", width: "100%" }}
+        >
           {position && (
             <MapContainer
               center={position}
@@ -202,19 +214,13 @@ export default function LiveMap() {
           )}
         </div>
 
-        {/* Transit info panel — always open, no interaction required */}
-        <div
-          className="map-panel"
-          role="region"
-          aria-labelledby="panel-heading"
-          aria-describedby="panel-content"
-        >
+        <section className="map-panel" role="region" aria-labelledby="panel-heading">
           <div style={{ padding: "14px 16px", borderBottom: "1px solid #1a2e28", flexShrink: 0 }}>
             <h2 id="panel-heading" style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "#3ecfb2" }}>
               Nearby Transit
             </h2>
             {position && (
-              <p style={{ margin: "4px 0 0", fontSize: 11, color: "#555" }}>
+              <p style={{ margin: "4px 0 0", fontSize: 11, color: "#8a9492" }}>
                 Based on your current location
               </p>
             )}
@@ -222,24 +228,19 @@ export default function LiveMap() {
 
           <div
             id="panel-content"
-            role="status"
             aria-live="polite"
-            aria-atomic="false"
             style={{ overflowY: "auto", padding: "12px 16px", flexGrow: 1, display: "flex", flexDirection: "column", gap: 12 }}
           >
-
-            {/* Status */}
             {transitLoading && (
-              <p style={{ fontSize: 12, color: "#848d9a", margin: 0 }}>Loading routes...</p>
+              <p style={{ fontSize: 12, color: "#8a9492", margin: 0 }}>Loading routes...</p>
             )}
             {transitError && (
               <p style={{ fontSize: 12, color: "#f87171", margin: 0 }}>{transitError}</p>
             )}
             {!transitLoading && !transitError && nearbyRoutes.length === 0 && (
-              <p style={{ fontSize: 12, color: "#555", margin: 0 }}>No transit routes found near your location.</p>
+              <p style={{ fontSize: 12, color: "#8a9492", margin: 0 }}>No transit routes found near your location.</p>
             )}
 
-            {/* Route list */}
             {!transitLoading && nearbyRoutes.length > 0 && (
               <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 8 }}>
                 {nearbyRoutes.map(route => {
@@ -248,38 +249,30 @@ export default function LiveMap() {
                   const itinerary = route.merged_itineraries?.[0];
                   const direction = itinerary?.itineraries?.[0]?.direction_headsign || "Unknown direction";
                   const stopName = itinerary?.closest_stop?.stop_name || "Unknown stop";
-
                   return (
                     <li key={route.global_route_id}>
-                      <button
+                      <RouteButton
+                        routeLabel={routeLabel}
+                        direction={direction}
+                        stopName={stopName}
                         onClick={() => router.push(`/trip?destination=${encodeURIComponent(stopName)}`)}
-                        aria-label={`Route ${routeLabel}, direction ${direction}, nearest stop ${stopName}. Tap to plan this trip.`}
-                        style={{ all: "unset", display: "block", width: "100%", background: "#1a2e28", borderRadius: 8, padding: "10px 12px", cursor: "pointer", boxSizing: "border-box" }}
-                      >
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-                          <span style={{ fontWeight: 700, color: "#3ecfb2", fontSize: 13 }}>Route {routeLabel}</span>
-                          <span aria-hidden="true" style={{ fontSize: 10, color: "#3ecfb2" }}>Plan →</span>
-                        </div>
-                        <div style={{ fontSize: 11, color: "#aaa" }}>Direction: {direction}</div>
-                        <div style={{ fontSize: 11, color: "#555", marginTop: 2 }}>Stop: {stopName}</div>
-                      </button>
+                      />
                     </li>
                   );
                 })}
               </ul>
             )}
 
-            {/* Trip planner link */}
             <a
               href="/trip"
+              className="trip-link"
               style={{ display: "block", background: "transparent", border: "1px solid #1a2e28", borderRadius: 8, padding: "10px 12px", color: "#3ecfb2", fontSize: 12, fontWeight: 600, textDecoration: "none", textAlign: "center", marginTop: 4 }}
             >
               Open Trip Planner
             </a>
           </div>
-        </div>
+        </section>
 
-        {/* Transit error toast */}
         {transitError && (
           <div role="alert" style={{ position: "absolute", top: 16, left: "50%", transform: "translateX(-50%)", zIndex: 1000, background: "#1a0a0a", border: "1px solid #f87171", borderRadius: 8, padding: "8px 16px", fontSize: 12, color: "#f87171", maxWidth: "90vw" }}>
             {transitError}

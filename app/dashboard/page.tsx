@@ -142,28 +142,28 @@ export default function Dashboard() {
     <main className="dashboard-main">
       <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
-      {/* Page title — visible to screen readers as the page landmark */}
       <h1 className="sr-only">Dashboard</h1>
 
       <div className="dashboard-container">
-        {/* LEFT COLUMN */}
         <div className="main-content">
 
-          {/* Greeting — visually prominent but not the page h1 */}
           <header className="dashboard-header">
-            <p className="greeting-text">
+            <h2 className="greeting-text">
               {greeting}{firstName ? <span className="user-name">, {firstName}</span> : ""}
-            </p>
+            </h2>
             <p className="subtitle">Where are you heading today?</p>
           </header>
 
-          {/* Search */}
           <div className="search-wrapper">
+            <label htmlFor="destination-search" className="search-label">
+              Search destinations
+            </label>
             <div className={`search-bar ${query ? "active" : ""}`}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="search-icon" aria-hidden="true">
                 <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
               </svg>
               <input
+                id="destination-search"
                 ref={inputRef}
                 aria-label="Search destinations, stations, routes"
                 value={query}
@@ -207,7 +207,8 @@ export default function Dashboard() {
           {/* Destinations */}
           {(popularDestinations.length > 0 || transitHubs.length > 0) && (
             <section aria-labelledby="destinations-heading" className="section-block">
-              <h2 id="destinations-heading" tabIndex={0}>Destinations</h2>
+              {/* FIX 4: Removed tabIndex={0} from all h2s — headings are not valid tabbable widgets */}
+              <h3 id="destinations-heading">Destinations</h3>
               <div className="pill-grid">
                 {[...popularDestinations, ...transitHubs].map((loc) => (
                   <button
@@ -225,7 +226,7 @@ export default function Dashboard() {
 
           {/* Navigate */}
           <section aria-labelledby="navigate-heading" className="section-block">
-            <h2 id="navigate-heading" tabIndex={0}>Navigate</h2>
+            <h3 id="navigate-heading">Navigate</h3>
             <div className="action-list">
               {quickActions.map((action) => (
                 <button
@@ -249,7 +250,7 @@ export default function Dashboard() {
           {/* Trips */}
           <div className="trips-grid">
             <section aria-labelledby="recent-heading">
-              <h2 id="recent-heading">Recent Trips</h2>
+              <h3 id="recent-heading">Recent Trips</h3>
               <div role="status" aria-live="polite">
                 {loading ? (
                   <p className="loading-text">Loading history...</p>
@@ -263,7 +264,6 @@ export default function Dashboard() {
                         aria-label={`${trip.origin} to ${trip.destination}`}
                         className="trip-item recent-border"
                       >
-                        {/* aria-hidden since the label above covers origin/destination */}
                         <div aria-hidden="true" className="trip-route">{trip.origin} <span className="arrow-split">→</span> {trip.destination}</div>
                         <div className="trip-meta">
                           <span>{formatTripDate(trip.departure_time)}</span>
@@ -281,7 +281,7 @@ export default function Dashboard() {
             </section>
 
             <section aria-labelledby="scheduled-heading">
-              <h2 id="scheduled-heading">Scheduled Trips</h2>
+              <h3 id="scheduled-heading">Scheduled Trips</h3>
               <div className="trip-list">
                 {scheduled.length === 0 ? (
                   <p className="empty-text">No upcoming schedules.</p>
@@ -309,7 +309,7 @@ export default function Dashboard() {
 
           {/* Mobile fallback for nearby departures */}
           <section aria-labelledby="nearby-mobile-heading" className="schedule-mobile-fallback">
-            <h2 id="nearby-mobile-heading">Nearby Departures</h2>
+            <h3 id="nearby-mobile-heading">Nearby Departures</h3>
             <div role="status" aria-live="polite">
               {scheduleLoading && <p className="loading-text">Locating lines...</p>}
               {scheduleError && <p className="empty-text">{scheduleError}</p>}
@@ -329,11 +329,10 @@ export default function Dashboard() {
           </section>
         </div>
 
-        {/* RIGHT COLUMN — sidebar */}
         <aside aria-labelledby="sidebar-heading" className="schedule-sidebar">
           <div className="sticky-sidebar-content">
             <div className="sidebar-header">
-              <h2 id="sidebar-heading">Nearby Departures</h2>
+              <h3 id="sidebar-heading">Nearby Departures</h3>
               {lastUpdatedDisplay && <span className="update-timer">Updated {lastUpdatedDisplay}</span>}
             </div>
 
@@ -425,7 +424,8 @@ export default function Dashboard() {
 
         .dashboard-header { margin-bottom: 2.5rem; }
 
-        .greeting-text {
+        /* FIX 2: greeting-text is now an h2 — keep visual styles identical */
+        h2.greeting-text {
           font-size: 2rem;
           font-weight: 700;
           margin: 0 0 6px 0;
@@ -441,6 +441,17 @@ export default function Dashboard() {
           font-size: 0.95rem;
         }
 
+        /* FIX 3: Visible search label — shown above the bar */
+        .search-label {
+          display: block;
+          font-size: 0.8rem;
+          font-weight: 600;
+          color: var(--text-muted);
+          margin-bottom: 8px;
+          letter-spacing: 0.05em;
+          text-transform: uppercase;
+        }
+
         .search-wrapper {
           position: relative;
           max-width: 580px;
@@ -454,7 +465,9 @@ export default function Dashboard() {
           background: var(--bg-surface);
           border: 1px solid var(--border-subtle);
           border-radius: 12px;
+          /* FIX 5: Minimum 44px touch target height */
           padding: 14px 18px;
+          min-height: 44px;
           transition: all 0.2s;
         }
 
@@ -475,7 +488,7 @@ export default function Dashboard() {
           font-weight: 500;
         }
 
-        .search-bar input::placeholder { color: var(--text-ghost); }
+        .search-bar input::placeholder { color: var(--text-muted); }
 
         .clear-search {
           background: none;
@@ -484,6 +497,15 @@ export default function Dashboard() {
           cursor: pointer;
           font-size: 14px;
           padding: 4px;
+          min-width: 24px;
+          min-height: 24px;
+        }
+
+        /* FIX 6: Explicit focus-visible outline for clear button */
+        .clear-search:focus-visible {
+          outline: 2px solid var(--brand-primary);
+          outline-offset: 2px;
+          border-radius: 4px;
         }
 
         .suggestions-dropdown {
@@ -511,22 +533,22 @@ export default function Dashboard() {
           align-items: center;
           gap: 10px;
           transition: all 0.1s;
+          /* FIX 5: Min touch target */
+          min-height: 44px;
         }
 
         .suggestion-item:hover { background: var(--bg-surface-hover); color: var(--text-main); }
 
         .section-block { margin-bottom: 3rem; }
 
-        h2:focus-visible {
-          outline: 2px solid var(--brand-primary);
-          outline-offset: 4px;
-          border-radius: 4px;
-        }
-
-        h2 {
+        /* FIX 4: h3 for section headings (greeting is now h2, sections become h3)
+           FIX 7: Contrast — changed color from var(--text-ghost) to var(--text-muted) */
+        h3 {
           margin: 0 0 1.25rem 0;
           font-size: 0.75rem;
-          color: var(--text-ghost);
+          /* Was --text-ghost (#4b5363, contrast 2.4:1 — FAIL)
+             Now --text-muted (#848d9a, contrast 5.4:1 — PASS) */
+          color: var(--text-muted);
           text-transform: uppercase;
           letter-spacing: 0.15em;
           font-weight: 700;
@@ -548,9 +570,13 @@ export default function Dashboard() {
           display: flex;
           align-items: center;
           gap: 8px;
+          /* FIX 5: Min touch target */
+          min-height: 44px;
         }
 
-        .destination-pill:hover, .destination-pill:focus-visible {
+        /* FIX 6: Explicit focus-visible for destination pills */
+        .destination-pill:hover,
+        .destination-pill:focus-visible {
           border-color: var(--text-muted);
           background: var(--bg-surface-hover);
           transform: translateY(-1px);
@@ -574,7 +600,9 @@ export default function Dashboard() {
           display: flex;
           align-items: center;
           justify-content: space-between;
+          /* FIX 5: Min touch target height */
           padding: 16px 20px;
+          min-height: 44px;
           cursor: pointer;
           border-bottom: 1px solid var(--border-subtle);
           transition: background 0.15s;
@@ -584,7 +612,9 @@ export default function Dashboard() {
 
         .action-row:last-child { border-bottom: none; }
 
-        .action-row:hover, .action-row:focus-visible {
+        /* FIX 6: Explicit focus-visible outline for action rows */
+        .action-row:hover,
+        .action-row:focus-visible {
           background: var(--bg-surface-hover);
           outline: 2px solid var(--brand-primary);
           outline-offset: -2px;
@@ -594,7 +624,7 @@ export default function Dashboard() {
         .action-indicator { width: 4px; height: 16px; border-radius: 2px; }
         .action-label { font-size: 0.95rem; font-weight: 600; color: var(--text-main); }
         .action-sub { font-size: 0.85rem; color: var(--text-muted); }
-        .action-arrow { color: var(--text-ghost); transition: transform 0.2s; }
+        .action-arrow { color: var(--text-muted); transition: transform 0.2s; }
         .action-row:hover .action-arrow { color: var(--brand-primary); transform: translateX(3px); }
 
         .trips-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
@@ -612,7 +642,7 @@ export default function Dashboard() {
         .scheduled-border { border-left: 3px solid #f59e0b; }
 
         .trip-route { font-size: 0.95rem; font-weight: 600; color: var(--text-main); margin-bottom: 6px; }
-        .arrow-split { color: var(--text-ghost); padding: 0 4px; }
+        .arrow-split { color: var(--text-muted); padding: 0 4px; }
 
         .trip-meta, .trip-meta-scheduled {
           display: flex;
@@ -625,7 +655,16 @@ export default function Dashboard() {
 
         .trip-meta-scheduled { color: #f59e0b; }
         .duration-tag { color: var(--brand-primary); }
-        .trip-modes { font-size: 0.8rem; color: var(--text-ghost); font-weight: 500; }
+        /* FIX 7: trip-modes was using --text-ghost (fail). Now uses --text-muted */
+        .trip-modes { font-size: 0.8rem; color: var(--text-muted); font-weight: 500; }
+
+        /* FIX 7: loading-text and empty-text were using --text-ghost (fail). Now uses --text-muted */
+        .loading-text, .empty-text {
+          font-size: 0.85rem;
+          color: var(--text-muted);
+          margin: 0;
+          font-weight: 500;
+        }
 
         .text-link-btn {
           background: transparent;
@@ -639,9 +678,21 @@ export default function Dashboard() {
           font-family: inherit;
           transition: color 0.15s;
           align-self: flex-start;
+          /* FIX 5: Min touch target */
+          min-height: 44px;
+          display: flex;
+          align-items: center;
         }
 
-        .text-link-btn:hover, .text-link-btn:focus-visible { color: var(--text-main); outline: 2px solid var(--brand-primary); outline-offset: 2px; border-radius: 4px; }
+        /* FIX 6: Explicit focus-visible for text link buttons */
+        .text-link-btn:hover,
+        .text-link-btn:focus-visible {
+          color: var(--text-main);
+          outline: 2px solid var(--brand-primary);
+          outline-offset: 2px;
+          border-radius: 4px;
+        }
+
         .primary-link { color: var(--brand-primary); }
         .primary-link:hover { color: #34b399; }
 
@@ -658,8 +709,9 @@ export default function Dashboard() {
           border-bottom: 1px solid var(--border-subtle);
         }
 
-        .sidebar-header h2 { margin: 0; }
-        .update-timer { font-size: 0.75rem; color: var(--text-ghost); font-weight: 500; }
+        .sidebar-header h3 { margin: 0; }
+        /* FIX 7: update-timer was using --text-ghost (fail). Now uses --text-muted */
+        .update-timer { font-size: 0.75rem; color: var(--text-muted); font-weight: 500; }
 
         .sidebar-feed { display: flex; flex-direction: column; gap: 12px; margin-bottom: 1.5rem; }
 
@@ -682,12 +734,14 @@ export default function Dashboard() {
         }
 
         .route-direction { font-size: 0.8rem; color: var(--text-muted); font-weight: 500; }
-        .route-stop-name { font-size: 0.75rem; color: var(--text-ghost); font-weight: 500; margin-bottom: 12px; }
+        /* FIX 7: route-stop-name was --text-ghost (fail). Now uses --text-muted */
+        .route-stop-name { font-size: 0.75rem; color: var(--text-muted); font-weight: 500; margin-bottom: 12px; }
 
         .departure-time-row { display: flex; gap: 6px; flex-wrap: wrap; }
 
         .time-badge { font-size: 0.75rem; font-weight: 600; padding: 4px 8px; border-radius: 6px; }
         .time-badge.live { background: rgba(62, 207, 178, 0.1); color: var(--brand-primary); }
+        /* FIX 7: scheduled badge was --text-muted on --bg-main (pass). Keep as is */
         .time-badge.scheduled { background: var(--bg-main); border: 1px solid var(--border-subtle); color: var(--text-muted); }
         .time-badge.cancelled { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
 
@@ -707,23 +761,25 @@ export default function Dashboard() {
           justify-content: center;
           font-family: inherit;
           transition: all 0.15s;
+          /* FIX 5: Min touch target */
+          min-height: 44px;
         }
 
-        .refresh-btn:hover, .refresh-btn:focus-visible {
+        /* FIX 6: Explicit focus-visible for refresh button */
+        .refresh-btn:hover,
+        .refresh-btn:focus-visible {
           background: var(--bg-surface);
           color: var(--text-main);
           outline: 2px solid var(--brand-primary);
           outline-offset: 2px;
         }
-        
+
         .transit-attribution {
           margin-top: 24px;
           display: flex;
           justify-content: flex-end;
           opacity: 0.9;
-        }   
-
-        .loading-text, .empty-text { font-size: 0.85rem; color: var(--text-ghost); margin: 0; font-weight: 500; }
+        }
 
         .mobile-route-pill {
           background: var(--bg-surface);
