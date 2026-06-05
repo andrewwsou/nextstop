@@ -8,16 +8,13 @@ const apiUrl =
     : "http://localhost:5001";
 
 const nextConfig: NextConfig = {
-  turbopack: {},
   async rewrites() {
-    return {
-      beforeFiles: [
-        {
-          source: "/api/:path*",
-          destination: `${apiUrl}/api/:path*`,
-        },
-      ],
-    };
+    return [
+      {
+        source: "/api/:path*",
+        destination: `${apiUrl}/api/:path*`,
+      },
+    ];
   },
 };
 
@@ -27,4 +24,8 @@ export default withPWA({
   aggressiveFrontEndNavCaching: true,
   reloadOnOnline: true,
   disable: process.env.NODE_ENV === "development",
+  // Add the fallbacks configuration here natively
+  fallbacks: {
+    document: "/offline",
+  },
 })(nextConfig);
