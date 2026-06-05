@@ -151,13 +151,11 @@ function TripForm() {
               </label>
               <input
                 id="trip-date"
-                type="text"
-                inputMode="numeric"
+                type="date"
                 value={tripDate}
                 onChange={(e) => setTripDate(e.target.value)}
-                placeholder="MM/DD/YYYY"
-                aria-label="Departure date, optional. Enter in MM/DD/YYYY format."
-                className="w-full rounded-none border-b border-[#222630] bg-transparent py-2 text-sm text-[#f3f4f6] placeholder-[#4b5363] outline-none transition-colors focus:border-[#3ecfb2]"
+                aria-label="Departure date, optional."
+                className="w-full rounded-none border-b border-[#222630] bg-transparent py-2 text-sm text-[#f3f4f6] outline-none transition-colors focus:border-[#3ecfb2]"
               />
             </div>
             <div>
@@ -166,13 +164,11 @@ function TripForm() {
               </label>
               <input
                 id="trip-time"
-                type="text"
-                inputMode="numeric"
+                type="time"
                 value={tripTime}
                 onChange={(e) => setTripTime(e.target.value)}
-                placeholder="HH:MM AM/PM"
-                aria-label="Departure time, optional. Enter in HH:MM AM or PM format."
-                className="w-full rounded-none border-b border-[#222630] bg-transparent py-2 text-sm text-[#f3f4f6] placeholder-[#4b5363] outline-none transition-colors focus:border-[#3ecfb2]"
+                aria-label="Departure time, optional."
+                className="w-full rounded-none border-b border-[#222630] bg-transparent py-2 text-sm text-[#f3f4f6] outline-none transition-colors focus:border-[#3ecfb2]"
               />
             </div>
           </div>

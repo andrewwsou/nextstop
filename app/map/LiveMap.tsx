@@ -129,7 +129,19 @@ export default function LiveMap() {
             overflow: hidden;
           }
           @media (max-width: 640px) {
-            .map-panel { top: auto; bottom: 16px; left: 16px; right: 16px; width: auto; max-height: 50vh; }
+            .map-panel {
+              top: auto;
+              bottom: 24px;
+              left: 12px;
+              right: 12px;
+              width: auto;
+              max-height: 38vh;
+              border-radius: 18px;
+            }
+
+            .map-panel h2 {
+              font-size: 20px !important;
+            }
           }
           button:focus-visible { outline: 2px solid #3ecfb2; outline-offset: 2px; border-radius: 6px; }
           a:focus-visible { outline: 2px solid #3ecfb2; outline-offset: 2px; border-radius: 6px; }
