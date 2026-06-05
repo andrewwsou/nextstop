@@ -133,7 +133,7 @@ export default function LiveMap() {
               height: auto !important;
               min-height: 100%;
               overflow-y: auto;
-              padding-bottom: 24px;
+              padding-bottom: 140px;
               background: #050806;
             }
 
@@ -150,7 +150,7 @@ export default function LiveMap() {
               right: auto;
               width: calc(100% - 24px);
               max-height: none;
-              margin: 12px auto 24px;
+              margin: 12px auto 120px;
               border-radius: 18px;
             }
 
