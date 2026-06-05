@@ -10,6 +10,12 @@ export const metadata: Metadata = {
   title: "NextStop",
   description: "Your commute, one stop.",
   icons: { icon: "/logo2.png" },
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "NextStop",
+  },
 };
 
 export const viewport: Viewport = {

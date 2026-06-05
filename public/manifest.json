@@ -1,0 +1,21 @@
+{
+  "name": "NextStop",
+  "short_name": "NextStop",
+  "description": "Orange County transit planning app",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#0d1210",
+  "theme_color": "#3ecfb2",
+  "icons": [
+    {
+      "src": "/logo2.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/logo2.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
