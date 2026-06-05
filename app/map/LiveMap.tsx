@@ -110,7 +110,7 @@ export default function LiveMap() {
         {transitSummary}
       </div>
 
-      <div className="relative h-full w-full">
+      <div className="live-map-page relative h-full w-full">
         <style>{`
           .map-panel {
             position: absolute;
@@ -129,19 +129,35 @@ export default function LiveMap() {
             overflow: hidden;
           }
           @media (max-width: 640px) {
+            .live-map-page {
+              height: auto !important;
+              min-height: 100%;
+              overflow-y: auto;
+              padding-bottom: 24px;
+              background: #050806;
+            }
+
+            .live-map-page > div[aria-hidden="true"] {
+              height: 55vh !important;
+              min-height: 360px;
+            }
+
             .map-panel {
+              position: relative;
               top: auto;
-              bottom: 24px;
-              left: 12px;
-              right: 12px;
-              width: auto;
-              max-height: 38vh;
+              bottom: auto;
+              left: auto;
+              right: auto;
+              width: calc(100% - 24px);
+              max-height: none;
+              margin: 12px auto 24px;
               border-radius: 18px;
             }
 
             .map-panel h2 {
               font-size: 20px !important;
             }
+          }
           }
           button:focus-visible { outline: 2px solid #3ecfb2; outline-offset: 2px; border-radius: 6px; }
           a:focus-visible { outline: 2px solid #3ecfb2; outline-offset: 2px; border-radius: 6px; }
