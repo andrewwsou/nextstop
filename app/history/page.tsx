@@ -44,10 +44,7 @@ function fmtDate(d: string) {
 }
 
 function fmtDateTime(value?: string | null) {
-  if (!value) {
-    return "No departure time set";
-  }
-
+  if (!value) return "No departure time set";
   return new Date(value).toLocaleString("en-US", {
     month: "short",
     day: "numeric",
@@ -68,12 +65,8 @@ function getPreviewLegs(
   if (steps?.length) {
     return steps.map((step) => {
       if (step.type === "walking") {
-        return {
-          type: "walk",
-          duration: step.duration || "Walk",
-        };
+        return { type: "walk", duration: step.duration || "Walk" };
       }
-
       return {
         type: "bus",
         route: step.lineName || getVehicleLabel(step),
@@ -94,10 +87,7 @@ function getPreviewLegs(
 }
 
 function getVehicleLabel(step: RouteSummaryStep) {
-  if (step.vehicleType?.includes("RAIL")) {
-    return "Train";
-  }
-
+  if (step.vehicleType?.includes("RAIL")) return "Train";
   return "Bus";
 }
 
@@ -136,7 +126,7 @@ function RouteStepDetails({ step }: { step: RouteSummaryStep }) {
       )}
       {step.live && (
         <div className="text-[10px] font-mono text-teal-400 mt-0.5 flex items-center gap-1">
-          <span className="h-1 w-1 rounded-full bg-teal-400 animate-pulse" />
+          <span aria-hidden="true" className="h-1 w-1 rounded-full bg-teal-400 animate-pulse" />
           <span>{step.live.realtimeAvailable ? "Live updates" : "Scheduled times"}</span>
           {step.live.status ? ` · ${step.live.status}` : ""}
         </div>
@@ -165,16 +155,17 @@ function getGroup(dateStr: string): "this-week" | "this-month" | "last-6-months"
 }
 
 const GROUP_LABELS: Record<string, string> = {
-  "this-week": "THIS WEEK",
-  "this-month": "THIS MONTH",
-  "last-6-months": "LAST 6 MONTHS",
+  "this-week": "This Week",
+  "this-month": "This Month",
+  "last-6-months": "Older Trips",
 };
 
 const GROUP_ORDER = ["this-week", "this-month", "last-6-months"];
 
+// purely decorative — hide from screen readers
 function RouteVisualizer({ legs }: { legs: Leg[] }) {
   return (
-    <div className="my-5 flex items-center w-full font-mono text-xs">
+    <div aria-hidden="true" className="my-5 flex items-center w-full font-mono text-xs">
       <div className="h-3 w-3 rounded-full border border-teal-500 flex items-center justify-center shrink-0">
         <div className="h-1 w-1 rounded-full bg-teal-500" />
       </div>
@@ -188,7 +179,6 @@ function RouteVisualizer({ legs }: { legs: Leg[] }) {
             </div>
           );
         }
-
         return (
           <div key={i} className="flex flex-[2] items-center">
             <div className="h-[1px] flex-1 bg-zinc-700" />
@@ -236,25 +226,16 @@ export default function History() {
   const grouped: Record<string, Trip[]> = { "this-week": [], "this-month": [], "last-6-months": [] };
   trips.forEach((trip) => {
     const group = getGroup(trip.date);
-    if (group) {
-      grouped[group].push(trip);
-    }
+    if (group) grouped[group].push(trip);
   });
 
-  const hasTrips = GROUP_ORDER.some((group) => grouped[group].length > 0);
+  const hasTrips = GROUP_ORDER.some((g) => grouped[g].length > 0);
 
   async function handleDelete(id: number) {
-    if (!confirm("Delete this trip?")) {
-      return;
-    }
-
+    if (!confirm("Delete this trip?")) return;
     const data = await deleteTrip(id);
-    if (data.error) {
-      setError(data.error);
-      return;
-    }
-
-    setTrips((currentTrips) => currentTrips.filter((trip) => trip.id !== id));
+    if (data.error) { setError(data.error); return; }
+    setTrips((curr) => curr.filter((t) => t.id !== id));
   }
 
   async function handleEditSave(id: number) {
@@ -262,7 +243,7 @@ export default function History() {
       ? `${editForm.departure_date}T${editForm.departure_time}:00`
       : undefined;
 
-    const trip = trips.find(t => t.id === id);
+    const trip = trips.find((t) => t.id === id);
     const routeChanged = trip && (editForm.origin !== trip.from || editForm.destination !== trip.to);
 
     const updatePayload: any = {
@@ -278,14 +259,10 @@ export default function History() {
     }
 
     const data = await updateTrip(id, updatePayload);
+    if (data.error) { setError(data.error); return; }
 
-    if (data.error) {
-      setError(data.error);
-      return;
-    }
-
-    setTrips(currentTrips =>
-      currentTrips.map(t =>
+    setTrips((curr) =>
+      curr.map((t) =>
         t.id === id
           ? {
               ...t,
@@ -305,61 +282,66 @@ export default function History() {
 
   return (
     <main className="min-h-screen bg-[#0b0c0e] text-[#f3f4f6] px-6 py-16 max-w-4xl mx-auto" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-      {/* Header Navigation */}
+
+      {/* Back button */}
       <div className="border-b border-[#222630] pb-5 mb-10 flex items-center gap-4">
         <button
-          className="text-[#848d9a] hover:text-[#f3f4f6] transition-colors text-xs uppercase tracking-wider flex items-center gap-2 font-semibold"
           onClick={() => router.push("/dashboard")}
+          className="text-[#848d9a] hover:text-[#f3f4f6] transition-colors text-xs uppercase tracking-wider flex items-center gap-2 font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#3ecfb2] rounded"
         >
-          <span>←</span> Back to Dashboard
+          <span aria-hidden="true">←</span> Back to Dashboard
         </button>
       </div>
 
       {/* Title */}
       <div className="mb-10">
-        <h1 className="text-3xl font-bold tracking-tight text-white mb-2">
-          Trip History
-        </h1>
+        <h1 className="text-3xl font-bold tracking-tight text-white mb-2">Trip History</h1>
         <p className="text-sm text-[#848d9a]">Review, edit, and revisit your saved trips.</p>
       </div>
 
-      {loading && <p className="text-sm text-[#848d9a] font-medium">Loading saved trips...</p>}
-      {error && <p className="text-sm text-red-400 border border-red-500/20 bg-red-950/10 p-4 rounded-xl font-medium">Error: {error}</p>}
-      {!loading && !error && !hasTrips && (
-        <p className="text-sm text-[#848d9a] font-medium">You don't have any saved trips yet.</p>
-      )}
+      {/* Loading / error / empty — announced to screen readers */}
+      <div role="status" aria-live="polite">
+        {loading && <p className="text-sm text-[#848d9a] font-medium">Loading saved trips...</p>}
+        {error && <p className="text-sm text-red-400 border border-red-500/20 bg-red-950/10 p-4 rounded-xl font-medium">Error: {error}</p>}
+        {!loading && !error && !hasTrips && (
+          <p className="text-sm text-[#848d9a] font-medium">You don't have any saved trips yet.</p>
+        )}
+      </div>
 
       {!loading && !error && GROUP_ORDER.map((group) => {
         const groupTrips = grouped[group];
         if (!groupTrips.length) return null;
 
         return (
-          <div key={group} className="mb-10">
-            <div className="mb-4">
-              <span className="text-xs font-bold tracking-widest text-[#4b5363] uppercase">
-                {GROUP_LABELS[group] === "THIS WEEK" ? "This Week" : GROUP_LABELS[group] === "THIS MONTH" ? "This Month" : "Older Trips"}
-              </span>
-            </div>
+          <section key={group} aria-labelledby={`group-${group}`} className="mb-10">
+            <h2 id={`group-${group}`} className="text-xs font-bold tracking-widest text-[#4b5363] uppercase mb-4">
+              {GROUP_LABELS[group]}
+            </h2>
 
-            {/* Structured Card Grid */}
             <div className="space-y-4">
               {groupTrips.map((trip) => (
-                <div key={trip.id} className="p-6 bg-[#13151a]/30 border border-[#222630] rounded-xl transition-all">
+                <article
+                  key={trip.id}
+                  aria-label={`Trip from ${trip.from} to ${trip.to}, ${fmtDate(trip.date)}`}
+                  className="p-6 bg-[#13151a]/30 border border-[#222630] rounded-xl transition-all"
+                >
                   <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
                     <div className="flex-1 w-full">
                       {editingId === trip.id ? (
                         <div className="flex flex-col gap-4 max-w-md text-sm">
                           <div>
-                            <label className="text-xs font-bold text-[#4b5363] uppercase tracking-wider mb-1 block">Origin</label>
+                            <label htmlFor={`origin-${trip.id}`} className="text-xs font-bold text-[#4b5363] uppercase tracking-wider mb-1 block">Origin</label>
                             <input
+                              id={`origin-${trip.id}`}
                               value={editForm.origin}
                               onChange={e => setEditForm({...editForm, origin: e.target.value})}
                               className="bg-[#0b0c0e] border border-[#222630] focus:border-[#3ecfb2] outline-none rounded-xl px-4 py-2 text-sm text-[#f3f4f6] w-full"
                             />
                           </div>
                           <div>
-                            <label className="text-xs font-bold text-[#4b5363] uppercase tracking-wider mb-1 block">Destination</label>
+                            <label htmlFor={`dest-${trip.id}`} className="text-xs font-bold text-[#4b5363] uppercase tracking-wider mb-1 block">Destination</label>
                             <input
+                              id={`dest-${trip.id}`}
                               value={editForm.destination}
                               onChange={e => setEditForm({...editForm, destination: e.target.value})}
                               className="bg-[#0b0c0e] border border-[#222630] focus:border-[#3ecfb2] outline-none rounded-xl px-4 py-2 text-sm text-[#f3f4f6] w-full"
@@ -367,8 +349,9 @@ export default function History() {
                           </div>
                           <div className="grid grid-cols-2 gap-3">
                             <div>
-                              <label className="text-xs font-bold text-[#4b5363] uppercase tracking-wider mb-1 block">Date</label>
+                              <label htmlFor={`date-${trip.id}`} className="text-xs font-bold text-[#4b5363] uppercase tracking-wider mb-1 block">Date</label>
                               <input
+                                id={`date-${trip.id}`}
                                 type="date"
                                 value={editForm.departure_date}
                                 onChange={e => setEditForm({...editForm, departure_date: e.target.value})}
@@ -376,8 +359,9 @@ export default function History() {
                               />
                             </div>
                             <div>
-                              <label className="text-xs font-bold text-[#4b5363] uppercase tracking-wider mb-1 block">Time</label>
+                              <label htmlFor={`time-${trip.id}`} className="text-xs font-bold text-[#4b5363] uppercase tracking-wider mb-1 block">Time</label>
                               <input
+                                id={`time-${trip.id}`}
                                 type="time"
                                 value={editForm.departure_time}
                                 onChange={e => setEditForm({...editForm, departure_time: e.target.value})}
@@ -385,19 +369,20 @@ export default function History() {
                               />
                             </div>
                           </div>
-                          <div>
-                            <label className="text-xs font-bold text-[#4b5363] uppercase tracking-wider mb-2 block">Transit Settings</label>
+                          <fieldset>
+                            <legend className="text-xs font-bold text-[#4b5363] uppercase tracking-wider mb-2">Transit Settings</legend>
                             <div className="flex gap-2">
                               {["bus", "train"].map(mode => (
                                 <button
                                   key={mode}
+                                  aria-pressed={editForm.transit_modes.includes(mode)}
                                   onClick={() => setEditForm(f => ({
                                     ...f,
                                     transit_modes: f.transit_modes.includes(mode)
-                                        ? f.transit_modes.filter(m => m !== mode)
-                                        : [...f.transit_modes, mode]
+                                      ? f.transit_modes.filter(m => m !== mode)
+                                      : [...f.transit_modes, mode]
                                   }))}
-                                  className={`px-4 py-2 text-xs font-semibold rounded-xl border transition-all ${
+                                  className={`px-4 py-2 text-xs font-semibold rounded-xl border transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#3ecfb2] ${
                                     editForm.transit_modes.includes(mode)
                                       ? "border-[#3ecfb2] text-[#3ecfb2] bg-[rgba(62,207,178,0.06)]"
                                       : "border-[#222630] text-[#848d9a] bg-transparent hover:border-[#4b5363]"
@@ -407,10 +392,11 @@ export default function History() {
                                 </button>
                               ))}
                             </div>
-                          </div>
+                          </fieldset>
                         </div>
                       ) : (
-                        <div>
+                        // origin/destination already read via article label, hide visually duplicated text
+                        <div aria-hidden="true">
                           <div className="text-lg font-bold text-white tracking-tight">{trip.from}</div>
                           <div className="text-sm text-[#848d9a] font-medium mt-1">
                             <span className="text-[#4b5363] mr-1.5">→</span> {trip.to}
@@ -419,9 +405,9 @@ export default function History() {
                       )}
                     </div>
 
-                    {/* Metadata & Inline Controls */}
                     <div className="flex flex-col items-start sm:items-end gap-1.5 shrink-0 w-full sm:w-auto">
-                      <div className="text-base font-bold text-white">{fmtDate(trip.date)}</div>
+                      {/* date already in article label */}
+                      <div aria-hidden="true" className="text-base font-bold text-white">{fmtDate(trip.date)}</div>
                       <div className="text-xs font-medium text-[#848d9a]">
                         <span className="text-[#4b5363] font-bold mr-1">Travel Time:</span>
                         {trip.durationMinutes ? `${trip.durationMinutes} min` : "No duration set"}
@@ -430,7 +416,8 @@ export default function History() {
                       <div className="mt-3 flex flex-wrap items-center gap-3">
                         <button
                           onClick={() => setExpanded(expanded === trip.id ? null : trip.id)}
-                          className="text-xs font-semibold text-[#3ecfb2] hover:text-[#34b399]"
+                          aria-expanded={expanded === trip.id}
+                          className="text-xs font-semibold text-[#3ecfb2] hover:text-[#34b399] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#3ecfb2] rounded"
                         >
                           {expanded === trip.id ? "Hide Details" : "View Details"}
                         </button>
@@ -439,13 +426,13 @@ export default function History() {
                           <div className="flex gap-2">
                             <button
                               onClick={() => handleEditSave(trip.id)}
-                              className="text-xs font-bold border border-[#3ecfb2]/40 text-[#3ecfb2] bg-[rgba(62,207,178,0.06)] px-3 py-1 rounded-xl hover:border-[#3ecfb2]"
+                              className="text-xs font-bold border border-[#3ecfb2]/40 text-[#3ecfb2] bg-[rgba(62,207,178,0.06)] px-3 py-1 rounded-xl hover:border-[#3ecfb2] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#3ecfb2]"
                             >
                               Save
                             </button>
                             <button
                               onClick={() => setEditingId(null)}
-                              className="text-xs font-bold border border-[#222630] text-[#848d9a] px-3 py-1 rounded-xl hover:border-[#4b5363]"
+                              className="text-xs font-bold border border-[#222630] text-[#848d9a] px-3 py-1 rounded-xl hover:border-[#4b5363] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#3ecfb2]"
                             >
                               Cancel
                             </button>
@@ -463,13 +450,15 @@ export default function History() {
                                   transit_modes: trip.modes ?? [],
                                 });
                               }}
-                              className="text-xs font-semibold text-[#848d9a] hover:text-[#f3f4f6]"
+                              aria-label={`Edit trip from ${trip.from} to ${trip.to}`}
+                              className="text-xs font-semibold text-[#848d9a] hover:text-[#f3f4f6] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#3ecfb2] rounded"
                             >
                               Edit
                             </button>
                             <button
                               onClick={() => handleDelete(trip.id)}
-                              className="text-xs font-semibold text-red-400/80 hover:text-red-400"
+                              aria-label={`Delete trip from ${trip.from} to ${trip.to}`}
+                              className="text-xs font-semibold text-red-400/80 hover:text-red-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#3ecfb2] rounded"
                             >
                               Delete
                             </button>
@@ -484,7 +473,8 @@ export default function History() {
                       <span className="text-[#4b5363] font-medium">No map steps available —</span>
                       <button
                         onClick={() => router.push(`/trip?destination=${encodeURIComponent(trip.to)}`)}
-                        className="text-xs border border-[#3ecfb2]/30 px-3 py-1 text-[#3ecfb2] font-semibold rounded-xl bg-[rgba(62,207,178,0.04)] hover:border-[#3ecfb2]"
+                        aria-label={`Re-plan trip to ${trip.to}`}
+                        className="text-xs border border-[#3ecfb2]/30 px-3 py-1 text-[#3ecfb2] font-semibold rounded-xl bg-[rgba(62,207,178,0.04)] hover:border-[#3ecfb2] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#3ecfb2]"
                       >
                         Re-plan Trip →
                       </button>
@@ -493,7 +483,6 @@ export default function History() {
                     <RouteVisualizer legs={trip.legs} />
                   )}
 
-                  {/* Expanded Route Step Drawer */}
                   {expanded === trip.id && (
                     <div className="mt-5 pt-5 border-t border-[#222630]/60 text-sm">
                       <div className="grid gap-2 text-[#848d9a] font-medium">
@@ -529,10 +518,10 @@ export default function History() {
                       </div>
                     </div>
                   )}
-                </div>
+                </article>
               ))}
             </div>
-          </div>
+          </section>
         );
       })}
     </main>

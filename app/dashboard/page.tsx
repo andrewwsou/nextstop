@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useSyncExternalStore, useCallback } from "react";
+import { useEffect, useState, useSyncExternalStore, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useRequireAuth, getUser } from "../lib/auth";
 import { getLocations, getTrips } from "../lib/api";
@@ -57,7 +57,6 @@ function parseScheduleRoutes(data: any): ScheduleRoute[] {
   }).filter((r: ScheduleRoute) => r.departures.length > 0).slice(0, 6);
 }
 
-// Modernized, intentional palette accent mapping
 const categoryColors: Record<string, string> = {
   Campus: "#3ecfb2", Shopping: "#3b82f6", Airport: "#f59e0b", "Transit Hub": "#8b5cf6",
 };
@@ -76,6 +75,7 @@ export default function Dashboard() {
   const [scheduleError, setScheduleError] = useState("");
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [lastUpdatedDisplay, setLastUpdatedDisplay] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const firstName = useSyncExternalStore(subscribeToClientSnapshot, getClientFirstName, () => "");
   const greeting = useSyncExternalStore(subscribeToClientSnapshot, getGreeting, () => "Good day");
@@ -142,55 +142,80 @@ export default function Dashboard() {
     <main className="dashboard-main">
       <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
+      {/* Page title — visible to screen readers as the page landmark */}
+      <h1 className="sr-only">Dashboard</h1>
+
       <div className="dashboard-container">
         {/* LEFT COLUMN */}
         <div className="main-content">
 
-          {/* Header */}
+          {/* Greeting — visually prominent but not the page h1 */}
           <header className="dashboard-header">
-            <h1>
-              {greeting}
-              {firstName ? <span className="user-name">, {firstName}</span> : ""}
-            </h1>
+            <p className="greeting-text">
+              {greeting}{firstName ? <span className="user-name">, {firstName}</span> : ""}
+            </p>
             <p className="subtitle">Where are you heading today?</p>
           </header>
 
-          {/* Search Box */}
+          {/* Search */}
           <div className="search-wrapper">
             <div className={`search-bar ${query ? "active" : ""}`}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="search-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="search-icon" aria-hidden="true">
                 <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
               </svg>
               <input
+                ref={inputRef}
+                aria-label="Search destinations, stations, routes"
                 value={query}
                 onChange={(e) => handleSearchChange(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Escape") { setQuery(""); setSuggestions([]); } }}
                 placeholder="Search destinations, stations, routes..."
               />
               {query && (
-                <button onClick={() => { setQuery(""); setSuggestions([]); }} className="clear-search">✕</button>
+                <button
+                  onClick={() => { setQuery(""); setSuggestions([]); inputRef.current?.focus(); }}
+                  aria-label="Clear search"
+                  className="clear-search"
+                >
+                  ✕
+                </button>
               )}
             </div>
 
             {suggestions.length > 0 && (
-              <div className="suggestions-dropdown">
-                {suggestions.map((s, i) => (
-                  <div key={s.place_id} onClick={() => goToTrip(s.display_name)} className="suggestion-item">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+              <ul
+                role="listbox"
+                aria-label="Destination suggestions"
+                className="suggestions-dropdown"
+              >
+                {suggestions.map((s) => (
+                  <li
+                    key={s.place_id}
+                    role="option"
+                    aria-selected="false"
+                    onClick={() => goToTrip(s.display_name)}
+                    className="suggestion-item"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
                     <span>{s.display_name}</span>
-                  </div>
+                  </li>
                 ))}
-              </div>
+              </ul>
             )}
           </div>
 
-          {/* Destination Pills */}
+          {/* Destinations */}
           {(popularDestinations.length > 0 || transitHubs.length > 0) && (
-            <section className="section-block">
-              <h2>Destinations</h2>
+            <section aria-labelledby="destinations-heading" className="section-block">
+              <h2 id="destinations-heading" tabIndex={0}>Destinations</h2>
               <div className="pill-grid">
                 {[...popularDestinations, ...transitHubs].map((loc) => (
-                  <button key={loc.id} onClick={() => goToTrip(loc.name)} className="destination-pill">
-                    <span className="pill-dot" style={{ backgroundColor: categoryColors[loc.category] ?? "#3ecfb2" }} />
+                  <button
+                    key={loc.id}
+                    onClick={() => goToTrip(loc.name)}
+                    className="destination-pill"
+                  >
+                    <span aria-hidden="true" className="pill-dot" style={{ backgroundColor: categoryColors[loc.category] ?? "#3ecfb2" }} />
                     {loc.name}
                   </button>
                 ))}
@@ -198,110 +223,127 @@ export default function Dashboard() {
             </section>
           )}
 
-          {/* Navigation Action Rows */}
-          <section className="section-block">
-            <h2>Navigate</h2>
+          {/* Navigate */}
+          <section aria-labelledby="navigate-heading" className="section-block">
+            <h2 id="navigate-heading" tabIndex={0}>Navigate</h2>
             <div className="action-list">
               {quickActions.map((action) => (
-                <div key={action.href} onClick={() => router.push(action.href)} className="action-row">
+                <button
+                  key={action.href}
+                  onClick={() => router.push(action.href)}
+                  className="action-row"
+                >
                   <div className="action-left">
-                    <div className="action-indicator" style={{ backgroundColor: action.color }} />
+                    <div aria-hidden="true" className="action-indicator" style={{ backgroundColor: action.color }} />
                     <span className="action-label">{action.label}</span>
                     <span className="action-sub">{action.sub}</span>
                   </div>
-                  <span className="action-arrow">
+                  <span aria-hidden="true" className="action-arrow">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                   </span>
-                </div>
+                </button>
               ))}
             </div>
           </section>
 
-          {/* Triplogs Split Layout */}
-          <section className="trips-grid">
-            <div className="trip-column">
-              <h2>Recent Trips</h2>
-              {loading ? (
-                <p className="loading-text">Loading history...</p>
-              ) : recent.length === 0 ? (
-                <p className="empty-text">No recent journeys found.</p>
-              ) : (
-                <div className="trip-list">
-                  {recent.map((trip) => (
-                    <div key={trip.id} className="trip-item recent-border">
-                      <div className="trip-route">{trip.origin} <span className="arrow-split">→</span> {trip.destination}</div>
-                      <div className="trip-meta">
-                        <span>{formatTripDate(trip.departure_time)}</span>
-                        {trip.duration_minutes && <span className="duration-tag">{trip.duration_minutes}m duration</span>}
+          {/* Trips */}
+          <div className="trips-grid">
+            <section aria-labelledby="recent-heading">
+              <h2 id="recent-heading">Recent Trips</h2>
+              <div role="status" aria-live="polite">
+                {loading ? (
+                  <p className="loading-text">Loading history...</p>
+                ) : recent.length === 0 ? (
+                  <p className="empty-text">No recent journeys found.</p>
+                ) : (
+                  <div className="trip-list">
+                    {recent.map((trip) => (
+                      <div
+                        key={trip.id}
+                        aria-label={`${trip.origin} to ${trip.destination}`}
+                        className="trip-item recent-border"
+                      >
+                        {/* aria-hidden since the label above covers origin/destination */}
+                        <div aria-hidden="true" className="trip-route">{trip.origin} <span className="arrow-split">→</span> {trip.destination}</div>
+                        <div className="trip-meta">
+                          <span>{formatTripDate(trip.departure_time)}</span>
+                          {trip.duration_minutes && <span className="duration-tag">{trip.duration_minutes}m duration</span>}
+                        </div>
+                        <div className="trip-modes">{formatModes(trip.transit_modes)}</div>
                       </div>
-                      <div className="trip-modes">{formatModes(trip.transit_modes)}</div>
-                    </div>
-                  ))}
-                  <button onClick={() => router.push("/history")} className="text-link-btn">
-                    View full history
-                  </button>
-                </div>
-              )}
-            </div>
+                    ))}
+                    <button onClick={() => router.push("/history")} className="text-link-btn">
+                      View full history
+                    </button>
+                  </div>
+                )}
+              </div>
+            </section>
 
-            <div className="trip-column">
-              <h2>Scheduled Trips</h2>
-              {scheduled.length === 0 ? (
-                <div className="trip-list">
+            <section aria-labelledby="scheduled-heading">
+              <h2 id="scheduled-heading">Scheduled Trips</h2>
+              <div className="trip-list">
+                {scheduled.length === 0 ? (
                   <p className="empty-text">No upcoming schedules.</p>
-                </div>
-              ) : (
-                <div className="trip-list">
-                  {scheduled.map((trip) => (
-                    <div key={trip.id} className="trip-item scheduled-border">
-                      <div className="trip-route">{trip.origin} <span className="arrow-split">→</span> {trip.destination}</div>
+                ) : (
+                  scheduled.map((trip) => (
+                    <div
+                      key={trip.id}
+                      aria-label={`${trip.origin} to ${trip.destination}`}
+                      className="trip-item scheduled-border"
+                    >
+                      <div aria-hidden="true" className="trip-route">{trip.origin} <span className="arrow-split">→</span> {trip.destination}</div>
                       <div className="trip-meta-scheduled">{formatTripDate(trip.departure_time)}</div>
                       <div className="trip-modes">
                         {formatModes(trip.transit_modes)}{trip.duration_minutes ? ` · ${trip.duration_minutes} min` : ""}
                       </div>
                     </div>
+                  ))
+                )}
+                <button onClick={() => router.push("/trip")} className="text-link-btn primary-link">
+                  + Set new schedule
+                </button>
+              </div>
+            </section>
+          </div>
+
+          {/* Mobile fallback for nearby departures */}
+          <section aria-labelledby="nearby-mobile-heading" className="schedule-mobile-fallback">
+            <h2 id="nearby-mobile-heading">Nearby Departures</h2>
+            <div role="status" aria-live="polite">
+              {scheduleLoading && <p className="loading-text">Locating lines...</p>}
+              {scheduleError && <p className="empty-text">{scheduleError}</p>}
+              {!scheduleLoading && !scheduleError && scheduleRoutes.length === 0 && (
+                <p className="empty-text">No active paths nearby.</p>
+              )}
+              {!scheduleLoading && !scheduleError && scheduleRoutes.length > 0 && (
+                <div className="pill-grid">
+                  {scheduleRoutes.map((route, i) => (
+                    <span key={i} className="mobile-route-pill">
+                      {route.routeName} · {route.direction}
+                    </span>
                   ))}
                 </div>
               )}
-              <button onClick={() => router.push("/trip")} className="text-link-btn primary-link">
-                + Set new schedule
-              </button>
             </div>
           </section>
-
-          {/* Mobile Fallback Panel */}
-          <div className="schedule-mobile-fallback">
-            <h2>Nearby Departures</h2>
-            {scheduleLoading && <p className="loading-text">Locating lines...</p>}
-            {scheduleError && <p className="empty-text">{scheduleError}</p>}
-            {!scheduleLoading && !scheduleError && scheduleRoutes.length === 0 && (
-              <p className="empty-text">No active paths nearby.</p>
-            )}
-            {!scheduleLoading && !scheduleError && scheduleRoutes.length > 0 && (
-              <div className="pill-grid">
-                {scheduleRoutes.map((route, i) => (
-                  <span key={i} className="mobile-route-pill">
-                    {route.routeName} · {route.direction}
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
         </div>
 
-        {/* RIGHT COLUMN (Desktop Sidebar) */}
-        <aside className="schedule-sidebar">
+        {/* RIGHT COLUMN — sidebar */}
+        <aside aria-labelledby="sidebar-heading" className="schedule-sidebar">
           <div className="sticky-sidebar-content">
             <div className="sidebar-header">
-              <h2>Nearby Departures</h2>
+              <h2 id="sidebar-heading">Nearby Departures</h2>
               {lastUpdatedDisplay && <span className="update-timer">Updated {lastUpdatedDisplay}</span>}
             </div>
 
-            {scheduleLoading && <p className="loading-text">Scanning regional transit feeds...</p>}
-            {scheduleError && <p className="empty-text">{scheduleError}</p>}
-            {!scheduleLoading && !scheduleError && scheduleRoutes.length === 0 && (
-              <p className="empty-text">No operational lines found around your current hub.</p>
-            )}
+            <div role="status" aria-live="polite">
+              {scheduleLoading && <p className="loading-text">Scanning regional transit feeds...</p>}
+              {scheduleError && <p className="empty-text">{scheduleError}</p>}
+              {!scheduleLoading && !scheduleError && scheduleRoutes.length === 0 && (
+                <p className="empty-text">No operational lines found around your current hub.</p>
+              )}
+            </div>
 
             <div className="sidebar-feed">
               {!scheduleLoading && scheduleRoutes.map((route, i) => (
@@ -327,7 +369,7 @@ export default function Dashboard() {
                 onClick={() => { setScheduleLoading(true); navigator.geolocation.getCurrentPosition((pos) => { fetchSchedule(pos.coords.latitude, pos.coords.longitude); }); }}
                 className="refresh-btn"
               >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
                 Force Refresh Feed
               </button>
             )}
@@ -335,7 +377,6 @@ export default function Dashboard() {
         </aside>
       </div>
 
-      {/* Embedded CSS Variables & Rules to strip away the 'AI-generated' appearance */}
       <style>{`
         :root {
           --bg-main: #0b0c0e;
@@ -346,6 +387,19 @@ export default function Dashboard() {
           --text-main: #f3f4f6;
           --text-muted: #848d9a;
           --text-ghost: #4b5363;
+        }
+
+        /* visually hidden but readable by screen readers */
+        .sr-only {
+          position: absolute;
+          width: 1px;
+          height: 1px;
+          padding: 0;
+          margin: -1px;
+          overflow: hidden;
+          clip: rect(0,0,0,0);
+          white-space: nowrap;
+          border: 0;
         }
 
         .dashboard-main {
@@ -361,22 +415,18 @@ export default function Dashboard() {
 
         .dashboard-container {
           width: 100%;
-          maxWidth: 1240px;
+          max-width: 1240px;
           display: grid;
           grid-template-columns: 1fr 300px;
           gap: 64px;
           align-items: flex-start;
         }
 
-        .main-content {
-          min-width: 0;
-        }
+        .main-content { min-width: 0; }
 
-        .dashboard-header {
-          margin-bottom: 2.5rem;
-        }
+        .dashboard-header { margin-bottom: 2.5rem; }
 
-        .dashboard-header h1 {
+        .greeting-text {
           font-size: 2rem;
           font-weight: 700;
           margin: 0 0 6px 0;
@@ -384,17 +434,14 @@ export default function Dashboard() {
           color: var(--text-main);
         }
 
-        .dashboard-header .user-name {
-          color: var(--brand-primary);
-        }
+        .user-name { color: var(--brand-primary); }
 
-        .dashboard-header .subtitle {
+        .subtitle {
           color: var(--text-muted);
           margin: 0;
           font-size: 0.95rem;
         }
 
-        /* Modernized Search Box styling */
         .search-wrapper {
           position: relative;
           max-width: 580px;
@@ -409,7 +456,7 @@ export default function Dashboard() {
           border: 1px solid var(--border-subtle);
           border-radius: 12px;
           padding: 14px 18px;
-          transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+          transition: all 0.2s;
         }
 
         .search-bar:focus-within, .search-bar.active {
@@ -429,9 +476,7 @@ export default function Dashboard() {
           font-weight: 500;
         }
 
-        .search-bar input::placeholder {
-          color: var(--text-ghost);
-        }
+        .search-bar input::placeholder { color: var(--text-ghost); }
 
         .clear-search {
           background: none;
@@ -453,6 +498,9 @@ export default function Dashboard() {
           z-index: 100;
           overflow: hidden;
           box-shadow: 0 12px 30px rgba(0,0,0,0.5);
+          list-style: none;
+          margin: 0;
+          padding: 0;
         }
 
         .suggestion-item {
@@ -466,14 +514,14 @@ export default function Dashboard() {
           transition: all 0.1s;
         }
 
-        .suggestion-item:hover {
-          background: var(--bg-surface-hover);
-          color: var(--text-main);
-        }
+        .suggestion-item:hover { background: var(--bg-surface-hover); color: var(--text-main); }
 
-        /* Generic typography cleanups */
-        .section-block {
-          margin-bottom: 3rem;
+        .section-block { margin-bottom: 3rem; }
+
+        h2:focus-visible {
+          outline: 2px solid var(--brand-primary);
+          outline-offset: 4px;
+          border-radius: 4px;
         }
 
         h2 {
@@ -485,12 +533,7 @@ export default function Dashboard() {
           font-weight: 700;
         }
 
-        /* Pill Grids */
-        .pill-grid {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 8px;
-        }
+        .pill-grid { display: flex; flex-wrap: wrap; gap: 8px; }
 
         .destination-pill {
           background: var(--bg-surface);
@@ -508,20 +551,16 @@ export default function Dashboard() {
           gap: 8px;
         }
 
-        .destination-pill:hover {
+        .destination-pill:hover, .destination-pill:focus-visible {
           border-color: var(--text-muted);
           background: var(--bg-surface-hover);
           transform: translateY(-1px);
+          outline: 2px solid var(--brand-primary);
+          outline-offset: 2px;
         }
 
-        .pill-dot {
-          width: 6px;
-          height: 6px;
-          border-radius: 50%;
-          display: inline-block;
-        }
+        .pill-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
 
-        /* Actions List UI */
         .action-list {
           display: flex;
           flex-direction: column;
@@ -532,6 +571,7 @@ export default function Dashboard() {
         }
 
         .action-row {
+          all: unset;
           display: flex;
           align-items: center;
           justify-content: space-between;
@@ -539,66 +579,28 @@ export default function Dashboard() {
           cursor: pointer;
           border-bottom: 1px solid var(--border-subtle);
           transition: background 0.15s;
+          box-sizing: border-box;
+          width: 100%;
         }
 
-        .action-row:last-child {
-          border-bottom: none;
-        }
+        .action-row:last-child { border-bottom: none; }
 
-        .action-row:hover {
+        .action-row:hover, .action-row:focus-visible {
           background: var(--bg-surface-hover);
+          outline: 2px solid var(--brand-primary);
+          outline-offset: -2px;
         }
 
-        .action-left {
-          display: flex;
-          align-items: center;
-          gap: 16px;
-        }
+        .action-left { display: flex; align-items: center; gap: 16px; }
+        .action-indicator { width: 4px; height: 16px; border-radius: 2px; }
+        .action-label { font-size: 0.95rem; font-weight: 600; color: var(--text-main); }
+        .action-sub { font-size: 0.85rem; color: var(--text-muted); }
+        .action-arrow { color: var(--text-ghost); transition: transform 0.2s; }
+        .action-row:hover .action-arrow { color: var(--brand-primary); transform: translateX(3px); }
 
-        .action-indicator {
-          width: 4px;
-          height: 16px;
-          border-radius: 2px;
-        }
+        .trips-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
 
-        .action-label {
-          font-size: 0.95rem;
-          font-weight: 600;
-          color: var(--text-main);
-        }
-
-        .action-sub {
-          font-size: 0.85rem;
-          color: var(--text-muted);
-        }
-
-        .action-arrow {
-          color: var(--text-ghost);
-          transition: transform 0.2s;
-        }
-
-        .action-row:hover .action-arrow {
-          color: var(--brand-primary);
-          transform: translateX(3px);
-        }
-
-        /* Triplogs Grid split styling */
-        .trips-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 40px;
-        }
-
-        .trip-column {
-          display: flex;
-          flex-direction: column;
-        }
-
-        .trip-list {
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-        }
+        .trip-list { display: flex; flex-direction: column; gap: 12px; }
 
         .trip-item {
           padding: 14px 16px;
@@ -607,25 +609,11 @@ export default function Dashboard() {
           border: 1px solid var(--border-subtle);
         }
 
-        .recent-border {
-          border-left: 3px solid var(--border-subtle);
-        }
+        .recent-border { border-left: 3px solid var(--border-subtle); }
+        .scheduled-border { border-left: 3px solid #f59e0b; }
 
-        .scheduled-border {
-          border-left: 3px solid #f59e0b;
-        }
-
-        .trip-route {
-          font-size: 0.95rem;
-          font-weight: 600;
-          color: var(--text-main);
-          margin-bottom: 6px;
-        }
-
-        .arrow-split {
-          color: var(--text-ghost);
-          padding: 0 4px;
-        }
+        .trip-route { font-size: 0.95rem; font-weight: 600; color: var(--text-main); margin-bottom: 6px; }
+        .arrow-split { color: var(--text-ghost); padding: 0 4px; }
 
         .trip-meta, .trip-meta-scheduled {
           display: flex;
@@ -636,19 +624,9 @@ export default function Dashboard() {
           margin-bottom: 4px;
         }
 
-        .trip-meta-scheduled {
-          color: #f59e0b;
-        }
-
-        .duration-tag {
-          color: var(--brand-primary);
-        }
-
-        .trip-modes {
-          font-size: 0.8rem;
-          color: var(--text-ghost);
-          font-weight: 500;
-        }
+        .trip-meta-scheduled { color: #f59e0b; }
+        .duration-tag { color: var(--brand-primary); }
+        .trip-modes { font-size: 0.8rem; color: var(--text-ghost); font-weight: 500; }
 
         .text-link-btn {
           background: transparent;
@@ -664,26 +642,13 @@ export default function Dashboard() {
           align-self: flex-start;
         }
 
-        .text-link-btn:hover {
-          color: var(--text-main);
-        }
+        .text-link-btn:hover, .text-link-btn:focus-visible { color: var(--text-main); outline: 2px solid var(--brand-primary); outline-offset: 2px; border-radius: 4px; }
+        .primary-link { color: var(--brand-primary); }
+        .primary-link:hover { color: #34b399; }
 
-        .primary-link {
-          color: var(--brand-primary);
-        }
-        .primary-link:hover {
-          color: #34b399;
-        }
+        .schedule-sidebar { width: 300px; }
 
-        /* Sidebar Feed Column styling */
-        .schedule-sidebar {
-          width: 300px;
-        }
-
-        .sticky-sidebar-content {
-          position: sticky;
-          top: 60px;
-        }
+        .sticky-sidebar-content { position: sticky; top: 60px; }
 
         .sidebar-header {
           display: flex;
@@ -694,22 +659,10 @@ export default function Dashboard() {
           border-bottom: 1px solid var(--border-subtle);
         }
 
-        .sidebar-header h2 {
-          margin: 0;
-        }
+        .sidebar-header h2 { margin: 0; }
+        .update-timer { font-size: 0.75rem; color: var(--text-ghost); font-weight: 500; }
 
-        .update-timer {
-          font-size: 0.75rem;
-          color: var(--text-ghost);
-          font-weight: 500;
-        }
-
-        .sidebar-feed {
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-          margin-bottom: 1.5rem;
-        }
+        .sidebar-feed { display: flex; flex-direction: column; gap: 12px; margin-bottom: 1.5rem; }
 
         .feed-card {
           background: var(--bg-surface);
@@ -718,12 +671,7 @@ export default function Dashboard() {
           padding: 16px;
         }
 
-        .feed-card-header {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          margin-bottom: 6px;
-        }
+        .feed-card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
 
         .route-badge {
           font-size: 0.75rem;
@@ -734,47 +682,15 @@ export default function Dashboard() {
           border-radius: 4px;
         }
 
-        .route-direction {
-          font-size: 0.8rem;
-          color: var(--text-muted);
-          font-weight: 500;
-        }
+        .route-direction { font-size: 0.8rem; color: var(--text-muted); font-weight: 500; }
+        .route-stop-name { font-size: 0.75rem; color: var(--text-ghost); font-weight: 500; margin-bottom: 12px; }
 
-        .route-stop-name {
-          font-size: 0.75rem;
-          color: var(--text-ghost);
-          font-weight: 500;
-          margin-bottom: 12px;
-        }
+        .departure-time-row { display: flex; gap: 6px; flex-wrap: wrap; }
 
-        .departure-time-row {
-          display: flex;
-          gap: 6px;
-          flex-wrap: wrap;
-        }
-
-        .time-badge {
-          font-size: 0.75rem;
-          font-weight: 600;
-          padding: 4px 8px;
-          border-radius: 6px;
-        }
-
-        .time-badge.live {
-          background: rgba(62, 207, 178, 0.1);
-          color: var(--brand-primary);
-        }
-
-        .time-badge.scheduled {
-          background: var(--bg-main);
-          border: 1px solid var(--border-subtle);
-          color: var(--text-muted);
-        }
-
-        .time-badge.cancelled {
-          background: rgba(239, 68, 68, 0.1);
-          color: #ef4444;
-        }
+        .time-badge { font-size: 0.75rem; font-weight: 600; padding: 4px 8px; border-radius: 6px; }
+        .time-badge.live { background: rgba(62, 207, 178, 0.1); color: var(--brand-primary); }
+        .time-badge.scheduled { background: var(--bg-main); border: 1px solid var(--border-subtle); color: var(--text-muted); }
+        .time-badge.cancelled { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
 
         .refresh-btn {
           display: flex;
@@ -794,17 +710,14 @@ export default function Dashboard() {
           transition: all 0.15s;
         }
 
-        .refresh-btn:hover {
+        .refresh-btn:hover, .refresh-btn:focus-visible {
           background: var(--bg-surface);
           color: var(--text-main);
+          outline: 2px solid var(--brand-primary);
+          outline-offset: 2px;
         }
 
-        .loading-text, .empty-text {
-          font-size: 0.85rem;
-          color: var(--text-ghost);
-          margin: 0;
-          font-weight: 500;
-        }
+        .loading-text, .empty-text { font-size: 0.85rem; color: var(--text-ghost); margin: 0; font-weight: 500; }
 
         .mobile-route-pill {
           background: var(--bg-surface);
@@ -816,15 +729,14 @@ export default function Dashboard() {
           border-radius: 8px;
         }
 
-        /* Responsive Layout Overrides */
-        @media (max-width: 1024px) { 
+        @media (max-width: 1024px) {
           .dashboard-container { grid-template-columns: 1fr; gap: 0; }
-          .schedule-sidebar { display: none !important; } 
+          .schedule-sidebar { display: none !important; }
           .schedule-mobile-fallback { display: block; margin-top: 3rem; }
         }
         .schedule-mobile-fallback { display: none; }
-        @media (max-width: 768px) { 
-          .trips-grid { grid-template-columns: 1fr !important; gap: 32px; } 
+        @media (max-width: 768px) {
+          .trips-grid { grid-template-columns: 1fr !important; gap: 32px; }
           .dashboard-main { padding: 72px 1.25rem 40px; }
         }
       `}</style>
