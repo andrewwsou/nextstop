@@ -304,17 +304,18 @@ export default function History() {
   }
 
   return (
-    <main className="min-h-screen bg-[#18181b] text-zinc-100 font-sans px-6 py-16 max-w-4xl mx-auto">
-      <div className="border-b border-zinc-800 pb-6 mb-8">
-        <h1 className="text-2xl font-bold tracking-tight text-white font-sans">
+    <main className="min-h-screen bg-[#0b0c0e] text-[#f3f4f6] px-6 py-16 max-w-4xl mx-auto" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+      {/* Title */}
+      <div className="border-b border-[#222630] pb-6 mb-8">
+        <h1 className="text-3xl font-bold tracking-tight text-white">
           Trip History
         </h1>
       </div>
 
-      {loading && <p className="text-xs font-mono text-zinc-500 uppercase tracking-wider">Synchronizing archives...</p>}
-      {error && <p className="text-xs font-mono text-red-400 border border-red-500/20 bg-red-950/10 p-4 rounded">ERR // {error}</p>}
+      {loading && <p className="text-sm text-[#848d9a] font-medium">Loading saved trips...</p>}
+      {error && <p className="text-sm text-red-400 border border-red-500/20 bg-red-950/10 p-4 rounded-xl font-medium">Error: {error}</p>}
       {!loading && !error && !hasTrips && (
-        <p className="text-xs font-mono text-zinc-500 uppercase tracking-wider">No logged runs found in memory.</p>
+        <p className="text-sm text-[#848d9a] font-medium">You don't have any saved trips yet.</p>
       )}
 
       {!loading && !error && GROUP_ORDER.map((group) => {
@@ -324,57 +325,57 @@ export default function History() {
         return (
           <div key={group} className="mb-10">
             <div className="mb-4">
-              <span className="text-[10px] font-mono font-bold tracking-widest text-zinc-500 uppercase">
-                {GROUP_LABELS[group]}
+              <span className="text-xs font-bold tracking-widest text-[#4b5363] uppercase">
+                {GROUP_LABELS[group] === "THIS WEEK" ? "This Week" : GROUP_LABELS[group] === "THIS MONTH" ? "This Month" : "Older Trips"}
               </span>
             </div>
 
-            {/* Clean row list with sharp line dividers instead of background blocks */}
-            <div className="divide-y divide-zinc-800/60">
+            {/* Structured Card Grid */}
+            <div className="space-y-4">
               {groupTrips.map((trip) => (
-                <div key={trip.id} className="py-6 first:pt-0 last:pb-0">
+                <div key={trip.id} className="p-6 bg-[#13151a]/30 border border-[#222630] rounded-xl transition-all">
                   <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
                     <div className="flex-1 w-full">
                       {editingId === trip.id ? (
-                        <div className="flex flex-col gap-4 max-w-md font-mono text-xs">
+                        <div className="flex flex-col gap-4 max-w-md text-sm">
                           <div>
-                            <div className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">Origin</div>
+                            <label className="text-xs font-bold text-[#4b5363] uppercase tracking-wider mb-1 block">Origin</label>
                             <input
                               value={editForm.origin}
                               onChange={e => setEditForm({...editForm, origin: e.target.value})}
-                              className="bg-zinc-900 border border-zinc-700 focus:border-teal-500 outline-none rounded px-3 py-1.5 text-zinc-200 w-full"
+                              className="bg-[#0b0c0e] border border-[#222630] focus:border-[#3ecfb2] outline-none rounded-xl px-4 py-2 text-sm text-[#f3f4f6] w-full"
                             />
                           </div>
                           <div>
-                            <div className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">Destination</div>
+                            <label className="text-xs font-bold text-[#4b5363] uppercase tracking-wider mb-1 block">Destination</label>
                             <input
                               value={editForm.destination}
                               onChange={e => setEditForm({...editForm, destination: e.target.value})}
-                              className="bg-zinc-900 border border-zinc-700 focus:border-teal-500 outline-none rounded px-3 py-1.5 text-zinc-200 w-full"
+                              className="bg-[#0b0c0e] border border-[#222630] focus:border-[#3ecfb2] outline-none rounded-xl px-4 py-2 text-sm text-[#f3f4f6] w-full"
                             />
                           </div>
-                          <div className="grid grid-template-columns grid-cols-2 gap-3">
+                          <div className="grid grid-cols-2 gap-3">
                             <div>
-                              <div className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">Date</div>
+                              <label className="text-xs font-bold text-[#4b5363] uppercase tracking-wider mb-1 block">Date</label>
                               <input
                                 type="date"
                                 value={editForm.departure_date}
                                 onChange={e => setEditForm({...editForm, departure_date: e.target.value})}
-                                className="bg-zinc-900 border border-zinc-700 focus:border-teal-500 outline-none rounded px-3 py-1.5 text-zinc-200 w-full color-scheme-dark"
+                                className="bg-[#0b0c0e] border border-[#222630] focus:border-[#3ecfb2] outline-none rounded-xl px-4 py-2 text-sm text-[#f3f4f6] w-full [color-scheme:dark]"
                               />
                             </div>
                             <div>
-                              <div className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">Time</div>
+                              <label className="text-xs font-bold text-[#4b5363] uppercase tracking-wider mb-1 block">Time</label>
                               <input
                                 type="time"
                                 value={editForm.departure_time}
                                 onChange={e => setEditForm({...editForm, departure_time: e.target.value})}
-                                className="bg-zinc-900 border border-zinc-700 focus:border-teal-500 outline-none rounded px-3 py-1.5 text-zinc-200 w-full"
+                                className="bg-[#0b0c0e] border border-[#222630] focus:border-[#3ecfb2] outline-none rounded-xl px-4 py-2 text-sm text-[#f3f4f6] w-full [color-scheme:dark]"
                               />
                             </div>
                           </div>
                           <div>
-                            <div className="text-[10px] text-zinc-500 uppercase tracking-wider mb-2">Transit Intercepts</div>
+                            <label className="text-xs font-bold text-[#4b5363] uppercase tracking-wider mb-2 block">Transit Settings</label>
                             <div className="flex gap-2">
                               {["bus", "train"].map(mode => (
                                 <button
@@ -385,10 +386,10 @@ export default function History() {
                                         ? f.transit_modes.filter(m => m !== mode)
                                         : [...f.transit_modes, mode]
                                   }))}
-                                  className={`px-3 py-1 border text-[11px] font-bold rounded uppercase tracking-wider transition-all ${
+                                  className={`px-4 py-2 text-xs font-semibold rounded-xl border transition-all ${
                                     editForm.transit_modes.includes(mode)
-                                      ? "border-teal-500 text-teal-400 bg-teal-950/20"
-                                      : "border-zinc-700 text-zinc-500 bg-transparent hover:border-zinc-500"
+                                      ? "border-[#3ecfb2] text-[#3ecfb2] bg-[rgba(62,207,178,0.06)]"
+                                      : "border-[#222630] text-[#848d9a] bg-transparent hover:border-[#4b5363]"
                                   }`}
                                 >
                                   {mode === "bus" ? "OC Bus" : "Metrolink"}
@@ -398,44 +399,44 @@ export default function History() {
                           </div>
                         </div>
                       ) : (
-                        <div className="font-sans">
-                          <div className="text-base font-bold text-white tracking-tight">{trip.from}</div>
-                          <div className="text-xs text-zinc-400 font-medium mt-1">
-                            <span className="text-zinc-600 mr-1.5">→</span> {trip.to}
+                        <div>
+                          <div className="text-lg font-bold text-white tracking-tight">{trip.from}</div>
+                          <div className="text-sm text-[#848d9a] font-medium mt-1">
+                            <span className="text-[#4b5363] mr-1.5">→</span> {trip.to}
                           </div>
                         </div>
                       )}
                     </div>
 
-                    {/* Metadata & Controls Alignment Stack */}
+                    {/* Metadata & Inline Controls */}
                     <div className="flex flex-col items-start sm:items-end gap-1.5 shrink-0 w-full sm:w-auto">
-                      <div className="text-base font-bold text-white font-mono">{fmtDate(trip.date)}</div>
-                      <div className="text-[11px] font-mono text-zinc-400 lowercase tracking-wide">
-                        <span className="text-zinc-600 uppercase mr-1">METRIC:</span>
-                        {trip.durationMinutes ? `${trip.durationMinutes} min` : "untracked duration"}
+                      <div className="text-base font-bold text-white">{fmtDate(trip.date)}</div>
+                      <div className="text-xs font-medium text-[#848d9a]">
+                        <span className="text-[#4b5363] font-bold mr-1">Travel Time:</span>
+                        {trip.durationMinutes ? `${trip.durationMinutes} min` : "No duration set"}
                       </div>
 
-                      <div className="mt-2 flex flex-wrap items-center gap-3">
+                      <div className="mt-3 flex flex-wrap items-center gap-3">
                         <button
                           onClick={() => setExpanded(expanded === trip.id ? null : trip.id)}
-                          className="text-[11px] font-mono uppercase tracking-widest text-teal-400 hover:text-teal-300"
+                          className="text-xs font-semibold text-[#3ecfb2] hover:text-[#34b399]"
                         >
-                          [{expanded === trip.id ? "Hide Details" : "See Details"}]
+                          {expanded === trip.id ? "Hide Details" : "View Details"}
                         </button>
 
                         {editingId === trip.id ? (
                           <div className="flex gap-2">
                             <button
                               onClick={() => handleEditSave(trip.id)}
-                              className="text-[11px] font-mono uppercase border border-teal-500/40 text-teal-400 bg-teal-950/30 px-2 py-0.5 rounded hover:border-teal-400"
+                              className="text-xs font-bold border border-[#3ecfb2]/40 text-[#3ecfb2] bg-[rgba(62,207,178,0.06)] px-3 py-1 rounded-xl hover:border-[#3ecfb2]"
                             >
-                              Commit
+                              Save
                             </button>
                             <button
                               onClick={() => setEditingId(null)}
-                              className="text-[11px] font-mono uppercase border border-zinc-700 text-zinc-400 px-2 py-0.5 rounded hover:border-zinc-500"
+                              className="text-xs font-bold border border-[#222630] text-[#848d9a] px-3 py-1 rounded-xl hover:border-[#4b5363]"
                             >
-                              Abort
+                              Cancel
                             </button>
                           </div>
                         ) : (
@@ -451,15 +452,15 @@ export default function History() {
                                   transit_modes: trip.modes ?? [],
                                 });
                               }}
-                              className="text-[11px] font-mono uppercase text-zinc-400 hover:text-zinc-200"
+                              className="text-xs font-semibold text-[#848d9a] hover:text-[#f3f4f6]"
                             >
                               Edit
                             </button>
                             <button
                               onClick={() => handleDelete(trip.id)}
-                              className="text-[11px] font-mono uppercase text-red-400/80 hover:text-red-400"
+                              className="text-xs font-semibold text-red-400/80 hover:text-red-400"
                             >
-                              Purge
+                              Delete
                             </button>
                           </div>
                         )}
@@ -468,50 +469,50 @@ export default function History() {
                   </div>
 
                   {trip.legs.length === 0 ? (
-                    <div className="mt-4 flex items-center gap-3 font-mono text-xs">
-                      <span className="text-zinc-500 uppercase tracking-wider">No telemetry logs —</span>
+                    <div className="mt-4 flex items-center gap-3 text-sm">
+                      <span className="text-[#4b5363] font-medium">No map steps available —</span>
                       <button
                         onClick={() => router.push(`/trip?destination=${encodeURIComponent(trip.to)}`)}
-                        className="text-[11px] border border-teal-500/30 px-2 py-0.5 text-teal-400 uppercase tracking-widest rounded bg-teal-950/10 hover:border-teal-400"
+                        className="text-xs border border-[#3ecfb2]/30 px-3 py-1 text-[#3ecfb2] font-semibold rounded-xl bg-[rgba(62,207,178,0.04)] hover:border-[#3ecfb2]"
                       >
-                        Re-plan Map →
+                        Re-plan Trip →
                       </button>
                     </div>
                   ) : (
                     <RouteVisualizer legs={trip.legs} />
                   )}
 
-                  {/* Expanded Step Details View */}
+                  {/* Expanded Route Step Drawer */}
                   {expanded === trip.id && (
-                    <div className="mt-5 pt-5 border-t border-zinc-800/80 font-mono text-xs">
-                      <div className="grid gap-2 text-zinc-400">
+                    <div className="mt-5 pt-5 border-t border-[#222630]/60 text-sm">
+                      <div className="grid gap-2 text-[#848d9a] font-medium">
                         <div>
-                          <span className="text-zinc-600 uppercase tracking-wider">// Planned Departure: </span>
-                          <span className="text-zinc-200">{fmtDateTime(trip.departureTime)}</span>
+                          <span className="text-[#4b5363]">Departure: </span>
+                          <span className="text-[#f3f4f6]">{fmtDateTime(trip.departureTime)}</span>
                         </div>
                         <div>
-                          <span className="text-zinc-600 uppercase tracking-wider">// Target Logged: </span>
-                          <span className="text-zinc-200">{trip.savedDate ? fmtDate(trip.savedDate) : "Unknown"}</span>
+                          <span className="text-[#4b5363]">Saved On: </span>
+                          <span className="text-[#f3f4f6]">{trip.savedDate ? fmtDate(trip.savedDate) : "Unknown"}</span>
                         </div>
                         <div>
-                          <span className="text-zinc-600 uppercase tracking-wider">// Routing Matrix: </span>
-                          <span className="text-zinc-200">{trip.modes?.length ? trip.modes.map(formatMode).join(", ") : "Default fallback"}</span>
+                          <span className="text-[#4b5363]">Transit Preferences: </span>
+                          <span className="text-[#f3f4f6]">{trip.modes?.length ? trip.modes.map(formatMode).join(", ") : "Default filters"}</span>
                         </div>
                         <div>
-                          <span className="text-zinc-600 uppercase tracking-wider">// Run Duration: </span>
-                          <span className="text-zinc-200">{trip.durationMinutes ? `${trip.durationMinutes} min` : "Unavailable"}</span>
+                          <span className="text-[#4b5363]">Total Trip Length: </span>
+                          <span className="text-[#f3f4f6]">{trip.durationMinutes ? `${trip.durationMinutes} mins` : "Unavailable"}</span>
                         </div>
 
                         {trip.routeSummary?.steps?.length ? (
-                          <div className="grid gap-3 mt-4 pt-4 border-t border-zinc-800/40">
-                            <div className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Sequence Vectors</div>
+                          <div className="grid gap-3 mt-4 pt-4 border-t border-[#222630]/40">
+                            <div className="text-xs text-[#4b5363] font-bold uppercase tracking-widest">Route Steps</div>
                             {trip.routeSummary.steps.map((step, index) => (
                               <RouteStepDetails key={`${trip.id}-${index}`} step={step} />
                             ))}
                           </div>
                         ) : (
-                          <div className="text-zinc-500 text-[11px] italic mt-2">
-                            Granular routing steps were not saved in memory payload for this historical coordinate.
+                          <div className="text-[#4b5363] text-xs italic mt-2">
+                            Step-by-step navigation logs are not attached to this historical summary record.
                           </div>
                         )}
                       </div>

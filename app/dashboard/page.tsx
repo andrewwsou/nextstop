@@ -57,8 +57,9 @@ function parseScheduleRoutes(data: any): ScheduleRoute[] {
   }).filter((r: ScheduleRoute) => r.departures.length > 0).slice(0, 6);
 }
 
+// Modernized, intentional palette accent mapping
 const categoryColors: Record<string, string> = {
-  Campus: "#3ecfb2", Shopping: "#60a5fa", Airport: "#f59e0b", "Transit Hub": "#a78bfa",
+  Campus: "#3ecfb2", Shopping: "#3b82f6", Airport: "#f59e0b", "Transit Hub": "#8b5cf6",
 };
 
 export default function Dashboard() {
@@ -120,8 +121,8 @@ export default function Dashboard() {
 
   const quickActions = [
     { label: "Live Map", sub: "Real-time vehicle positions", href: "/map", color: "#3ecfb2" },
-    { label: "Plan a Trip", sub: "Find the fastest route", href: "/trip", color: "#60a5fa" },
-    { label: "Trip History", sub: "View past journeys", href: "/history", color: "#a78bfa" },
+    { label: "Plan a Trip", sub: "Find the fastest route", href: "/trip", color: "#3b82f6" },
+    { label: "Trip History", sub: "View past journeys", href: "/history", color: "#8b5cf6" },
     { label: "Profile", sub: "Settings & preferences", href: "/profile", color: "#f59e0b" },
   ];
 
@@ -138,192 +139,148 @@ export default function Dashboard() {
   function goToTrip(destination: string) { router.push(`/trip?destination=${encodeURIComponent(destination)}`); }
 
   return (
-    <main style={{ minHeight: "100vh", padding: "80px 2.5rem 2.5rem", background: "#0a0f0d", color: "white", display: "flex", justifyContent: "center", fontFamily: "'IBM Plex Sans', sans-serif" }}>
-      <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+    <main className="dashboard-main">
+      <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
-      <div style={{ width: "100%", maxWidth: 1300, display: "flex", gap: 48, alignItems: "flex-start" }}>
+      <div className="dashboard-container">
+        {/* LEFT COLUMN */}
+        <div className="main-content">
 
-        {/* LEFT */}
-        <div style={{ flex: 1, minWidth: 0 }}>
-
-          {/* Greeting */}
-          <div style={{ marginBottom: "2.5rem", borderBottom: "1px solid #1a2e28", paddingBottom: "1.5rem" }}>
-            <h1 style={{ fontSize: "1.6rem", fontWeight: 500, margin: "0 0 4px", letterSpacing: "-0.02em" }}>
-              {greeting}{firstName ? `, ${firstName}` : ""}
+          {/* Header */}
+          <header className="dashboard-header">
+            <h1>
+              {greeting}
+              {firstName ? <span className="user-name">, {firstName}</span> : ""}
             </h1>
-            <p style={{ color: "#3a5248", margin: 0, fontSize: "0.85rem" }}>
-              Where are you heading today?
-            </p>
-          </div>
+            <p className="subtitle">Where are you heading today?</p>
+          </header>
 
-          {/* Search — underline style, no box */}
-          <div style={{ position: "relative", maxWidth: 520, marginBottom: "2.5rem" }}>
-            <div style={{
-              display: "flex", alignItems: "center", gap: 12,
-              background: "transparent",
-              borderBottom: `1px solid ${query ? "#3ecfb2" : "#1f3530"}`,
-              padding: "8px 0", transition: "border-color 0.2s",
-            }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3a5248" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+          {/* Search Box */}
+          <div className="search-wrapper">
+            <div className={`search-bar ${query ? "active" : ""}`}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="search-icon">
                 <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
               </svg>
               <input
                 value={query}
                 onChange={(e) => handleSearchChange(e.target.value)}
-                placeholder="Search a destination..."
-                style={{ background: "transparent", border: "none", outline: "none", color: "white", fontSize: "0.9rem", width: "100%", fontFamily: "inherit" }}
+                placeholder="Search destinations, stations, routes..."
               />
               {query && (
-                <button onClick={() => { setQuery(""); setSuggestions([]); }}
-                  style={{ background: "none", border: "none", color: "#3a5248", cursor: "pointer", fontSize: 13, padding: 0 }}>✕</button>
+                <button onClick={() => { setQuery(""); setSuggestions([]); }} className="clear-search">✕</button>
               )}
             </div>
+
             {suggestions.length > 0 && (
-              <div style={{ position: "absolute", top: "100%", left: 0, right: 0, background: "#0d1a16", border: "1px solid #1f3530", borderTop: "none", zIndex: 100, overflow: "hidden" }}>
+              <div className="suggestions-dropdown">
                 {suggestions.map((s, i) => (
-                  <div key={s.place_id} onClick={() => goToTrip(s.display_name)}
-                    style={{ padding: "10px 0", fontSize: "0.82rem", cursor: "pointer", borderTop: i === 0 ? "none" : "1px solid #111a17", color: "#888" }}
-                    onMouseEnter={e => (e.currentTarget.style.color = "white")}
-                    onMouseLeave={e => (e.currentTarget.style.color = "#888")}
-                  >{s.display_name}</div>
+                  <div key={s.place_id} onClick={() => goToTrip(s.display_name)} className="suggestion-item">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                    <span>{s.display_name}</span>
+                  </div>
                 ))}
               </div>
             )}
           </div>
 
-          {/* Destinations — flat pill row, no card boxes */}
+          {/* Destination Pills */}
           {(popularDestinations.length > 0 || transitHubs.length > 0) && (
-            <div style={{ marginBottom: "2.5rem" }}>
-              <p style={{ margin: "0 0 0.85rem", fontSize: "0.68rem", color: "#3a5248", textTransform: "uppercase", letterSpacing: "0.12em", fontWeight: 600 }}>
-                Destinations
-              </p>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
+            <section className="section-block">
+              <h2>Destinations</h2>
+              <div className="pill-grid">
                 {[...popularDestinations, ...transitHubs].map((loc) => (
-                  <button key={loc.id} onClick={() => goToTrip(loc.name)}
-                    style={{
-                      background: "transparent",
-                      border: "1px solid #1f3530",
-                      borderRadius: 2,
-                      padding: "5px 13px",
-                      cursor: "pointer",
-                      fontFamily: "inherit",
-                      fontSize: "0.82rem",
-                      color: "#888",
-                      fontWeight: 400,
-                      transition: "all 0.15s",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 7,
-                    }}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor = categoryColors[loc.category] ?? "#3ecfb2"; e.currentTarget.style.color = "white"; }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor = "#1f3530"; e.currentTarget.style.color = "#888"; }}
-                  >
-                    <span style={{ width: 5, height: 5, borderRadius: "50%", background: categoryColors[loc.category] ?? "#3ecfb2", display: "inline-block", flexShrink: 0 }} />
+                  <button key={loc.id} onClick={() => goToTrip(loc.name)} className="destination-pill">
+                    <span className="pill-dot" style={{ backgroundColor: categoryColors[loc.category] ?? "#3ecfb2" }} />
                     {loc.name}
                   </button>
                 ))}
               </div>
-            </div>
+            </section>
           )}
 
-          {/* Quick Actions — list rows, no cards */}
-          <div style={{ marginBottom: "2.5rem" }}>
-            <p style={{ margin: "0 0 0.85rem", fontSize: "0.68rem", color: "#3a5248", textTransform: "uppercase", letterSpacing: "0.12em", fontWeight: 600 }}>
-              Navigate
-            </p>
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              {quickActions.map((action, i) => (
-                <div key={action.href} onClick={() => router.push(action.href)}
-                  style={{
-                    display: "flex", alignItems: "center", justifyContent: "space-between",
-                    padding: "12px 0", cursor: "pointer",
-                    borderBottom: "1px solid #0f1e1a",
-                    transition: "opacity 0.15s",
-                  }}
-                  onMouseEnter={e => (e.currentTarget.style.opacity = "0.65")}
-                  onMouseLeave={e => (e.currentTarget.style.opacity = "1")}
-                >
-                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    <span style={{ width: 5, height: 5, borderRadius: "50%", background: action.color, flexShrink: 0, display: "inline-block" }} />
-                    <span style={{ fontSize: "0.88rem", fontWeight: 500, color: "white" }}>{action.label}</span>
-                    <span style={{ fontSize: "0.78rem", color: "#3a5248" }}>{action.sub}</span>
+          {/* Navigation Action Rows */}
+          <section className="section-block">
+            <h2>Navigate</h2>
+            <div className="action-list">
+              {quickActions.map((action) => (
+                <div key={action.href} onClick={() => router.push(action.href)} className="action-row">
+                  <div className="action-left">
+                    <div className="action-indicator" style={{ backgroundColor: action.color }} />
+                    <span className="action-label">{action.label}</span>
+                    <span className="action-sub">{action.sub}</span>
                   </div>
-                  <span style={{ color: "#3a5248", fontSize: "0.8rem" }}>→</span>
+                  <span className="action-arrow">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                  </span>
                 </div>
               ))}
             </div>
-          </div>
+          </section>
 
-          {/* Trips — left accent bar, no box backgrounds */}
-          <div className="dashboard-trips" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 32 }}>
-            <div>
-              <p style={{ margin: "0 0 0.85rem", fontSize: "0.68rem", color: "#3a5248", textTransform: "uppercase", letterSpacing: "0.12em", fontWeight: 600 }}>
-                Recent Trips
-              </p>
+          {/* Triplogs Split Layout */}
+          <section className="trips-grid">
+            <div className="trip-column">
+              <h2>Recent Trips</h2>
               {loading ? (
-                <p style={{ color: "#3a5248", fontSize: "0.85rem" }}>Loading...</p>
+                <p className="loading-text">Loading history...</p>
               ) : recent.length === 0 ? (
-                <p style={{ color: "#3a5248", fontSize: "0.85rem" }}>No trips yet.</p>
+                <p className="empty-text">No recent journeys found.</p>
               ) : (
-                <div style={{ display: "flex", flexDirection: "column" }}>
+                <div className="trip-list">
                   {recent.map((trip) => (
-                    <div key={trip.id} style={{ padding: "10px 0 10px 14px", borderLeft: "2px solid #1f3530", marginBottom: 10 }}>
-                      <p style={{ margin: 0, fontSize: "0.87rem", fontWeight: 500, color: "white" }}>{trip.origin} → {trip.destination}</p>
-                      <div style={{ display: "flex", gap: 12, marginTop: 4 }}>
-                        <span style={{ fontSize: "0.72rem", color: "#3a5248" }}>{formatTripDate(trip.departure_time)}</span>
-                        {trip.duration_minutes && <span style={{ fontSize: "0.72rem", color: "#3ecfb2" }}>{trip.duration_minutes} min</span>}
+                    <div key={trip.id} className="trip-item recent-border">
+                      <div className="trip-route">{trip.origin} <span className="arrow-split">→</span> {trip.destination}</div>
+                      <div className="trip-meta">
+                        <span>{formatTripDate(trip.departure_time)}</span>
+                        {trip.duration_minutes && <span className="duration-tag">{trip.duration_minutes}m duration</span>}
                       </div>
-                      <p style={{ margin: "3px 0 0", fontSize: "0.72rem", color: "#3a5248" }}>{formatModes(trip.transit_modes)}</p>
+                      <div className="trip-modes">{formatModes(trip.transit_modes)}</div>
                     </div>
                   ))}
-                  <button onClick={() => router.push("/history")}
-                    style={{ background: "transparent", border: "none", color: "#3ecfb2", fontSize: "0.78rem", cursor: "pointer", textAlign: "left", padding: "4px 0", fontFamily: "inherit" }}>
-                    View all →
+                  <button onClick={() => router.push("/history")} className="text-link-btn">
+                    View full history
                   </button>
                 </div>
               )}
             </div>
 
-            <div>
-              <p style={{ margin: "0 0 0.85rem", fontSize: "0.68rem", color: "#3a5248", textTransform: "uppercase", letterSpacing: "0.12em", fontWeight: 600 }}>
-                Scheduled Trips
-              </p>
+            <div className="trip-column">
+              <h2>Scheduled Trips</h2>
               {scheduled.length === 0 ? (
-                <p style={{ color: "#3a5248", fontSize: "0.85rem" }}>No scheduled trips.</p>
+                <div className="trip-list">
+                  <p className="empty-text">No upcoming schedules.</p>
+                </div>
               ) : (
-                <div style={{ display: "flex", flexDirection: "column" }}>
+                <div className="trip-list">
                   {scheduled.map((trip) => (
-                    <div key={trip.id} style={{ padding: "10px 0 10px 14px", borderLeft: "2px solid #f59e0b44", marginBottom: 10 }}>
-                      <p style={{ margin: 0, fontSize: "0.87rem", fontWeight: 500 }}>{trip.origin} → {trip.destination}</p>
-                      <span style={{ fontSize: "0.72rem", color: "#f59e0b" }}>{formatTripDate(trip.departure_time)}</span>
-                      <p style={{ margin: "3px 0 0", fontSize: "0.72rem", color: "#3a5248" }}>
+                    <div key={trip.id} className="trip-item scheduled-border">
+                      <div className="trip-route">{trip.origin} <span className="arrow-split">→</span> {trip.destination}</div>
+                      <div className="trip-meta-scheduled">{formatTripDate(trip.departure_time)}</div>
+                      <div className="trip-modes">
                         {formatModes(trip.transit_modes)}{trip.duration_minutes ? ` · ${trip.duration_minutes} min` : ""}
-                      </p>
+                      </div>
                     </div>
                   ))}
                 </div>
               )}
-              <button onClick={() => router.push("/trip")}
-                style={{ background: "transparent", border: "none", borderBottom: "1px solid #1f3530", color: "#3ecfb2", fontSize: "0.82rem", cursor: "pointer", textAlign: "left", padding: "4px 0", fontFamily: "inherit" }}>
-                + Schedule a trip
+              <button onClick={() => router.push("/trip")} className="text-link-btn primary-link">
+                + Set new schedule
               </button>
             </div>
-          </div>
+          </section>
 
-          {/* Mobile schedule fallback */}
+          {/* Mobile Fallback Panel */}
           <div className="schedule-mobile-fallback">
-            <p style={{ margin: "2rem 0 0.75rem", fontSize: "0.68rem", color: "#3a5248", textTransform: "uppercase", letterSpacing: "0.12em", fontWeight: 600 }}>
-              Nearby Departures
-            </p>
-            {scheduleLoading && <p style={{ color: "#3a5248", fontSize: "0.85rem" }}>Loading schedule...</p>}
-            {scheduleError && <p style={{ color: "#3a5248", fontSize: "0.85rem" }}>{scheduleError}</p>}
+            <h2>Nearby Departures</h2>
+            {scheduleLoading && <p className="loading-text">Locating lines...</p>}
+            {scheduleError && <p className="empty-text">{scheduleError}</p>}
             {!scheduleLoading && !scheduleError && scheduleRoutes.length === 0 && (
-              <p style={{ color: "#3a5248", fontSize: "0.85rem" }}>No nearby routes found.</p>
+              <p className="empty-text">No active paths nearby.</p>
             )}
             {!scheduleLoading && !scheduleError && scheduleRoutes.length > 0 && (
-              <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
+              <div className="pill-grid">
                 {scheduleRoutes.map((route, i) => (
-                  <span key={i} style={{ background: "transparent", border: "1px solid #1f3530", color: "#3ecfb2", fontSize: "0.72rem", fontWeight: 500, padding: "3px 10px" }}>
+                  <span key={i} className="mobile-route-pill">
                     {route.routeName} · {route.direction}
                   </span>
                 ))}
@@ -332,60 +289,544 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* RIGHT — schedule panel, no card background */}
-        <div className="schedule-panel" style={{ width: 240, flexShrink: 0 }}>
-          <div style={{ position: "sticky", top: 90 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem", paddingBottom: "0.75rem", borderBottom: "1px solid #1a2e28" }}>
-              <p style={{ margin: 0, fontSize: "0.68rem", color: "#3a5248", textTransform: "uppercase", letterSpacing: "0.12em", fontWeight: 600 }}>
-                Nearby Departures
-              </p>
-              {lastUpdatedDisplay && <span style={{ fontSize: "0.65rem", color: "#2a3e38" }}>Updated {lastUpdatedDisplay}</span>}
+        {/* RIGHT COLUMN (Desktop Sidebar) */}
+        <aside className="schedule-sidebar">
+          <div className="sticky-sidebar-content">
+            <div className="sidebar-header">
+              <h2>Nearby Departures</h2>
+              {lastUpdatedDisplay && <span className="update-timer">Updated {lastUpdatedDisplay}</span>}
             </div>
 
-            {scheduleLoading && <p style={{ color: "#3a5248", fontSize: "0.78rem" }}>Loading schedule...</p>}
-            {scheduleError && <p style={{ color: "#3a5248", fontSize: "0.78rem" }}>{scheduleError}</p>}
+            {scheduleLoading && <p className="loading-text">Scanning regional transit feeds...</p>}
+            {scheduleError && <p className="empty-text">{scheduleError}</p>}
             {!scheduleLoading && !scheduleError && scheduleRoutes.length === 0 && (
-              <p style={{ color: "#3a5248", fontSize: "0.78rem" }}>No nearby routes found.</p>
+              <p className="empty-text">No operational lines found around your current hub.</p>
             )}
 
-            {!scheduleLoading && scheduleRoutes.map((route, i) => (
-              <div key={i} style={{ marginBottom: 16, paddingBottom: 16, borderBottom: i < scheduleRoutes.length - 1 ? "1px solid #0f1e1a" : "none" }}>
-                <div style={{ display: "flex", alignItems: "baseline", gap: 7, marginBottom: 3 }}>
-                  <span style={{ fontSize: "0.78rem", fontWeight: 600, color: "white" }}>{route.routeName}</span>
-                  <span style={{ fontSize: "0.68rem", color: "#3a5248" }}>→ {route.direction}</span>
+            <div className="sidebar-feed">
+              {!scheduleLoading && scheduleRoutes.map((route, i) => (
+                <div key={i} className="feed-card">
+                  <div className="feed-card-header">
+                    <span className="route-badge">{route.routeName}</span>
+                    <span className="route-direction">to {route.direction}</span>
+                  </div>
+                  <div className="route-stop-name">{route.stopName}</div>
+                  <div className="departure-time-row">
+                    {route.departures.map((dep, j) => (
+                      <span key={j} className={`time-badge ${dep.is_cancelled ? "cancelled" : dep.is_real_time ? "live" : "scheduled"}`}>
+                        {dep.is_cancelled ? "Cancelled" : formatUnixTime(dep.arrival_time)}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-                <div style={{ fontSize: "0.68rem", color: "#2a3e38", marginBottom: 6 }}>{route.stopName}</div>
-                <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
-                  {route.departures.map((dep, j) => (
-                    <span key={j} style={{
-                      fontSize: "0.7rem", padding: "2px 7px",
-                      border: `1px solid ${dep.is_cancelled ? "#f87171" : dep.is_real_time ? "#3ecfb2" : "#1f3530"}`,
-                      color: dep.is_cancelled ? "#f87171" : dep.is_real_time ? "#3ecfb2" : "#3a5248",
-                    }}>
-                      {dep.is_cancelled ? "Cancelled" : formatUnixTime(dep.arrival_time)}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
 
             {!scheduleLoading && !scheduleError && (
               <button
                 onClick={() => { setScheduleLoading(true); navigator.geolocation.getCurrentPosition((pos) => { fetchSchedule(pos.coords.latitude, pos.coords.longitude); }); }}
-                style={{ background: "transparent", border: "none", borderBottom: "1px solid #1f3530", color: "#3ecfb2", fontSize: "0.72rem", cursor: "pointer", padding: "2px 0", fontFamily: "inherit" }}
+                className="refresh-btn"
               >
-                Refresh
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                Force Refresh Feed
               </button>
             )}
           </div>
-        </div>
+        </aside>
       </div>
 
+      {/* Embedded CSS Variables & Rules to strip away the 'AI-generated' appearance */}
       <style>{`
-        @media (max-width: 1024px) { .schedule-panel { display: none !important; } }
-        @media (max-width: 768px) { .dashboard-trips { grid-template-columns: 1fr !important; } }
+        :root {
+          --bg-main: #0b0c0e;
+          --bg-surface: #13151a;
+          --bg-surface-hover: #1c1f26;
+          --border-subtle: #222630;
+          --brand-primary: #3ecfb2;
+          --text-main: #f3f4f6;
+          --text-muted: #848d9a;
+          --text-ghost: #4b5363;
+        }
+
+        .dashboard-main {
+          min-height: 100vh;
+          padding: 60px 2rem 4rem;
+          background-color: var(--bg-main);
+          color: var(--text-main);
+          display: flex;
+          justify-content: center;
+          font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+          letter-spacing: -0.01em;
+        }
+
+        .dashboard-container {
+          width: 100%;
+          maxWidth: 1240px;
+          display: grid;
+          grid-template-columns: 1fr 300px;
+          gap: 64px;
+          align-items: flex-start;
+        }
+
+        .main-content {
+          min-width: 0;
+        }
+
+        .dashboard-header {
+          margin-bottom: 2.5rem;
+        }
+
+        .dashboard-header h1 {
+          font-size: 2rem;
+          font-weight: 700;
+          margin: 0 0 6px 0;
+          letter-spacing: -0.03em;
+          color: var(--text-main);
+        }
+
+        .dashboard-header .user-name {
+          color: var(--brand-primary);
+        }
+
+        .dashboard-header .subtitle {
+          color: var(--text-muted);
+          margin: 0;
+          font-size: 0.95rem;
+        }
+
+        /* Modernized Search Box styling */
+        .search-wrapper {
+          position: relative;
+          max-width: 580px;
+          margin-bottom: 3rem;
+        }
+
+        .search-bar {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          background: var(--bg-surface);
+          border: 1px solid var(--border-subtle);
+          border-radius: 12px;
+          padding: 14px 18px;
+          transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .search-bar:focus-within, .search-bar.active {
+          border-color: var(--brand-primary);
+          box-shadow: 0 0 0 4px rgba(62, 207, 178, 0.1);
+          background: var(--bg-main);
+        }
+
+        .search-bar input {
+          background: transparent;
+          border: none;
+          outline: none;
+          color: var(--text-main);
+          font-size: 0.95rem;
+          width: 100%;
+          font-family: inherit;
+          font-weight: 500;
+        }
+
+        .search-bar input::placeholder {
+          color: var(--text-ghost);
+        }
+
+        .clear-search {
+          background: none;
+          border: none;
+          color: var(--text-muted);
+          cursor: pointer;
+          font-size: 14px;
+          padding: 4px;
+        }
+
+        .suggestions-dropdown {
+          position: absolute;
+          top: calc(100% + 8px);
+          left: 0;
+          right: 0;
+          background: var(--bg-surface);
+          border: 1px solid var(--border-subtle);
+          border-radius: 12px;
+          z-index: 100;
+          overflow: hidden;
+          box-shadow: 0 12px 30px rgba(0,0,0,0.5);
+        }
+
+        .suggestion-item {
+          padding: 14px 18px;
+          font-size: 0.9rem;
+          cursor: pointer;
+          color: var(--text-muted);
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          transition: all 0.1s;
+        }
+
+        .suggestion-item:hover {
+          background: var(--bg-surface-hover);
+          color: var(--text-main);
+        }
+
+        /* Generic typography cleanups */
+        .section-block {
+          margin-bottom: 3rem;
+        }
+
+        h2 {
+          margin: 0 0 1.25rem 0;
+          font-size: 0.75rem;
+          color: var(--text-ghost);
+          text-transform: uppercase;
+          letter-spacing: 0.15em;
+          font-weight: 700;
+        }
+
+        /* Pill Grids */
+        .pill-grid {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+
+        .destination-pill {
+          background: var(--bg-surface);
+          border: 1px solid var(--border-subtle);
+          border-radius: 20px;
+          padding: 8px 16px;
+          cursor: pointer;
+          font-family: inherit;
+          font-size: 0.88rem;
+          color: var(--text-main);
+          font-weight: 500;
+          transition: all 0.2s;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .destination-pill:hover {
+          border-color: var(--text-muted);
+          background: var(--bg-surface-hover);
+          transform: translateY(-1px);
+        }
+
+        .pill-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          display: inline-block;
+        }
+
+        /* Actions List UI */
+        .action-list {
+          display: flex;
+          flex-direction: column;
+          background: var(--bg-surface);
+          border: 1px solid var(--border-subtle);
+          border-radius: 14px;
+          overflow: hidden;
+        }
+
+        .action-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 16px 20px;
+          cursor: pointer;
+          border-bottom: 1px solid var(--border-subtle);
+          transition: background 0.15s;
+        }
+
+        .action-row:last-child {
+          border-bottom: none;
+        }
+
+        .action-row:hover {
+          background: var(--bg-surface-hover);
+        }
+
+        .action-left {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+        }
+
+        .action-indicator {
+          width: 4px;
+          height: 16px;
+          border-radius: 2px;
+        }
+
+        .action-label {
+          font-size: 0.95rem;
+          font-weight: 600;
+          color: var(--text-main);
+        }
+
+        .action-sub {
+          font-size: 0.85rem;
+          color: var(--text-muted);
+        }
+
+        .action-arrow {
+          color: var(--text-ghost);
+          transition: transform 0.2s;
+        }
+
+        .action-row:hover .action-arrow {
+          color: var(--brand-primary);
+          transform: translateX(3px);
+        }
+
+        /* Triplogs Grid split styling */
+        .trips-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 40px;
+        }
+
+        .trip-column {
+          display: flex;
+          flex-direction: column;
+        }
+
+        .trip-list {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+
+        .trip-item {
+          padding: 14px 16px;
+          background: var(--bg-surface);
+          border-radius: 10px;
+          border: 1px solid var(--border-subtle);
+        }
+
+        .recent-border {
+          border-left: 3px solid var(--border-subtle);
+        }
+
+        .scheduled-border {
+          border-left: 3px solid #f59e0b;
+        }
+
+        .trip-route {
+          font-size: 0.95rem;
+          font-weight: 600;
+          color: var(--text-main);
+          margin-bottom: 6px;
+        }
+
+        .arrow-split {
+          color: var(--text-ghost);
+          padding: 0 4px;
+        }
+
+        .trip-meta, .trip-meta-scheduled {
+          display: flex;
+          gap: 12px;
+          font-size: 0.8rem;
+          font-weight: 500;
+          color: var(--text-muted);
+          margin-bottom: 4px;
+        }
+
+        .trip-meta-scheduled {
+          color: #f59e0b;
+        }
+
+        .duration-tag {
+          color: var(--brand-primary);
+        }
+
+        .trip-modes {
+          font-size: 0.8rem;
+          color: var(--text-ghost);
+          font-weight: 500;
+        }
+
+        .text-link-btn {
+          background: transparent;
+          border: none;
+          color: var(--text-muted);
+          font-size: 0.85rem;
+          font-weight: 600;
+          cursor: pointer;
+          text-align: left;
+          padding: 8px 0;
+          font-family: inherit;
+          transition: color 0.15s;
+          align-self: flex-start;
+        }
+
+        .text-link-btn:hover {
+          color: var(--text-main);
+        }
+
+        .primary-link {
+          color: var(--brand-primary);
+        }
+        .primary-link:hover {
+          color: #34b399;
+        }
+
+        /* Sidebar Feed Column styling */
+        .schedule-sidebar {
+          width: 300px;
+        }
+
+        .sticky-sidebar-content {
+          position: sticky;
+          top: 60px;
+        }
+
+        .sidebar-header {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+          margin-bottom: 1.5rem;
+          padding-bottom: 1rem;
+          border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .sidebar-header h2 {
+          margin: 0;
+        }
+
+        .update-timer {
+          font-size: 0.75rem;
+          color: var(--text-ghost);
+          font-weight: 500;
+        }
+
+        .sidebar-feed {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          margin-bottom: 1.5rem;
+        }
+
+        .feed-card {
+          background: var(--bg-surface);
+          border: 1px solid var(--border-subtle);
+          border-radius: 12px;
+          padding: 16px;
+        }
+
+        .feed-card-header {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 6px;
+        }
+
+        .route-badge {
+          font-size: 0.75rem;
+          font-weight: 700;
+          color: var(--bg-main);
+          background: var(--text-main);
+          padding: 2px 6px;
+          border-radius: 4px;
+        }
+
+        .route-direction {
+          font-size: 0.8rem;
+          color: var(--text-muted);
+          font-weight: 500;
+        }
+
+        .route-stop-name {
+          font-size: 0.75rem;
+          color: var(--text-ghost);
+          font-weight: 500;
+          margin-bottom: 12px;
+        }
+
+        .departure-time-row {
+          display: flex;
+          gap: 6px;
+          flex-wrap: wrap;
+        }
+
+        .time-badge {
+          font-size: 0.75rem;
+          font-weight: 600;
+          padding: 4px 8px;
+          border-radius: 6px;
+        }
+
+        .time-badge.live {
+          background: rgba(62, 207, 178, 0.1);
+          color: var(--brand-primary);
+        }
+
+        .time-badge.scheduled {
+          background: var(--bg-main);
+          border: 1px solid var(--border-subtle);
+          color: var(--text-muted);
+        }
+
+        .time-badge.cancelled {
+          background: rgba(239, 68, 68, 0.1);
+          color: #ef4444;
+        }
+
+        .refresh-btn {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          background: transparent;
+          border: 1px solid var(--border-subtle);
+          border-radius: 8px;
+          color: var(--text-muted);
+          font-size: 0.8rem;
+          font-weight: 600;
+          cursor: pointer;
+          padding: 8px 14px;
+          width: 100%;
+          justify-content: center;
+          font-family: inherit;
+          transition: all 0.15s;
+        }
+
+        .refresh-btn:hover {
+          background: var(--bg-surface);
+          color: var(--text-main);
+        }
+
+        .loading-text, .empty-text {
+          font-size: 0.85rem;
+          color: var(--text-ghost);
+          margin: 0;
+          font-weight: 500;
+        }
+
+        .mobile-route-pill {
+          background: var(--bg-surface);
+          border: 1px solid var(--border-subtle);
+          color: var(--brand-primary);
+          font-size: 0.8rem;
+          font-weight: 600;
+          padding: 6px 12px;
+          border-radius: 8px;
+        }
+
+        /* Responsive Layout Overrides */
+        @media (max-width: 1024px) { 
+          .dashboard-container { grid-template-columns: 1fr; gap: 0; }
+          .schedule-sidebar { display: none !important; } 
+          .schedule-mobile-fallback { display: block; margin-top: 3rem; }
+        }
         .schedule-mobile-fallback { display: none; }
-        @media (max-width: 1024px) { .schedule-mobile-fallback { display: block; } }
+        @media (max-width: 768px) { 
+          .trips-grid { grid-template-columns: 1fr !important; gap: 32px; } 
+          .dashboard-main { padding: 40px 1.25rem; }
+        }
       `}</style>
     </main>
   );

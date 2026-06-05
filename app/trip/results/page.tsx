@@ -252,58 +252,60 @@ function TripResultsContent() {
   }
 
   return (
-    <main className="min-h-screen bg-[#18181b] text-zinc-100 font-sans px-6 py-16 max-w-4xl mx-auto">
+    <main className="min-h-screen bg-[#0b0c0e] text-[#f3f4f6] px-6 py-16 max-w-3xl mx-auto" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
       {/* Navigation */}
       <button
         onClick={() => router.back()}
-        className="text-zinc-400 hover:text-white transition-colors text-sm font-medium tracking-wide uppercase mb-8 flex items-center gap-2"
+        className="text-[#848d9a] hover:text-[#f3f4f6] transition-colors text-xs uppercase tracking-wider font-semibold mb-8 flex items-center gap-2"
       >
         <span>←</span> Back to Planner
       </button>
 
       {/* Header Info */}
-      <div className="border-b border-zinc-800 pb-6 mb-8">
-        <h1 className="text-2xl font-bold tracking-tight text-white font-sans">
-          {isLoading ? "Finding paths..." : `${routes.length} Available Routes`}
+      <div className="border-b border-[#222630] pb-6 mb-10">
+        <h1 className="text-3xl font-bold tracking-tight text-white mb-2">
+          {isLoading ? "Finding your routes..." : `${routes.length} Available Routes`}
         </h1>
-        <div className="mt-2 text-sm text-zinc-400 font-medium">
-          <span className="text-teal-400">{start}</span>
-          <span className="mx-2 text-zinc-600">→</span>
-          <span className="text-zinc-200">{destination}</span>
+        <div className="mt-2 text-sm text-[#848d9a] flex items-center flex-wrap gap-1.5 font-medium">
+          <span className="text-[#3ecfb2]">{start}</span>
+          <span className="text-[#4b5363]">→</span>
+          <span className="text-[#f3f4f6]">{destination}</span>
         </div>
-        <p className="text-xs font-mono text-zinc-500 mt-1.5 uppercase tracking-wider">
+        <p className="text-xs font-bold tracking-widest text-[#4b5363] mt-3 uppercase">
           DEPARTURE:{" "}
-          {tripDate
-            ? new Date(tripDate).toLocaleDateString("en-US", {
-                weekday: "short",
-                month: "short",
-                day: "numeric",
-              })
-            : "Today"}
-          {tripTime && ` @ ${tripTime}`}
+          <span className="text-[#848d9a]">
+            {tripDate
+              ? new Date(tripDate).toLocaleDateString("en-US", {
+                  weekday: "short",
+                  month: "short",
+                  day: "numeric",
+                })
+              : "Today"}
+            {tripTime && ` @ ${tripTime}`}
+          </span>
         </p>
       </div>
 
       {error && (
-        <div className="mb-6 rounded border border-red-500/20 bg-red-950/10 p-4 text-xs font-mono text-red-400">
-          ERR // {error}
+        <div className="mb-6 rounded-xl border border-red-500/20 bg-red-950/10 p-4 text-sm text-red-400 flex items-center gap-2">
+          <span>✕ Error:</span> {error}
         </div>
       )}
 
       {saveError && (
-        <div className="mb-6 rounded border border-red-500/20 bg-red-950/10 p-4 text-xs font-mono text-red-400">
-          ERR_SAVE // {saveError}
+        <div className="mb-6 rounded-xl border border-red-500/20 bg-red-950/10 p-4 text-sm text-red-400 flex items-center gap-2">
+          <span>✕ Save Error:</span> {saveError}
         </div>
       )}
 
       {!isLoading && !error && routes.length === 0 && (
-        <div className="mb-6 rounded border border-zinc-800 bg-zinc-900/50 p-4 text-xs font-mono text-zinc-400">
-          SYSTEM // No routes match filters.
+        <div className="mb-6 rounded-xl border border-[#222630] bg-[#13151a]/30 p-5 text-sm text-[#848d9a]">
+          No transit routes match your filters. Try adjusting your departure preferences.
         </div>
       )}
 
       {/* Route List Container */}
-      <div className="divide-y divide-zinc-800/60">
+      <div className="space-y-6">
         {routes.map((route, index) => {
           const isExpanded = expandedRouteId === route.id;
           const isSaving = savingRouteId === route.id;
@@ -313,22 +315,22 @@ function TripResultsContent() {
           return (
             <section
               key={route.id}
-              className={`py-8 first:pt-0 last:pb-0 transition-all ${
+              className={`p-6 border transition-all rounded-xl ${
                 isSuggested
-                  ? "bg-gradient-to-r from-teal-950/10 via-transparent to-transparent border-l-2 border-teal-500/40 pl-4 -ml-4"
-                  : ""
+                  ? "bg-[#13151a]/60 border-[#3ecfb2]/40"
+                  : "bg-[#13151a]/30 border-[#222630]"
               }`}
             >
-              {/* Tactical Top Tag */}
+              {/* Top Suggestion Tag */}
               {isSuggested && (
-                <span className="inline-block text-[10px] font-bold tracking-widest text-teal-400 font-mono mb-2 bg-teal-950/40 border border-teal-500/30 px-2 py-0.5 rounded-sm">
-                  {route.label}
+                <span className="inline-block text-[10px] font-bold tracking-widest text-[#3ecfb2] uppercase mb-3 bg-[rgba(62,207,178,0.06)] border border-[#3ecfb2]/20 px-2 py-0.5 rounded-md">
+                  Suggested Route
                 </span>
               )}
 
-              <div className="flex flex-col md:flex-row md:items-baseline justify-between gap-2">
-                <h2 className="text-xl font-bold tracking-tight text-white font-mono">{route.time}</h2>
-                <span className="text-xs font-mono text-zinc-400 uppercase tracking-wider">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <h2 className="text-xl font-bold tracking-tight text-white">{route.time}</h2>
+                <span className="text-xs font-semibold text-[#848d9a] tracking-wide">
                   {route.transitLines.length > 0
                     ? route.transitLines.join(" + ")
                     : route.depart}
@@ -336,10 +338,10 @@ function TripResultsContent() {
               </div>
 
               {route.hasLiveData && (
-                <div className="mt-1 flex items-center gap-1.5">
-                  <span className="h-1.5 w-1.5 rounded-full bg-teal-400 animate-pulse" />
-                  <span className="text-[10px] font-mono uppercase tracking-wider text-teal-400">
-                    Live Feed Intercepted
+                <div className="mt-2 flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#3ecfb2] animate-pulse" />
+                  <span className="text-[11px] font-medium text-[#3ecfb2]">
+                    Live updates active
                   </span>
                 </div>
               )}
@@ -347,82 +349,90 @@ function TripResultsContent() {
               {/* Graphic Timeline component */}
               <RouteLine segments={route.segments} />
 
-              {/* Micro-metrics Panel */}
-              <div className="flex gap-6 text-xs font-mono text-zinc-400">
-                <span className="flex items-center gap-1"><span className="text-zinc-600">DUR:</span> {route.duration}</span>
-                <span className="flex items-center gap-1"><span className="text-zinc-600">XFER:</span> {route.transfers}</span>
-                <span className="flex items-center gap-1"><span className="text-zinc-600">WALK:</span> {route.walk}</span>
+              {/* Metrics Panel */}
+              <div className="flex flex-wrap gap-x-6 gap-y-1.5 text-xs text-[#848d9a] font-medium pt-1">
+                <span className="flex items-center gap-1"><span className="text-[#4b5363]">Duration:</span> {route.duration}</span>
+                <span className="flex items-center gap-1"><span className="text-[#4b5363]">Transfers:</span> {route.transfers}</span>
+                <span className="flex items-center gap-1"><span className="text-[#4b5363]">Walking:</span> {route.walk}</span>
               </div>
 
-              {/* Control Deck */}
-              <div className="mt-5 flex items-center gap-4">
+              {/* Interactive buttons */}
+              <div className="mt-6 pt-4 border-t border-[#222630]/60 flex items-center gap-3">
                 <button
                   onClick={() => setExpandedRouteId(isExpanded ? null : route.id)}
-                  className="text-xs font-mono uppercase tracking-widest text-zinc-400 hover:text-white transition-colors"
+                  className="rounded-xl border border-[#222630] bg-[#0b0c0e]/40 px-4 py-2 text-xs font-semibold text-[#848d9a] hover:text-[#f3f4f6] hover:border-[#4b5363] transition-all"
                 >
-                  [{isExpanded ? "Collapse -" : "Expand +"}]
+                  {isExpanded ? "Hide Details" : "View Details"}
                 </button>
                 <button
                   onClick={() => handleSaveTrip(route)}
                   disabled={isSaving || isSaved}
-                  className="rounded border border-zinc-700 bg-zinc-900/30 px-3 py-1 text-xs font-mono uppercase tracking-wider text-zinc-300 hover:border-zinc-500 hover:bg-zinc-800/40 transition-all disabled:cursor-not-allowed disabled:border-zinc-800 disabled:text-zinc-600 disabled:bg-transparent"
+                  className="rounded-xl border border-[#222630] bg-[#0b0c0e]/40 px-4 py-2 text-xs font-semibold text-[#848d9a] hover:border-[#3ecfb2] hover:text-[#3ecfb2] transition-all disabled:cursor-not-allowed disabled:border-[#222630] disabled:text-[#4b5363] disabled:bg-transparent"
                 >
-                  {isSaved ? "Saved" : isSaving ? "Processing..." : "Save Route"}
+                  {isSaved ? "Saved to History" : isSaving ? "Saving..." : "Save Route"}
                 </button>
               </div>
 
               {/* Expanded Vertical Timeline View */}
               {isExpanded && (
-                <div className="mt-8 ml-2 pl-4 relative before:absolute before:top-2 before:bottom-2 before:left-[3px] before:w-[1px] before:bg-zinc-800 space-y-6">
+                <div className="mt-8 pt-4 border-t border-[#222630]/40 ml-1 pl-4 relative before:absolute before:top-6 before:bottom-4 before:left-[3px] before:w-[2px] before:bg-[#222630] space-y-6">
                   {route.steps.map((step, stepIndex) => (
                     <div key={`${route.id}-${stepIndex}`} className="relative text-xs pl-6">
 
-                      {/* Technical Line Node */}
-                      <span className={`absolute left-[-4px] top-[4px] h-2 w-2 rounded-full border bg-[#18181b] ${
-                        step.type === 'transit' ? 'border-teal-500' : 'border-zinc-600'
+                      {/* Timeline Hub Node */}
+                      <span className={`absolute left-[-5px] top-[4px] h-3 w-3 rounded-full border-2 bg-[#0b0c0e] ${
+                        step.type === 'transit' ? 'border-[#3ecfb2]' : 'border-[#4b5363]'
                       }`} />
 
                       {step.type === "transit" ? (
                         <div className="space-y-1">
-                          <div className="font-semibold text-white tracking-wide">
-                            {step.vehicleType?.includes("RAIL") ? "Train Service" : "Bus Service"}{" "}
-                            <span className="text-teal-400 font-mono font-bold bg-teal-950/30 px-1.5 py-0.5 rounded border border-teal-500/20 text-[10px] ml-1">
+                          <div className="font-semibold text-white tracking-wide text-sm flex flex-wrap items-center gap-2">
+                            {step.vehicleType?.includes("RAIL") ? "Train Service" : "Bus Line"}{" "}
+                            <span className="text-[#3ecfb2] font-bold bg-[rgba(62,207,178,0.06)] px-2 py-0.5 rounded-md border border-[#3ecfb2]/20 text-xs">
                               {step.lineName || "Transit"}
                             </span>
                             {step.duration && (
-                              <span className="font-mono text-[10px] text-zinc-500 uppercase ml-2">// {step.duration}</span>
+                              <span className="text-xs text-[#4b5363] font-normal">({step.duration})</span>
                             )}
                           </div>
-                          <div className="text-zinc-400 text-xs">
-                            {step.departureStop || "Origin Station"} <span className="text-zinc-600">→</span> {step.arrivalStop || "Terminus Station"}
+                          <div className="text-[#848d9a] text-xs font-medium">
+                            {step.departureStop || "Origin Station"} <span className="text-[#4b5363]">→</span> {step.arrivalStop || "Destination Station"}
                           </div>
                           {(step.departureTime || step.arrivalTime) && (
-                            <div className="text-[10px] font-mono text-zinc-500">
+                            <div className="text-xs text-[#4b5363] font-medium">
                               {step.departureTime || "--:--"} — {step.arrivalTime || "--:--"}
                             </div>
                           )}
                           {step.live && (
-                            <div className="mt-1.5 text-[10px] font-mono text-teal-400/90 flex items-center gap-1">
-                              <span>▪</span>
-                              <span>{step.live.realtimeAvailable ? "Telemetry Live" : "Scheduled Track"}</span>
+                            <div className="mt-2 text-xs text-[#3ecfb2] font-medium flex items-center gap-1.5">
+                              <span className="w-1 h-1 rounded-full bg-[#3ecfb2]" />
+                              <span>{step.live.realtimeAvailable ? "Live Schedule" : "Scheduled Time"}</span>
                               {step.live.nextDeparture && (
-                                <><span>·</span> Next Arr: {new Date(step.live.nextDeparture).toLocaleTimeString([], {
-                                  hour: "numeric",
-                                  minute: "2-digit",
-                                })}</>
+                                <>
+                                  <span className="text-[#4b5363]">·</span>
+                                  <span className="text-[#848d9a]">Next Arrival: {new Date(step.live.nextDeparture).toLocaleTimeString([], {
+                                    hour: "numeric",
+                                    minute: "2-digit",
+                                  })}</span>
+                                </>
                               )}
-                              {step.live.status && <><span className="text-zinc-600">/</span> <span className="uppercase text-teal-300">{step.live.status}</span></>}
+                              {step.live.status && (
+                                <>
+                                  <span className="text-[#4b5363]">/</span>
+                                  <span className="uppercase font-bold text-[#3ecfb2]/90">{step.live.status.toLowerCase()}</span>
+                                </>
+                              )}
                             </div>
                           )}
                         </div>
                       ) : (
-                        <div className="text-zinc-400 space-y-0.5">
-                          <div className="font-medium text-zinc-300">
-                            Pedestrian Transfer {step.distance && `(${step.distance})`}
-                            {step.duration && <span className="font-mono text-[10px] text-zinc-500 ml-2">// {step.duration}</span>}
+                        <div className="text-[#848d9a] space-y-1">
+                          <div className="font-semibold text-zinc-300 text-sm">
+                            Walk {step.distance && `(${step.distance})`}
+                            {step.duration && <span className="text-xs text-[#4b5363] font-normal ml-1.5">({step.duration})</span>}
                           </div>
                           {step.instruction && (
-                            <div className="text-zinc-500 italic text-[11px]">{step.instruction}</div>
+                            <div className="text-[#848d9a] text-xs leading-relaxed font-medium">{step.instruction}</div>
                           )}
                         </div>
                       )}
@@ -440,7 +450,11 @@ function TripResultsContent() {
 
 export default function TripResults() {
   return (
-    <Suspense fallback={<div className="p-8 text-xs font-mono text-zinc-500">SYNCHRONIZING RECONNAISSANCE...</div>}>
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center bg-[#0b0c0e] text-sm text-[#848d9a] tracking-wide" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+        Loading direct routes...
+      </div>
+    }>
       <TripResultsContent />
     </Suspense>
   );

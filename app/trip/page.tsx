@@ -77,119 +77,155 @@ function TripForm() {
   };
 
   return (
-    <main className="min-h-screen bg-[#18181b] text-zinc-100 font-sans px-6 py-16 max-w-4xl mx-auto">
-      {/* Header Deck */}
-      <div className="border-b border-zinc-800 pb-6 mb-8 flex items-center gap-4">
+    <main className="min-h-screen bg-[#0b0c0e] text-[#f3f4f6] px-6 py-16 max-w-2xl mx-auto" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+      {/* Header Navigation */}
+      <div className="border-b border-[#222630] pb-5 mb-10 flex items-center gap-4">
         <button
-          className="text-zinc-400 hover:text-white transition-colors text-sm font-mono"
+          className="text-[#848d9a] hover:text-[#f3f4f6] transition-colors text-xs uppercase tracking-wider flex items-center gap-2 font-semibold"
           onClick={() => router.push("/dashboard")}
         >
-          [← BACK]
+          <span>←</span> Back to Dashboard
         </button>
-
-        <h1 className="text-2xl font-bold tracking-tight text-white font-sans">
-          Route Planner
-        </h1>
       </div>
 
-      <div className="space-y-6">
-        {/* Core Coordinates Section (No background block, separated by thin stack lines) */}
-        <section className="space-y-5">
+      <div className="mb-10">
+        <h1 className="text-3xl font-bold tracking-tight text-white mb-2">
+          Plan Your Route
+        </h1>
+        <p className="text-sm text-[#848d9a]">Enter your travel details to find the best transit directions.</p>
+      </div>
+
+      <div className="space-y-8">
+        {/* Locations Inputs */}
+        <section className="space-y-6">
           <div>
-            <div className="mb-2 flex items-center justify-between">
-              <span className="text-[10px] font-mono font-bold tracking-widest text-zinc-500">START COORDINATES</span>
+            <div className="mb-2.5 flex items-center justify-between">
+              <label className="text-xs font-bold tracking-widest text-[#4b5363] uppercase">Starting Point</label>
               <button
                 onClick={handleUseCurrentLocation}
-                className="rounded border border-teal-500/30 bg-teal-950/10 px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider text-teal-400 transition hover:border-teal-400 hover:bg-teal-950/30"
+                className="rounded-xl bg-transparent border border-[#222630] hover:border-[#3ecfb2] px-3 py-1 text-xs text-[#848d9a] hover:text-[#3ecfb2] transition-colors flex items-center gap-2 font-medium"
               >
-                Use Current Location
+                Use current location
               </button>
             </div>
             <input
               value={start}
               onChange={(e) => setStart(e.target.value)}
-              placeholder="Enter starting location or coordinates"
-              className="w-full rounded border border-zinc-700 bg-zinc-900/40 px-3 py-2 text-sm text-zinc-100 font-mono placeholder:text-zinc-600 outline-none transition focus:border-teal-500/50 focus:bg-zinc-900"
+              placeholder="Enter street, city, or coordinates"
+              className="w-full rounded-none border-b border-[#222630] bg-transparent py-3 text-sm text-[#f3f4f6] placeholder-[#4b5363] outline-none transition-colors focus:border-[#3ecfb2]"
             />
           </div>
 
           <div>
-            <div className="mb-2">
-              <span className="text-[10px] font-mono font-bold tracking-widest text-zinc-500">TARGET DESTINATION</span>
+            <div className="mb-2.5">
+              <label className="text-xs font-bold tracking-widest text-[#4b5363] uppercase">Destination</label>
             </div>
             <input
               value={destination}
               onChange={(e) => setDestination(e.target.value)}
-              placeholder="Enter destination location"
-              className="w-full rounded border border-zinc-700 bg-zinc-900/40 px-3 py-2 text-sm text-zinc-100 font-mono placeholder:text-zinc-600 outline-none transition focus:border-teal-500/50 focus:bg-zinc-900"
+              placeholder="Where do you want to go?"
+              className="w-full rounded-none border-b border-[#222630] bg-transparent py-3 text-sm text-[#f3f4f6] placeholder-[#4b5363] outline-none transition-colors focus:border-[#3ecfb2]"
             />
           </div>
         </section>
 
-        {/* Temporal Parameters (Date / Time picker grid) */}
-        <div className="grid grid-cols-2 gap-4 pt-2">
+        {/* Date / Time Picker Grid */}
+        <div className="grid grid-cols-2 gap-6 pt-2">
           <div>
-            <p className="mb-2 text-[10px] font-mono font-bold tracking-widest text-zinc-500 uppercase">Date //</p>
+            <label className="mb-2.5 block text-xs font-bold tracking-widest text-[#4b5363] uppercase">Departure Date</label>
             <input
               type="date"
               value={tripDate}
               onChange={(e) => setTripDate(e.target.value)}
-              className="w-full rounded border border-zinc-700 bg-zinc-900/40 px-3 py-2 text-sm text-zinc-100 font-mono outline-none transition focus:border-teal-500/50 color-scheme-dark"
+              className="w-full rounded-none border-b border-[#222630] bg-transparent py-2 text-sm text-[#f3f4f6] outline-none transition-colors focus:border-[#3ecfb2] [color-scheme:dark]"
             />
           </div>
 
           <div>
-            <p className="mb-2 text-[10px] font-mono font-bold tracking-widest text-zinc-500 uppercase">Time //</p>
+            <label className="mb-2.5 block text-xs font-bold tracking-widest text-[#4b5363] uppercase">Departure Time</label>
             <input
               type="time"
               value={tripTime}
               onChange={(e) => setTripTime(e.target.value)}
-              className="w-full rounded border border-zinc-700 bg-zinc-900/40 px-3 py-2 text-sm text-zinc-100 font-mono outline-none transition focus:border-teal-500/50 color-scheme-dark"
+              className="w-full rounded-none border-b border-[#222630] bg-transparent py-2 text-sm text-[#f3f4f6] outline-none transition-colors focus:border-[#3ecfb2] [color-scheme:dark]"
             />
           </div>
         </div>
 
-        {/* Transit Network Configuration */}
+        {/* Transit Selection — Layout styled like the Navigate panel stack */}
         <div className="pt-2">
-          <p className="mb-3 text-[10px] font-mono font-bold tracking-widest text-zinc-500 uppercase">Network Protocols</p>
-          <div className="grid grid-cols-2 gap-3">
+          <label className="mb-4 block text-xs font-bold tracking-widest text-[#4b5363] uppercase">Preferred Transit</label>
+          <div className="flex flex-col border border-[#222630] bg-[#13151a]/30">
+
+            {/* OC Bus Option */}
             <button
               onClick={() => toggleTransitType("bus")}
-              className={`rounded border px-4 py-2.5 text-xs font-mono font-bold tracking-wider uppercase transition-all ${
-                transitTypes.bus
-                  ? "border-teal-500 text-teal-400 bg-teal-950/20"
-                  : "border-zinc-700 text-zinc-500 bg-transparent hover:border-zinc-500"
+              className={`w-full text-left p-5 transition-all flex items-center justify-between border-b border-[#222630] ${
+                transitTypes.bus 
+                  ? "bg-[#1c1f26]/60" 
+                  : "hover:bg-[#1c1f26]/30 opacity-60"
               }`}
             >
-              OC Bus
+              <div className="flex items-center gap-4">
+                <div
+                  className="w-1 h-5 transition-all"
+                  style={{ backgroundColor: transitTypes.bus ? "#3ecfb2" : "#4b5363" }}
+                />
+                <div>
+                  <div className="text-sm font-semibold text-white">OC Bus</div>
+                  <div className="text-xs text-[#848d9a] mt-0.5">Include local and express bus networks</div>
+                </div>
+              </div>
+              <div className="flex items-center">
+                <div className={`w-4 h-4 border flex items-center justify-center text-[10px] ${transitTypes.bus ? "border-[#3ecfb2] text-[#3ecfb2]" : "border-[#4b5363]"}`}>
+                  {transitTypes.bus && "✓"}
+                </div>
+              </div>
             </button>
 
+            {/* Metrolink Option */}
             <button
               onClick={() => toggleTransitType("train")}
-              className={`rounded border px-4 py-2.5 text-xs font-mono font-bold tracking-wider uppercase transition-all ${
-                transitTypes.train
-                  ? "border-indigo-500/50 text-indigo-400 bg-indigo-950/20"
-                  : "border-zinc-700 text-zinc-500 bg-transparent hover:border-zinc-500"
+              className={`w-full text-left p-5 transition-all flex items-center justify-between ${
+                transitTypes.train 
+                  ? "bg-[#1c1f26]/60" 
+                  : "hover:bg-[#1c1f26]/30 opacity-60"
               }`}
             >
-              Metrolink
+              <div className="flex items-center gap-4">
+                <div
+                  className="w-1 h-5 transition-all"
+                  style={{ backgroundColor: transitTypes.train ? "#3b82f6" : "#4b5363" }}
+                />
+                <div>
+                  <div className="text-sm font-semibold text-white">Metrolink</div>
+                  <div className="text-xs text-[#848d9a] mt-0.5">Include regional commuter rail lines</div>
+                </div>
+              </div>
+              <div className="flex items-center">
+                <div className={`w-4 h-4 border flex items-center justify-center text-[10px] ${transitTypes.train ? "border-[#3b82f6] text-[#3b82f6]" : "border-[#4b5363]"}`}>
+                  {transitTypes.train && "✓"}
+                </div>
+              </div>
             </button>
+
           </div>
         </div>
       </div>
 
       {formError && (
-        <div className="mt-6 rounded border border-red-500/20 bg-red-950/10 p-4 text-xs font-mono text-red-400">
-          SYSTEM_ERR // {formError}
+        <div className="mt-8 rounded-none border border-red-500/30 bg-red-950/10 p-4 text-xs tracking-wide uppercase font-semibold text-red-400 flex items-center gap-2">
+          <span>✕ Error:</span>
+          {formError}
         </div>
       )}
 
-      {/* Primary Navigation Trigger */}
+      {/* Primary Action Button — matching landing page color scheme but crisp rectangular */}
       <button
         onClick={handlePlanTrip}
-        className="mt-10 w-full rounded border border-teal-500 bg-teal-500/10 hover:bg-teal-500/20 py-3 text-xs font-mono font-bold uppercase tracking-widest text-teal-400 shadow-sm transition-all active:scale-[0.99]"
+        className="mt-12 w-full rounded-xl bg-[#3ecfb2] hover:bg-[#34b399] py-4 text-sm font-bold uppercase tracking-wider text-[#0b0c0e] transition-colors active:scale-[0.99] flex items-center justify-center gap-2"
       >
-        Execute Trajectory Planning
+        Find Routes <span>→</span>
       </button>
     </main>
   );
@@ -199,8 +235,8 @@ export default function Trip() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center bg-[#18181b] font-mono text-xs text-zinc-500 tracking-widest">
-          INITIALIZING GEOLOCATION SYSTEMS...
+        <div className="flex min-h-screen items-center justify-center bg-[#0b0c0e] text-xs uppercase tracking-widest text-[#848d9a]" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+          Loading interface...
         </div>
       }
     >

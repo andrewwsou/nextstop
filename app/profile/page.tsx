@@ -146,71 +146,47 @@ export default function Profile() {
   const isInfoModal = modal === "about" || modal === "privacy";
 
   return (
-    <main
-      className="profile-main"
-      style={{
-        minHeight: "100vh",
-        padding: "80px 5rem 2.5rem",
-        background: "#0d1210",
-        color: "white",
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: "3rem" }}>
-        <div style={{
-          width: 72, height: 72, borderRadius: "50%",
-          background: "#1a2e28", border: "1px solid #2a4a3e",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          fontSize: "1.6rem", fontWeight: 700, color: "#3ecfb2",
-          flexShrink: 0,
-        }}>
+    <main className="profile-main min-h-screen bg-[#0b0c0e] text-[#f3f4f6] px-20 py-16 max-w-5xl mx-auto" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+
+      {/* User Header Section */}
+      <div className="flex items-center gap-4 mb-12">
+        <div className="w-16 h-16 rounded-full bg-[#13151a] border border-[#222630] flex items-center justify-center text-2xl font-bold text-[#3ecfb2] shrink-0">
           {user?.first_name?.[0] || "U"}
         </div>
-        <div style={{ minWidth: 0 }}>
-          <p style={{ margin: 0, fontSize: "1.4rem", fontWeight: 700, wordBreak: "break-word" }}>
+        <div className="min-w-0">
+          <p className="margin-0 text-xl font-bold tracking-tight text-white break-words">
             {user?.first_name} {user?.last_name}
           </p>
-          <p style={{ margin: "4px 0 0", fontSize: "0.85rem", color: "#555", wordBreak: "break-all" }}>
+          <p className="margin-0 text-sm text-[#848d9a] mt-1 break-all font-medium">
             {user?.email}
           </p>
         </div>
       </div>
 
-      <div
-        className="profile-grid"
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr 1fr",
-          gap: 24,
-          alignItems: "start",
-        }}
-      >
+      {/* Settings Panel Grid */}
+      <div className="profile-grid grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
         {sections.map(s => (
           <div key={s.label}>
-            <p style={{
-              margin: "0 0 10px",
-              fontSize: "0.72rem", color: "#444",
-              textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 700,
-            }}>
+            <p className="mb-3 text-xs font-bold tracking-widest text-[#4b5363] uppercase">
               {s.label}
             </p>
-            <div style={{
-              background: "#111a17", border: "1px solid #1a2e28",
-              borderRadius: 14, overflow: "hidden",
-            }}>
+            <div className="bg-[#13151a]/40 border border-[#222630] rounded-xl overflow-hidden">
               {s.items.map((item, i) => (
                 <div
                   key={item}
                   onClick={() => onRowClick(item)}
-                  style={{
-                    padding: "16px 20px",
-                    borderBottom: i < s.items.length - 1 ? "1px solid #1a2e28" : "none",
-                    display: "flex", justifyContent: "space-between", alignItems: "center",
-                    cursor: "pointer", fontSize: "0.9rem",
-                    color: item === "Sign out" ? "#ef4444" : "white",
-                  }}
+                  className={`px-5 py-4 flex justify-between items-center cursor-pointer text-sm font-semibold transition-colors ${
+                    i < s.items.length - 1 ? "border-b border-[#222630]/60" : ""
+                  } ${
+                    item === "Sign out" 
+                      ? "text-red-400 hover:bg-red-950/10" 
+                      : "text-[#f3f4f6] hover:bg-[#1c1f26]/40"
+                  }`}
                 >
                   {item}
-                  {item !== "Sign out" && <span style={{ color: "#333" }}>›</span>}
+                  {item !== "Sign out" && (
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4b5363" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                  )}
                 </div>
               ))}
             </div>
@@ -218,25 +194,17 @@ export default function Profile() {
         ))}
       </div>
 
+      {/* Action / Information Modals */}
       {modal && (
         <div
-          style={{
-            position: "fixed", inset: 0, zIndex: 200,
-            background: "rgba(0,0,0,0.6)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            padding: "0 1rem",
-          }}
+          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4"
           onClick={() => setModal(null)}
         >
           <div
-            className="profile-modal"
-            style={{
-              width: 400, background: "#111a17", border: "1px solid #1a2e28",
-              borderRadius: 14, padding: "1.5rem",
-            }}
+            className="profile-modal w-full max-w-md bg-[#13151a] border border-[#222630] rounded-xl p-6 shadow-xl"
             onClick={e => e.stopPropagation()}
           >
-            <h2 style={{ margin: "0 0 1rem", fontSize: "1.1rem" }}>
+            <h2 className="text-lg font-bold text-white mb-4">
               {modal === "name" && "Edit name"}
               {modal === "email" && "Change email"}
               {modal === "password" && "Change password"}
@@ -244,25 +212,21 @@ export default function Profile() {
               {modal === "privacy" && "Privacy policy"}
             </h2>
 
-            {error && <p style={{ color: "#ef4444", fontSize: "0.85rem" }}>{error}</p>}
+            {error && (
+              <div className="mb-4 rounded-xl border border-red-500/20 bg-red-950/10 p-3 text-sm text-red-400 flex items-center gap-2 font-medium">
+                <span>✕</span> {error}
+              </div>
+            )}
 
+            {/* About App Modal Content */}
             {modal === "about" && (
-              <div style={{ display: "grid", gap: 14 }}>
+              <div className="space-y-4">
                 {aboutSections.map(section => (
                   <section key={section.title}>
-                    <h3 style={{
-                      margin: "0 0 6px",
-                      fontSize: "0.9rem",
-                      color: "#3ecfb2",
-                    }}>
+                    <h3 className="text-xs font-bold tracking-wider text-[#3ecfb2] uppercase mb-1">
                       {section.title}
                     </h3>
-                    <p style={{
-                      margin: 0,
-                      fontSize: "0.88rem",
-                      lineHeight: 1.55,
-                      color: "#b8c5c1",
-                    }}>
+                    <p className="text-sm leading-relaxed text-[#848d9a] font-medium">
                       {section.body}
                     </p>
                   </section>
@@ -270,23 +234,15 @@ export default function Profile() {
               </div>
             )}
 
+            {/* Privacy Modal Content */}
             {modal === "privacy" && (
-              <div style={{ display: "grid", gap: 14 }}>
+              <div className="space-y-4">
                 {privacySections.map(section => (
                   <section key={section.title}>
-                    <h3 style={{
-                      margin: "0 0 6px",
-                      fontSize: "0.9rem",
-                      color: "#3ecfb2",
-                    }}>
+                    <h3 className="text-xs font-bold tracking-wider text-[#3ecfb2] uppercase mb-1">
                       {section.title}
                     </h3>
-                    <p style={{
-                      margin: 0,
-                      fontSize: "0.88rem",
-                      lineHeight: 1.55,
-                      color: "#b8c5c1",
-                    }}>
+                    <p className="text-sm leading-relaxed text-[#848d9a] font-medium">
                       {section.body}
                     </p>
                   </section>
@@ -294,57 +250,85 @@ export default function Profile() {
               </div>
             )}
 
+            {/* Edit Name Fields */}
             {modal === "name" && (
-              <>
-                <input className="input" placeholder="First name" value={firstName}
-                  onChange={e => setFirstName(e.target.value)} />
-                <input className="input" placeholder="Last name" value={lastName}
-                  onChange={e => setLastName(e.target.value)} style={{ marginTop: 10 }} />
-              </>
+              <div className="space-y-3">
+                <input
+                  placeholder="First name"
+                  value={firstName}
+                  onChange={e => setFirstName(e.target.value)}
+                  className="w-full rounded-xl border border-[#222630] bg-[#0b0c0e] px-4 py-3 text-sm text-[#f3f4f6] placeholder-[#4b5363] outline-none transition focus:border-[#3ecfb2]"
+                />
+                <input
+                  placeholder="Last name"
+                  value={lastName}
+                  onChange={e => setLastName(e.target.value)}
+                  className="w-full rounded-xl border border-[#222630] bg-[#0b0c0e] px-4 py-3 text-sm text-[#f3f4f6] placeholder-[#4b5363] outline-none transition focus:border-[#3ecfb2]"
+                />
+              </div>
             )}
 
+            {/* Change Email Fields */}
             {modal === "email" && (
-              <>
-                <input className="input" type="email" placeholder="New email" value={email}
-                  onChange={e => setEmail(e.target.value)} />
-                <input className="input" type="password" placeholder="Current password"
-                  value={password} onChange={e => setPassword(e.target.value)}
-                  style={{ marginTop: 10 }} />
-              </>
+              <div className="space-y-3">
+                <input
+                  type="email"
+                  placeholder="New email address"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  className="w-full rounded-xl border border-[#222630] bg-[#0b0c0e] px-4 py-3 text-sm text-[#f3f4f6] placeholder-[#4b5363] outline-none transition focus:border-[#3ecfb2]"
+                />
+                <input
+                  type="password"
+                  placeholder="Current password"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  className="w-full rounded-xl border border-[#222630] bg-[#0b0c0e] px-4 py-3 text-sm text-[#f3f4f6] placeholder-[#4b5363] outline-none transition focus:border-[#3ecfb2]"
+                />
+              </div>
             )}
 
+            {/* Change Password Fields */}
             {modal === "password" && (
-              <>
-                <input className="input" type="password" placeholder="Current password"
-                  value={password} onChange={e => setPassword(e.target.value)} />
-                <input className="input" type="password" placeholder="New password"
-                  value={newPassword} onChange={e => setNewPassword(e.target.value)}
-                  style={{ marginTop: 10 }} />
-                <input className="input" type="password" placeholder="Confirm new password"
-                  value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
-                  style={{ marginTop: 10 }} />
-              </>
+              <div className="space-y-3">
+                <input
+                  type="password"
+                  placeholder="Current password"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  className="w-full rounded-xl border border-[#222630] bg-[#0b0c0e] px-4 py-3 text-sm text-[#f3f4f6] placeholder-[#4b5363] outline-none transition focus:border-[#3ecfb2]"
+                />
+                <input
+                  type="password"
+                  placeholder="New password"
+                  value={newPassword}
+                  onChange={e => setNewPassword(e.target.value)}
+                  className="w-full rounded-xl border border-[#222630] bg-[#0b0c0e] px-4 py-3 text-sm text-[#f3f4f6] placeholder-[#4b5363] outline-none transition focus:border-[#3ecfb2]"
+                />
+                <input
+                  type="password"
+                  placeholder="Confirm new password"
+                  value={confirmPassword}
+                  onChange={e => setConfirmPassword(e.target.value)}
+                  className="w-full rounded-xl border border-[#222630] bg-[#0b0c0e] px-4 py-3 text-sm text-[#f3f4f6] placeholder-[#4b5363] outline-none transition focus:border-[#3ecfb2]"
+                />
+              </div>
             )}
 
-            <div style={{ display: "flex", gap: 10, marginTop: "1rem" }}>
+            {/* Modal Buttons */}
+            <div className="flex gap-3 mt-6">
               <button
                 onClick={() => setModal(null)}
-                style={{
-                  flex: 1, padding: 12, borderRadius: 10,
-                  border: "1px solid #1a2e28", background: "transparent", color: "#888",
-                }}
+                className="flex-1 rounded-xl border border-[#222630] bg-transparent hover:bg-[#1c1f26]/40 py-3 text-sm font-semibold text-[#848d9a] hover:text-[#f3f4f6] transition-colors"
               >
                 {isInfoModal ? "Close" : "Cancel"}
               </button>
               {!isInfoModal && (
                 <button
                   onClick={handleSave}
-                  style={{
-                    flex: 1, padding: 12, borderRadius: 10, border: "none",
-                    background: "#3ecfb2", color: "#0d1210", fontWeight: 700,
-                  }}
+                  className="flex-1 rounded-xl bg-[#3ecfb2] hover:bg-[#34b399] py-3 text-sm font-bold text-[#0b0c0e] transition-colors"
                 >
-                  Save
+                  Save Changes
                 </button>
               )}
             </div>
@@ -352,6 +336,7 @@ export default function Profile() {
         </div>
       )}
 
+      {/* Styled Responsive Overrides */}
       <style>{`
         @media (max-width: 768px) {
           .profile-main {
@@ -359,9 +344,6 @@ export default function Profile() {
           }
           .profile-grid {
             grid-template-columns: 1fr !important;
-          }
-          .profile-modal {
-            width: calc(100vw - 2rem) !important;
           }
         }
       `}</style>
