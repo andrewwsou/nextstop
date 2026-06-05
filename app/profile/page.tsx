@@ -13,7 +13,6 @@ type User = {
 
 const sections = [
   { label: "Account", items: ["Edit name", "Change email", "Change password"] },
-  { label: "Preferences", items: ["Default transit modes", "Notification settings", "Home & work locations"] },
   { label: "App", items: ["About NextStop", "Privacy policy", "Sign out"] },
 ];
 
@@ -164,7 +163,7 @@ export default function Profile() {
       </div>
 
       {/* Settings Panel Grid */}
-      <div className="profile-grid grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+      <div className="profile-grid grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
         {sections.map(s => (
           <div key={s.label}>
             <p className="mb-3 text-xs font-bold tracking-widest text-[#4b5363] uppercase">

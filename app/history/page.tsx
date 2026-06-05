@@ -105,7 +105,7 @@ function RouteStepDetails({ step }: { step: RouteSummaryStep }) {
   if (step.type === "walking") {
     return (
       <div className="text-xs text-zinc-400 flex gap-2 font-mono uppercase tracking-wider">
-        <span className="text-zinc-600">WK //</span>
+        <span className="text-zinc-600">Walk</span>
         <span>
           {step.distance || "Walking segment"}
           {step.duration ? ` · ${step.duration}` : ""}
@@ -137,7 +137,7 @@ function RouteStepDetails({ step }: { step: RouteSummaryStep }) {
       {step.live && (
         <div className="text-[10px] font-mono text-teal-400 mt-0.5 flex items-center gap-1">
           <span className="h-1 w-1 rounded-full bg-teal-400 animate-pulse" />
-          <span>{step.live.realtimeAvailable ? "Telemetry Active" : "Scheduled Track"}</span>
+          <span>{step.live.realtimeAvailable ? "Live updates" : "Scheduled times"}</span>
           {step.live.status ? ` · ${step.live.status}` : ""}
         </div>
       )}
@@ -305,11 +305,22 @@ export default function History() {
 
   return (
     <main className="min-h-screen bg-[#0b0c0e] text-[#f3f4f6] px-6 py-16 max-w-4xl mx-auto" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+      {/* Header Navigation */}
+      <div className="border-b border-[#222630] pb-5 mb-10 flex items-center gap-4">
+        <button
+          className="text-[#848d9a] hover:text-[#f3f4f6] transition-colors text-xs uppercase tracking-wider flex items-center gap-2 font-semibold"
+          onClick={() => router.push("/dashboard")}
+        >
+          <span>←</span> Back to Dashboard
+        </button>
+      </div>
+
       {/* Title */}
-      <div className="border-b border-[#222630] pb-6 mb-8">
-        <h1 className="text-3xl font-bold tracking-tight text-white">
+      <div className="mb-10">
+        <h1 className="text-3xl font-bold tracking-tight text-white mb-2">
           Trip History
         </h1>
+        <p className="text-sm text-[#848d9a]">Review, edit, and revisit your saved trips.</p>
       </div>
 
       {loading && <p className="text-sm text-[#848d9a] font-medium">Loading saved trips...</p>}

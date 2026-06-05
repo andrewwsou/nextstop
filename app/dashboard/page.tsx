@@ -350,7 +350,7 @@ export default function Dashboard() {
 
         .dashboard-main {
           min-height: 100vh;
-          padding: 60px 2rem 4rem;
+          padding: 76px 2rem 4rem;
           background-color: var(--bg-main);
           color: var(--text-main);
           display: flex;
@@ -825,7 +825,7 @@ export default function Dashboard() {
         .schedule-mobile-fallback { display: none; }
         @media (max-width: 768px) { 
           .trips-grid { grid-template-columns: 1fr !important; gap: 32px; } 
-          .dashboard-main { padding: 40px 1.25rem; }
+          .dashboard-main { padding: 72px 1.25rem 40px; }
         }
       `}</style>
     </main>
