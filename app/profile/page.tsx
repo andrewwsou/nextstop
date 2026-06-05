@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useRequireAuth, getUser, logout } from "../lib/auth";
 import { updateName, updateEmail, updatePassword } from "../lib/api";
 
-type ModalType = "name" | "email" | "password" | "about";
+type ModalType = "name" | "email" | "password" | "about" | "privacy";
 type User = {
   first_name?: string;
   last_name?: string;
@@ -19,16 +19,27 @@ const sections = [
 
 const aboutSections = [
   {
-    title: "What NextStop does",
+    title: "What is NextStop",
     body: "NextStop helps UCI and OC riders plan trips without bouncing between a bunch of tabs. You can look for routes, check transit options, and keep track of the trips you care about.",
   },
   {
-    title: "Why it exists",
-    body: "The goal is simple: make local transit feel less confusing. It is built for quick decisions, like figuring out how to get across campus, around Irvine, or somewhere nearby without guessing.",
+    title: "Our Goal",
+    body: "It's simple: to make local transit less confusing. It is built for quick decisions, like figuring out how to get across campus, around Irvine, or somewhere nearby without feeling hopeless.",
   },
   {
-    title: "Still being improved",
-    body: "Some parts are intentionally lightweight right now while the core features come together. More settings, saved preferences, and smarter trip tools can be added from this profile area next.",
+    title: "In Progress",
+    body: "We plan on having more settings, better preferences, and smarter trip features in the near future!",
+  },
+];
+
+const privacySections = [
+  {
+    title: "What NextStop saves",
+    body: "NextStop keeps the basic information needed for your account, including your name and email. When you use trip features, it may also save trips, places, or route details so the app can remember them later.",
+  },
+  {
+    title: "How that info is used",
+    body: "The app uses your information to keep you signed in, display your profile, and make transit tools more personalized. It is meant strictly for app features.",
   },
 ];
 
@@ -71,6 +82,9 @@ export default function Profile() {
     }
     if (item === "About NextStop") {
       setModal("about");
+    }
+    if (item === "Privacy policy") {
+      setModal("privacy");
     }
   }
 
@@ -129,7 +143,7 @@ export default function Profile() {
     }
   }
 
-  const isInfoModal = modal === "about";
+  const isInfoModal = modal === "about" || modal === "privacy";
 
   return (
     <main style={{
@@ -219,6 +233,7 @@ export default function Profile() {
               {modal === "email" && "Change email"}
               {modal === "password" && "Change password"}
               {modal === "about" && "About NextStop"}
+              {modal === "privacy" && "Privacy policy"}
             </h2>
 
             {error && <p style={{ color: "#ef4444", fontSize: "0.85rem" }}>{error}</p>}
@@ -226,6 +241,30 @@ export default function Profile() {
             {modal === "about" && (
               <div style={{ display: "grid", gap: 14 }}>
                 {aboutSections.map(section => (
+                  <section key={section.title}>
+                    <h3 style={{
+                      margin: "0 0 6px",
+                      fontSize: "0.9rem",
+                      color: "#3ecfb2",
+                    }}>
+                      {section.title}
+                    </h3>
+                    <p style={{
+                      margin: 0,
+                      fontSize: "0.88rem",
+                      lineHeight: 1.55,
+                      color: "#b8c5c1",
+                    }}>
+                      {section.body}
+                    </p>
+                  </section>
+                ))}
+              </div>
+            )}
+
+            {modal === "privacy" && (
+              <div style={{ display: "grid", gap: 14 }}>
+                {privacySections.map(section => (
                   <section key={section.title}>
                     <h3 style={{
                       margin: "0 0 6px",
