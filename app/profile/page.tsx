@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useRequireAuth, getUser, logout } from "../lib/auth";
 import { updateName, updateEmail, updatePassword } from "../lib/api";
@@ -57,68 +57,46 @@ export default function Profile() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
+  // focus modal when it opens so tab order starts inside it
+  const modalRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (modal) modalRef.current?.focus();
+  }, [modal]);
+
   useEffect(() => {
     setUser(getUser());
   }, []);
 
   function onRowClick(item: string) {
-    if (item === "Sign out") {
-      logout(router);
-      return;
-    }
+    if (item === "Sign out") { logout(router); return; }
     setError("");
     setPassword("");
     setNewPassword("");
     setConfirmPassword("");
 
-    if (item === "Edit name") {
-      setFirstName(user?.first_name || "");
-      setLastName(user?.last_name || "");
-      setModal("name");
-    }
-    if (item === "Change email") {
-      setEmail(user?.email || "");
-      setModal("email");
-    }
-    if (item === "Change password") {
-      setModal("password");
-    }
-    if (item === "About NextStop") {
-      setModal("about");
-    }
-    if (item === "Privacy policy") {
-      setModal("privacy");
-    }
+    if (item === "Edit name") { setFirstName(user?.first_name || ""); setLastName(user?.last_name || ""); setModal("name"); }
+    if (item === "Change email") { setEmail(user?.email || ""); setModal("email"); }
+    if (item === "Change password") setModal("password");
+    if (item === "About NextStop") setModal("about");
+    if (item === "Privacy policy") setModal("privacy");
   }
 
   async function handleSave() {
     setError("");
 
     if (modal === "name") {
-      if (!firstName) {
-        setError("First name is required");
-        return;
-      }
+      if (!firstName) { setError("First name is required"); return; }
       const res = await updateName({ first_name: firstName, last_name: lastName });
-      if (res.error) {
-        setError(res.error);
-        return;
-      }
+      if (res.error) { setError(res.error); return; }
       localStorage.setItem("user", JSON.stringify(res));
       setUser(res);
       setModal(null);
     }
 
     if (modal === "email") {
-      if (!email || !password) {
-        setError("Email and current password are required");
-        return;
-      }
+      if (!email || !password) { setError("Email and current password are required"); return; }
       const res = await updateEmail({ email, password });
-      if (res.error) {
-        setError(res.error);
-        return;
-      }
+      if (res.error) { setError(res.error); return; }
       localStorage.setItem("user", JSON.stringify(res.user));
       localStorage.setItem("token", res.token);
       setUser(res.user);
@@ -126,22 +104,10 @@ export default function Profile() {
     }
 
     if (modal === "password") {
-      if (!password || !newPassword) {
-        setError("Fill in all password fields");
-        return;
-      }
-      if (newPassword !== confirmPassword) {
-        setError("New passwords do not match");
-        return;
-      }
-      const res = await updatePassword({
-        current_password: password,
-        new_password: newPassword,
-      });
-      if (res.error) {
-        setError(res.error);
-        return;
-      }
+      if (!password || !newPassword) { setError("Fill in all password fields"); return; }
+      if (newPassword !== confirmPassword) { setError("New passwords do not match"); return; }
+      const res = await updatePassword({ current_password: password, new_password: newPassword });
+      if (res.error) { setError(res.error); return; }
       setModal(null);
     }
   }
@@ -151,9 +117,12 @@ export default function Profile() {
   return (
     <main className="profile-main min-h-screen bg-[#0b0c0e] text-[#f3f4f6] px-20 py-16 max-w-5xl mx-auto" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
 
-      {/* User Header Section */}
+      {/* Page heading — sr-only but first in DOM so it's announced on page load */}
+      <h1 tabIndex={0} className="sr-only">Profile</h1>
+
+      {/* Avatar is decorative, name/email carry the actual info */}
       <div className="flex items-center gap-4 mb-12">
-        <div className="w-16 h-16 rounded-full bg-[#13151a] border border-[#222630] flex items-center justify-center text-2xl font-bold text-[#3ecfb2] shrink-0">
+        <div aria-hidden="true" className="w-16 h-16 rounded-full bg-[#13151a] border border-[#222630] flex items-center justify-center text-2xl font-bold text-[#3ecfb2] shrink-0">
           {user?.first_name?.[0] || "U"}
         </div>
         <div className="min-w-0">
@@ -166,48 +135,60 @@ export default function Profile() {
         </div>
       </div>
 
-      {/* Settings Panel Grid */}
+      {/* Settings sections */}
       <div className="profile-grid grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
         {sections.map(s => (
-          <div key={s.label}>
-            <p className="mb-3 text-xs font-bold tracking-widest text-[#4b5363] uppercase">
+          <section key={s.label} aria-labelledby={`section-${s.label}`}>
+            <h2
+              id={`section-${s.label}`}
+              tabIndex={0}
+              className="mb-3 text-xs font-bold tracking-widest text-[#4b5363] uppercase focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#3ecfb2] rounded"
+            >
               {s.label}
-            </p>
+            </h2>
             <div className="bg-[#13151a]/40 border border-[#222630] rounded-xl overflow-hidden">
               {s.items.map((item, i) => (
-                <div
+                <button
                   key={item}
                   onClick={() => onRowClick(item)}
-                  className={`px-5 py-4 flex justify-between items-center cursor-pointer text-sm font-semibold transition-colors ${
+                  className={`w-full px-5 py-4 flex justify-between items-center text-sm font-semibold transition-colors text-left box-border focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#3ecfb2] focus-visible:outline-offset-[-2px] ${
                     i < s.items.length - 1 ? "border-b border-[#222630]/60" : ""
                   } ${
-                    item === "Sign out" 
-                      ? "text-red-400 hover:bg-red-950/10" 
+                    item === "Sign out"
+                      ? "text-red-400 hover:bg-red-950/10"
                       : "text-[#f3f4f6] hover:bg-[#1c1f26]/40"
                   }`}
                 >
                   {item}
                   {item !== "Sign out" && (
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4b5363" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                    <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4b5363" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="m9 18 6-6-6-6"/>
+                    </svg>
                   )}
-                </div>
+                </button>
               ))}
             </div>
-          </div>
+          </section>
         ))}
       </div>
 
-      {/* Action / Information Modals */}
+      {/* Modal */}
       {modal && (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="modal-title"
           className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4"
           onClick={() => setModal(null)}
+          onKeyDown={(e) => { if (e.key === "Escape") setModal(null); }}
         >
           <div
-            className="profile-modal w-full max-w-md bg-[#13151a] border border-[#222630] rounded-xl p-6 shadow-xl"
+            ref={modalRef}
+            tabIndex={-1}
+            className="profile-modal w-full max-w-md bg-[#13151a] border border-[#222630] rounded-xl p-6 shadow-xl outline-none"
             onClick={e => e.stopPropagation()}
           >
-            <h2 className="text-lg font-bold text-white mb-4">
+            <h2 id="modal-title" className="text-lg font-bold text-white mb-4">
               {modal === "name" && "Edit name"}
               {modal === "email" && "Change email"}
               {modal === "password" && "Change password"}
@@ -216,53 +197,46 @@ export default function Profile() {
             </h2>
 
             {error && (
-              <div className="mb-4 rounded-xl border border-red-500/20 bg-red-950/10 p-3 text-sm text-red-400 flex items-center gap-2 font-medium">
-                <span>✕</span> {error}
+              <div role="alert" className="mb-4 rounded-xl border border-red-500/20 bg-red-950/10 p-3 text-sm text-red-400 flex items-center gap-2 font-medium">
+                <span aria-hidden="true">✕</span> {error}
               </div>
             )}
 
-            {/* About App Modal Content */}
             {modal === "about" && (
               <div className="space-y-4">
                 {aboutSections.map(section => (
                   <section key={section.title}>
-                    <h3 className="text-xs font-bold tracking-wider text-[#3ecfb2] uppercase mb-1">
-                      {section.title}
-                    </h3>
-                    <p className="text-sm leading-relaxed text-[#848d9a] font-medium">
-                      {section.body}
-                    </p>
+                    <h3 className="text-xs font-bold tracking-wider text-[#3ecfb2] uppercase mb-1">{section.title}</h3>
+                    <p className="text-sm leading-relaxed text-[#848d9a] font-medium">{section.body}</p>
                   </section>
                 ))}
               </div>
             )}
 
-            {/* Privacy Modal Content */}
             {modal === "privacy" && (
               <div className="space-y-4">
                 {privacySections.map(section => (
                   <section key={section.title}>
-                    <h3 className="text-xs font-bold tracking-wider text-[#3ecfb2] uppercase mb-1">
-                      {section.title}
-                    </h3>
-                    <p className="text-sm leading-relaxed text-[#848d9a] font-medium">
-                      {section.body}
-                    </p>
+                    <h3 className="text-xs font-bold tracking-wider text-[#3ecfb2] uppercase mb-1">{section.title}</h3>
+                    <p className="text-sm leading-relaxed text-[#848d9a] font-medium">{section.body}</p>
                   </section>
                 ))}
               </div>
             )}
 
-            {/* Edit Name Fields */}
             {modal === "name" && (
               <div className="space-y-3">
+                <label htmlFor="first-name" className="sr-only">First name</label>
                 <input
+                  id="first-name"
                   placeholder="First name"
                   value={firstName}
                   onChange={e => setFirstName(e.target.value)}
                   className="w-full rounded-xl border border-[#222630] bg-[#0b0c0e] px-4 py-3 text-sm text-[#f3f4f6] placeholder-[#4b5363] outline-none transition focus:border-[#3ecfb2]"
                 />
+                <label htmlFor="last-name" className="sr-only">Last name</label>
                 <input
+                  id="last-name"
                   placeholder="Last name"
                   value={lastName}
                   onChange={e => setLastName(e.target.value)}
@@ -271,17 +245,20 @@ export default function Profile() {
               </div>
             )}
 
-            {/* Change Email Fields */}
             {modal === "email" && (
               <div className="space-y-3">
+                <label htmlFor="new-email" className="sr-only">New email address</label>
                 <input
+                  id="new-email"
                   type="email"
                   placeholder="New email address"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   className="w-full rounded-xl border border-[#222630] bg-[#0b0c0e] px-4 py-3 text-sm text-[#f3f4f6] placeholder-[#4b5363] outline-none transition focus:border-[#3ecfb2]"
                 />
+                <label htmlFor="current-password-email" className="sr-only">Current password</label>
                 <input
+                  id="current-password-email"
                   type="password"
                   placeholder="Current password"
                   value={password}
@@ -291,24 +268,29 @@ export default function Profile() {
               </div>
             )}
 
-            {/* Change Password Fields */}
             {modal === "password" && (
               <div className="space-y-3">
+                <label htmlFor="current-password" className="sr-only">Current password</label>
                 <input
+                  id="current-password"
                   type="password"
                   placeholder="Current password"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   className="w-full rounded-xl border border-[#222630] bg-[#0b0c0e] px-4 py-3 text-sm text-[#f3f4f6] placeholder-[#4b5363] outline-none transition focus:border-[#3ecfb2]"
                 />
+                <label htmlFor="new-password" className="sr-only">New password</label>
                 <input
+                  id="new-password"
                   type="password"
                   placeholder="New password"
                   value={newPassword}
                   onChange={e => setNewPassword(e.target.value)}
                   className="w-full rounded-xl border border-[#222630] bg-[#0b0c0e] px-4 py-3 text-sm text-[#f3f4f6] placeholder-[#4b5363] outline-none transition focus:border-[#3ecfb2]"
                 />
+                <label htmlFor="confirm-password" className="sr-only">Confirm new password</label>
                 <input
+                  id="confirm-password"
                   type="password"
                   placeholder="Confirm new password"
                   value={confirmPassword}
@@ -318,18 +300,17 @@ export default function Profile() {
               </div>
             )}
 
-            {/* Modal Buttons */}
             <div className="flex gap-3 mt-6">
               <button
                 onClick={() => setModal(null)}
-                className="flex-1 rounded-xl border border-[#222630] bg-transparent hover:bg-[#1c1f26]/40 py-3 text-sm font-semibold text-[#848d9a] hover:text-[#f3f4f6] transition-colors"
+                className="flex-1 rounded-xl border border-[#222630] bg-transparent hover:bg-[#1c1f26]/40 py-3 text-sm font-semibold text-[#848d9a] hover:text-[#f3f4f6] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#3ecfb2]"
               >
                 {isInfoModal ? "Close" : "Cancel"}
               </button>
               {!isInfoModal && (
                 <button
                   onClick={handleSave}
-                  className="flex-1 rounded-xl bg-[#3ecfb2] hover:bg-[#34b399] py-3 text-sm font-bold text-[#0b0c0e] transition-colors"
+                  className="flex-1 rounded-xl bg-[#3ecfb2] hover:bg-[#34b399] py-3 text-sm font-bold text-[#0b0c0e] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#3ecfb2]"
                 >
                   Save Changes
                 </button>
@@ -339,15 +320,21 @@ export default function Profile() {
         </div>
       )}
 
-      {/* Styled Responsive Overrides */}
       <style>{`
+        .sr-only {
+          position: absolute;
+          width: 1px;
+          height: 1px;
+          padding: 0;
+          margin: -1px;
+          overflow: hidden;
+          clip: rect(0,0,0,0);
+          white-space: nowrap;
+          border: 0;
+        }
         @media (max-width: 768px) {
-          .profile-main {
-            padding: 80px 1.25rem 2rem !important;
-          }
-          .profile-grid {
-            grid-template-columns: 1fr !important;
-          }
+          .profile-main { padding: 80px 1.25rem 2rem !important; }
+          .profile-grid { grid-template-columns: 1fr !important; }
         }
       `}</style>
     </main>

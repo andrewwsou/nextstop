@@ -118,25 +118,37 @@ export default function Navbar() {
 
   return (
     <>
-      <nav style={styles.nav}>
-        <Link href="/dashboard" style={styles.logo}>
-          <span style={styles.logoText}>NextStop</span>
-          <span style={styles.logoSub}>UCI + OC Transit</span>
+      {/* role="navigation" + aria-label distinguishes this from any other nav on the page */}
+      <nav role="navigation" aria-label="Main navigation" style={styles.nav}>
+
+        {/* Logo — "NextStop" is enough, hide the redundant subtitle */}
+        <Link href="/dashboard" style={styles.logo} aria-label="NextStop, go to dashboard">
+          <span style={styles.logoText} aria-hidden="true">NextStop</span>
+          <span style={styles.logoSub} aria-hidden="true">UCI + OC Transit</span>
         </Link>
 
+        {/* Desktop links — aria-current tells screen readers which page is active */}
         <div className="nav-desktop-links" style={styles.desktopLinks}>
           {links.map(l => (
-            <Link key={l.href} href={l.href} style={navLink(pathname === l.href)}>
+            <Link
+              key={l.href}
+              href={l.href}
+              style={navLink(pathname === l.href)}
+              aria-current={pathname === l.href ? "page" : undefined}
+            >
               {l.label}
             </Link>
           ))}
         </div>
 
+        {/* Hamburger — aria-expanded tells screen readers whether the menu is open */}
         <button
           className="nav-hamburger"
           style={styles.hamburger}
           onClick={() => setMenuOpen(!menuOpen)}
-          aria-label="Toggle menu"
+          aria-label="Toggle navigation menu"
+          aria-expanded={menuOpen}
+          aria-controls="mobile-menu"
         >
           <Bar open={menuOpen} rotate="rotate(45deg) translate(5px, 5px)" />
           <Bar open={menuOpen} hide />
@@ -144,8 +156,11 @@ export default function Navbar() {
         </button>
       </nav>
 
+      {/* Mobile menu — id matches aria-controls above */}
       <div
+        id="mobile-menu"
         className="nav-mobile-menu"
+        aria-hidden={!menuOpen}
         style={{
           ...styles.mobileMenu,
           maxHeight: menuOpen ? 400 : 0,
@@ -158,7 +173,9 @@ export default function Navbar() {
             key={l.href}
             href={l.href}
             style={mobileLink(pathname === l.href)}
+            aria-current={pathname === l.href ? "page" : undefined}
             onClick={() => setMenuOpen(false)}
+            tabIndex={menuOpen ? 0 : -1}
           >
             {l.label}
           </Link>
@@ -170,6 +187,16 @@ export default function Navbar() {
           .nav-desktop-links { display: none !important; }
           .nav-hamburger { display: flex !important; }
           .nav-mobile-menu { display: flex !important; }
+        }
+        a:focus-visible {
+          outline: 2px solid #3ecfb2;
+          outline-offset: 2px;
+          border-radius: 6px;
+        }
+        button:focus-visible {
+          outline: 2px solid #3ecfb2;
+          outline-offset: 2px;
+          border-radius: 6px;
         }
       `}</style>
     </>
