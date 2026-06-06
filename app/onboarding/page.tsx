@@ -165,31 +165,6 @@ export default function Onboarding() {
           <div style={{ marginTop: 10 }}>
             <AuthButton text="Sign In" variant="secondary" onClick={() => router.push("/login")} />
           </div>
-          {/* Back button*/}
-          <button
-            onClick={() => router.push("/")}
-            style={{
-              marginTop: 16,
-              background: "none",
-              border: "none",
-              color: "#848d9a",
-              fontSize: "0.75rem",
-              fontWeight: 600,
-              letterSpacing: "0.06em",
-              textTransform: "uppercase",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              padding: 0,
-              fontFamily: "inherit",
-              transition: "color 0.15s",
-            }}
-            onMouseOver={e => (e.currentTarget.style.color = "#f3f4f6")}
-            onMouseOut={e => (e.currentTarget.style.color = "#848d9a")}
-          >
-            <span aria-hidden="true">←</span> Back
-          </button>
         </div>
       </div>
 

@@ -1,36 +1,61 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# NextStop
 
-## Getting Started
+NextStop is a full-stack web application that helps users discover transportation options, compare routes, and plan trips more efficiently through a centralized platform.
 
-First, run the development server:
+## Team Members
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+* Athena Winn 
+* Andrew Sou
+* Kayleen Tran
+* Elane Shane
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Project Links
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+**Jira Board:**
+https://uci-nextstop.atlassian.net/jira/software/projects/SCRUM/boards/1?atlOrigin=eyJpIjoiOTQ4NmM4NTk3NmZlNDZjODhiOTBlZjhiNDBmYmIxNDMiLCJwIjoiaiJ9
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+**Live Website:**
+https://nextstopzot.com/onboarding
 
-## Learn More
 
-To learn more about Next.js, take a look at the following resources:
+## Features
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+* User authentication and account management
+* Route and trip planning
+* Saved trips and user preferences
+* Transportation data integration
+* Live routes and map information
+* Admin dashboard and analytics
+* Responsive design across desktop and mobile devices
+* Accessibility checked
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Tech Stack
 
-## Deploy on Vercel
+### Frontend
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+* React
+* TypeScript
+* Tailwind CSS
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Backend
+
+* Node.js
+* Express.js
+
+### Database
+
+* PostgreSQL (Neon)
+
+### Deployment
+
+* Vercel
+* AWS EC2
+
+## Architecture
+
+C4 diagrams are located in the repo.
+
+* Context Diagram
+* Container Diagram
+* Component Diagram
+* Code Diagram
