@@ -20,7 +20,6 @@ export default function OfflineDashboard() {
 
   return (
     <div className="w-full min-h-screen bg-[#0b0c0e] text-[#f3f4f6] flex flex-col items-center">
-      {/* Invisible spacer element to clear your top navigation bar cleanly without clipping or visual artifacts */}
       <div className="h-20 md:h-24 w-full shrink-0" />
 
       <main
@@ -28,7 +27,7 @@ export default function OfflineDashboard() {
         style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
       >
 
-        {/* Offline Alert Banner */}
+        {/* offline banner */}
         <div className="mb-8 p-4 rounded-xl border border-amber-500/20 bg-amber-950/10 flex items-center gap-3">
           <div className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse shrink-0" />
           <div className="text-sm font-medium text-amber-300">
@@ -36,7 +35,6 @@ export default function OfflineDashboard() {
           </div>
         </div>
 
-        {/* Header */}
         <div className="border-b border-[#222630] pb-6 mb-8">
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-white">
             Transit Reference Hub
@@ -46,7 +44,7 @@ export default function OfflineDashboard() {
           </p>
         </div>
 
-        {/* Static Timetable Information Cards */}
+        {/* Static info cards */}
         <div className="space-y-4">
           {localSchedules.map((sched, idx) => (
             <div key={idx} className="p-5 md:p-6 bg-[#13151a]/30 border border-[#222630] rounded-xl">
@@ -72,7 +70,7 @@ export default function OfflineDashboard() {
           ))}
         </div>
 
-        {/* Reconnect Instructions */}
+        {/* for reconnect */}
         <p className="text-center text-xs font-medium text-[#4b5363] mt-12 px-4">
           Live maps, dynamic trip planning, and database updates will resume automatically once a network link is established.
         </p>

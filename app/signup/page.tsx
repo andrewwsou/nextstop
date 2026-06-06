@@ -43,7 +43,7 @@ export default function SignUp() {
     <main className="auth-page bg-grid">
       <div className="auth-card">
 
-        {/* Back button */}
+        {/* go back button */}
         <button
           onClick={() => router.push("/onboarding")}
           className="auth-back-btn"

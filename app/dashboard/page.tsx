@@ -204,10 +204,9 @@ export default function Dashboard() {
             )}
           </div>
 
-          {/* Destinations */}
+          {/* dest */}
           {(popularDestinations.length > 0 || transitHubs.length > 0) && (
             <section aria-labelledby="destinations-heading" className="section-block">
-              {/* FIX 4: Removed tabIndex={0} from all h2s — headings are not valid tabbable widgets */}
               <h3 id="destinations-heading">Destinations</h3>
               <div className="pill-grid">
                 {[...popularDestinations, ...transitHubs].map((loc) => (
@@ -224,7 +223,7 @@ export default function Dashboard() {
             </section>
           )}
 
-          {/* Navigate */}
+          {/* nav */}
           <section aria-labelledby="navigate-heading" className="section-block">
             <h3 id="navigate-heading">Navigate</h3>
             <div className="action-list">
@@ -247,7 +246,7 @@ export default function Dashboard() {
             </div>
           </section>
 
-          {/* Trips */}
+          {/* trip */}
           <div className="trips-grid">
             <section aria-labelledby="recent-heading">
               <h3 id="recent-heading">Recent Trips</h3>

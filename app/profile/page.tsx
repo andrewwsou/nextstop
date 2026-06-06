@@ -117,11 +117,9 @@ export default function Profile() {
   return (
     <main className="profile-main min-h-screen bg-[#0b0c0e] text-[#f3f4f6] px-20 py-16 max-w-5xl mx-auto" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
 
-      {/* FIX 1: sr-only h1 is the page title; visible name is now an h2 heading */}
       <h1 className="sr-only">Profile</h1>
 
       <div className="flex items-center gap-4 mb-12">
-        {/* Avatar is decorative */}
         <div aria-hidden="true" className="w-16 h-16 rounded-full bg-[#13151a] border border-[#222630] flex items-center justify-center text-2xl font-bold text-[#3ecfb2] shrink-0">
           {user?.first_name?.[0] || "U"}
         </div>
@@ -173,7 +171,7 @@ export default function Profile() {
         ))}
       </div>
 
-      {/* Modal */}
+      {/* Modal stuff */}
       {modal && (
         <div
           role="dialog"

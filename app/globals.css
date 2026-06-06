@@ -36,7 +36,6 @@ main {
   overflow-x: hidden;
 }
 
-/* The card constrains all content to mobile width */
 .auth-card {
   width: 100%;
   max-width: 380px;
@@ -71,7 +70,6 @@ main {
   overflow-wrap: break-word;
 }
 
-/* Grid background — subtle teal grid lines */
 .bg-grid {
   background-color: #0d1a18;
   background-image:
@@ -81,7 +79,6 @@ main {
   background-position: center;
 }
 
-/* Input groups */
 .input-group {
   display: flex;
   flex-direction: column;
@@ -113,7 +110,7 @@ main {
   color: #4a4a4a;   /* placeholder color for empty select */
 }
 
-/* Section labels like "Name", "Email" */
+
 .field-section-label {
   font-size: 14px;
   line-height: 1.35;
@@ -122,7 +119,6 @@ main {
   overflow-wrap: break-word;
 }
 
-/* Buttons — all constrained by .auth-card width */
 .primary-btn {
   width: 100%;
   background: #3ecfb2;

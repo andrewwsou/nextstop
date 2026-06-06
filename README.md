@@ -54,6 +54,7 @@ https://nextstopzot.com/onboarding
 ## Architecture
 
 C4 diagrams are located in the repo.
+Link: https://miro.com/app/board/uXjVHTW2FCs=/?share_link_id=374041653207 
 
 * Context Diagram
 * Container Diagram

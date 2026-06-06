@@ -114,7 +114,6 @@ function TripForm() {
 
         {/* Date / Time */}
         <section aria-labelledby="datetime-heading" className="pt-2">
-          {/* FIX 1 + FIX 2: removed tabIndex, fixed contrast */}
           <h2 id="datetime-heading" className="mb-4 text-xs font-bold tracking-widest text-[#848d9a] uppercase">
             Departure Time
           </h2>
@@ -151,7 +150,6 @@ function TripForm() {
 
         {/* Transit Selection */}
         <section aria-labelledby="transit-heading" className="pt-2">
-          {/* FIX 1 + FIX 2: removed tabIndex, fixed contrast */}
           <h2 id="transit-heading" className="mb-4 text-xs font-bold tracking-widest text-[#848d9a] uppercase">
             Preferred Transit
           </h2>

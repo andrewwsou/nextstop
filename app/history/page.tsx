@@ -196,11 +196,7 @@ export default function History() {
         if (!groupTrips.length) return null;
         return (
           <section key={group} aria-labelledby={`group-${group}`} className="mb-10">
-            {/*
-              FIX 1: contrast — was text-[#4b5363] (2.44:1 FAIL).
-              Changed to text-[#848d9a] (5.83:1 PASS).
-              FIX 2: removed tabIndex={0} — headings are not tabbable widgets.
-            */}
+
             <h2 id={`group-${group}`} className="text-xs font-bold tracking-widest text-[#848d9a] uppercase mb-4">
               {GROUP_LABELS[group]}
             </h2>
@@ -248,7 +244,7 @@ export default function History() {
                           </fieldset>
                         </div>
                       ) : (
-                        // Visible trip info — no aria-hidden so the checker cannot
+                        // no aria-hidden so the checker cannot
                         // flag bold text inside a hidden subtree. The article's
                         // aria-label already provides AT the full summary.
                         <div role="presentation">
@@ -262,13 +258,9 @@ export default function History() {
                     </div>
 
                     <div className="flex flex-col items-start sm:items-end gap-1.5 shrink-0 w-full sm:w-auto">
-                      {/*
-                        FIX 3 (continued): date was a bold <div> flagged as a potential
-                        heading. Changed to <p> to avoid the text_block_heading warning.
-                      */}
+
                       <p className="text-base font-bold text-white m-0">{fmtDate(trip.date)}</p>
                       <div className="text-xs font-medium text-[#848d9a]">
-                        {/* FIX 1: label text was text-[#4b5363] (fail) → text-[#848d9a] */}
                         <span className="text-[#848d9a] font-bold mr-1">Travel Time:</span>
                         {trip.durationMinutes ? `${trip.durationMinutes} min` : "No duration set"}
                       </div>
@@ -321,7 +313,6 @@ export default function History() {
                     <div className="mt-5 pt-5 border-t border-[#222630]/60 text-sm">
                       <div className="grid gap-2 text-[#848d9a] font-medium">
                         <div>
-                          {/* FIX 1: label spans were text-[#4b5363] (fail) → text-[#848d9a] */}
                           <span className="text-[#848d9a]">Departure: </span>
                           <span className="text-[#f3f4f6]">{fmtDateTime(trip.departureTime)}</span>
                         </div>

@@ -214,7 +214,6 @@ function TripResultsContent() {
         </h1>
         <div className="mt-2 text-sm text-[#848d9a] flex items-center flex-wrap gap-1.5 font-medium">
           <span className="text-[#3ecfb2]">{start}</span>
-          {/* FIX 2: arrow was text-[#4b5363] (2.44:1 fail) → text-[#848d9a] */}
           <span aria-hidden="true" className="text-[#848d9a]">→</span>
           <span className="text-[#f3f4f6]">{destination}</span>
         </div>
