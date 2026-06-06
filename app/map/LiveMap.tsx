@@ -155,7 +155,7 @@ export default function LiveMap() {
               padding-bottom: 140px;
               background: #050806;
             }
-            .live-map-page > div[inert] {
+            .live-map-page > .leaflet-map-wrapper {
               height: 55vh !important;
               min-height: 360px;
             }
@@ -177,8 +177,8 @@ export default function LiveMap() {
 
 
         <div
-          aria-hidden="true"
-          inert={true}
+          className="leaflet-map-wrapper"
+          aria-label="Interactive live transit map"
           style={{ height: "100%", width: "100%" }}
         >
           {position && (

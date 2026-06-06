@@ -35,4 +35,4 @@ run("backend", "npm", ["--prefix", "nextstop-backend", "start"], {
   PORT: process.env.PORT || "5001",
 });
 
-run("frontend", "next", ["dev"]);
+run("frontend", "next", ["dev", "--webpack"]);
