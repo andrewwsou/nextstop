@@ -179,7 +179,6 @@ function TripForm() {
             <button
               onClick={() => toggleTransitType("train")}
               aria-pressed={transitTypes.train}
-              /* FIX 4: same fix — remove aria-label, let visible text be the name */
               className={`w-full text-left p-5 transition-all flex items-center justify-between focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#3ecfb2] ${
                 transitTypes.train ? "bg-[#1c1f26]/60" : "hover:bg-[#1c1f26]/30 opacity-60"
               }`}

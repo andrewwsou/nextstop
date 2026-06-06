@@ -423,7 +423,6 @@ export default function Dashboard() {
 
         .dashboard-header { margin-bottom: 2.5rem; }
 
-        /* FIX 2: greeting-text is now an h2 — keep visual styles identical */
         h2.greeting-text {
           font-size: 2rem;
           font-weight: 700;
@@ -440,7 +439,6 @@ export default function Dashboard() {
           font-size: 0.95rem;
         }
 
-        /* FIX 3: Visible search label — shown above the bar */
         .search-label {
           display: block;
           font-size: 0.8rem;
@@ -464,7 +462,6 @@ export default function Dashboard() {
           background: var(--bg-surface);
           border: 1px solid var(--border-subtle);
           border-radius: 12px;
-          /* FIX 5: Minimum 44px touch target height */
           padding: 14px 18px;
           min-height: 44px;
           transition: all 0.2s;
@@ -500,7 +497,6 @@ export default function Dashboard() {
           min-height: 24px;
         }
 
-        /* FIX 6: Explicit focus-visible outline for clear button */
         .clear-search:focus-visible {
           outline: 2px solid var(--brand-primary);
           outline-offset: 2px;
@@ -532,7 +528,6 @@ export default function Dashboard() {
           align-items: center;
           gap: 10px;
           transition: all 0.1s;
-          /* FIX 5: Min touch target */
           min-height: 44px;
         }
 
@@ -540,8 +535,6 @@ export default function Dashboard() {
 
         .section-block { margin-bottom: 3rem; }
 
-        /* FIX 4: h3 for section headings (greeting is now h2, sections become h3)
-           FIX 7: Contrast — changed color from var(--text-ghost) to var(--text-muted) */
         h3 {
           margin: 0 0 1.25rem 0;
           font-size: 0.75rem;
@@ -569,11 +562,9 @@ export default function Dashboard() {
           display: flex;
           align-items: center;
           gap: 8px;
-          /* FIX 5: Min touch target */
           min-height: 44px;
         }
 
-        /* FIX 6: Explicit focus-visible for destination pills */
         .destination-pill:hover,
         .destination-pill:focus-visible {
           border-color: var(--text-muted);
@@ -599,7 +590,6 @@ export default function Dashboard() {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          /* FIX 5: Min touch target height */
           padding: 16px 20px;
           min-height: 44px;
           cursor: pointer;
@@ -611,7 +601,6 @@ export default function Dashboard() {
 
         .action-row:last-child { border-bottom: none; }
 
-        /* FIX 6: Explicit focus-visible outline for action rows */
         .action-row:hover,
         .action-row:focus-visible {
           background: var(--bg-surface-hover);
@@ -654,10 +643,8 @@ export default function Dashboard() {
 
         .trip-meta-scheduled { color: #f59e0b; }
         .duration-tag { color: var(--brand-primary); }
-        /* FIX 7: trip-modes was using --text-ghost (fail). Now uses --text-muted */
         .trip-modes { font-size: 0.8rem; color: var(--text-muted); font-weight: 500; }
 
-        /* FIX 7: loading-text and empty-text were using --text-ghost (fail). Now uses --text-muted */
         .loading-text, .empty-text {
           font-size: 0.85rem;
           color: var(--text-muted);
@@ -677,13 +664,11 @@ export default function Dashboard() {
           font-family: inherit;
           transition: color 0.15s;
           align-self: flex-start;
-          /* FIX 5: Min touch target */
           min-height: 44px;
           display: flex;
           align-items: center;
         }
 
-        /* FIX 6: Explicit focus-visible for text link buttons */
         .text-link-btn:hover,
         .text-link-btn:focus-visible {
           color: var(--text-main);
@@ -709,7 +694,6 @@ export default function Dashboard() {
         }
 
         .sidebar-header h3 { margin: 0; }
-        /* FIX 7: update-timer was using --text-ghost (fail). Now uses --text-muted */
         .update-timer { font-size: 0.75rem; color: var(--text-muted); font-weight: 500; }
 
         .sidebar-feed { display: flex; flex-direction: column; gap: 12px; margin-bottom: 1.5rem; }
@@ -733,14 +717,12 @@ export default function Dashboard() {
         }
 
         .route-direction { font-size: 0.8rem; color: var(--text-muted); font-weight: 500; }
-        /* FIX 7: route-stop-name was --text-ghost (fail). Now uses --text-muted */
         .route-stop-name { font-size: 0.75rem; color: var(--text-muted); font-weight: 500; margin-bottom: 12px; }
 
         .departure-time-row { display: flex; gap: 6px; flex-wrap: wrap; }
 
         .time-badge { font-size: 0.75rem; font-weight: 600; padding: 4px 8px; border-radius: 6px; }
         .time-badge.live { background: rgba(62, 207, 178, 0.1); color: var(--brand-primary); }
-        /* FIX 7: scheduled badge was --text-muted on --bg-main (pass). Keep as is */
         .time-badge.scheduled { background: var(--bg-main); border: 1px solid var(--border-subtle); color: var(--text-muted); }
         .time-badge.cancelled { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
 
@@ -760,11 +742,9 @@ export default function Dashboard() {
           justify-content: center;
           font-family: inherit;
           transition: all 0.15s;
-          /* FIX 5: Min touch target */
           min-height: 44px;
         }
 
-        /* FIX 6: Explicit focus-visible for refresh button */
         .refresh-btn:hover,
         .refresh-btn:focus-visible {
           background: var(--bg-surface);
